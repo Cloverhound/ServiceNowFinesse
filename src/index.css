@@ -1,0 +1,27 @@
+
+/* apply a natural box layout model to all elements, but allowing components to change */
+html {
+  	box-sizing: border-box;
+  	font-family: Helvetica, Arial, sans-serif;
+}
+*, *:before, *:after {
+  	box-sizing: inherit;
+}
+/* */
+
+html {
+	/* background-image: linear-gradient(to top right, #fff, #2888d8); */
+}
+
+html {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	width: 100%;
+	min-height: 100%;
+	margin: 0;
+	padding: 0;
+}

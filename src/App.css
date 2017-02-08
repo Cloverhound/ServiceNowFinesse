@@ -1,0 +1,383 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 80px;
+}
+
+.App-header {
+  background-color: #222;
+  height: 150px;
+  padding: 20px;
+  color: white;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+#desktop {
+  position: relative;
+  max-width: 500px;
+  height: 300px;
+  margin: auto;
+  padding: 20px;
+  /*bottom: calc(-15%);*/
+}
+
+#header {
+  background-color: #6d7175;
+  padding: 10px;
+  padding-left: 10px;
+  color: #FFF;
+  font-size: 13px;
+  font-weight: 300;
+}
+
+#agent-state {
+  position: relative;
+}
+
+#agent-state .Dropdown-control {
+  width: 100%;
+  color: #FFF;
+  background-blend-mode: multiply;
+  background-color: rgba(255, 255, 255, 0.3);
+  font-size: 16px;
+  text-align: center;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+}
+
+#agent-state .Dropdown-arrow {
+  border-color: #fff transparent transparent;
+}
+
+#agent-state .is-open .Dropdown-arrow {
+  border-color: transparent transparent #fff;
+}
+
+#agent-state.READY .Dropdown-control {
+  background-color: #6aca54;
+}
+
+#agent-state.NOT_READY .Dropdown-control {
+  background-color: #cd1313;
+}
+
+.buttons {
+  margin-left: -20px;
+    margin-top: 20px;
+}
+
+#main {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+.login-section {
+  position: relative;
+  width: 250px;
+  margin: auto;
+  padding: 10px;
+  bottom: calc(-15%);
+}
+
+.login-form input {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0px;
+  border: none;
+  border-radius: 5px;
+
+  color: #333;
+  background-blend-mode: multiply;
+  background-color: rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+}
+
+.login-form input[type="submit"] {
+  border: 2px solid #333;
+  border-radius: 25px;
+  background-color: transparent;
+  margin-top: 30px;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/** Call Panel **/
+
+.call-header {
+  margin-top: 20px;
+  background-color: #EEE;
+  padding: 10px;
+  cursor: pointer;
+  border: 1px solid;
+  border-color: #DDD #DDD transparent #DDD
+}
+
+.call-content {
+  padding: 10px;
+  background-color: #F9F9F9;
+  transition: 0.2s;
+  overflow: hidden;
+  border: 1px solid;
+  border-color: transparent #DDD #DDD #DDD
+}
+
+/** Dial Pad **/
+
+.make-call input {
+    display: inline-block;
+    position: relative;
+    clear: both;
+    float: none;
+    width: calc(100% - 90px);
+    background-color: #FFF;
+    border: 1px solid rgba(24,31,37,0.15);
+    border-radius: 4px;
+    color: rgba(24,31,37,0.7);
+    font-size: 16px;
+    line-height: 140%;
+    padding: 6px 12px;
+}
+
+.make-call form {
+  width: 100%;
+  text-align: center;
+  margin: auto;
+}
+
+.make-call form .dial-pad {
+  text-align: center;
+  background-color: white;
+  border: 1px solid rgba(24,31,37,0.15);;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+.make-call form .dial-pad a {
+  border-bottom: 1px solid rgba(24,31,37,0.10);
+  border-right: 1px solid rgba(24,31,37,0.10);
+  color: #AAA;
+  cursor: pointer;
+  float: left;
+  font-size: 22px;
+  padding: 15px;
+  width: calc(100% / 3);
+}
+
+.make-call form .dial-pad a:nth-child(3n) {
+  border-right: none;
+}
+
+.make-call form .dial-pad a:nth-child(n+10) {
+  border-bottom: none;
+}
+
+.make-call form .dial-pad a:hover {
+  color: #222;
+  background-color: #FCFCFC;
+}
+
+.make-call form a.cta {
+    background-color: #6aca54;
+    color: #fff;
+}
+
+.cta i {
+  font-size: 16px;
+  vertical-align: middle;
+}
+
+.cta span {
+  margin-left: 10px;
+  vertical-align: middle;
+  font-weight: bold;
+}
+
+a.cta {
+    padding-left: 38px;
+    user-select: none;
+    display: inline-block;
+    position: relative;
+    border: 2px solid transparent;
+    border-radius: 25px;
+    background-color: #6aca54;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 6px 8px;
+    text-transform: uppercase;
+    width: 80px;
+    margin-left: 10px;
+    line-height: 140%;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+
+a.cta.end {
+  background-color: #cd1313;
+  position: absolute;
+  right: 5px;
+  top: 5px;
+}
+
+.cta.end i {
+  transform: rotate(135deg);
+  margin-left: 4px;
+}
+
+/**
+  form {
+    
+
+    .dial-pad {
+      @include full-box;
+      border: 1px solid $border-color;
+      border-radius: $border-radius * 2;
+      margin-bottom: $micro-space;
+
+      a {
+        @include better-box;
+        border-bottom: 1px solid $border-color;
+        border-right: 1px solid $border-color;
+        color: $stagnant;
+        cursor: pointer;
+        float: left;
+        font-family: "Source-Sans-Pro-L";
+        font-size: 22px;
+        padding: $half-space;
+        width: calc(100% / 3);
+
+        &:nth-child(3n) {
+          border-right: none;
+        }
+
+        &:nth-child(n+10) {
+          border-bottom: none;
+        }
+
+        &:hover {
+          color: $default;
+        } // End &:hover
+      } // End a
+    } // End .dial-pad
+
+    a.cta {
+      @include cta($success, transparent);
+    }
+  } // End form
+} // End .make-call
+*//
+
+
+/** Dropdown **/
+
+.Dropdown-root {
+  position: relative;
+}
+
+.Dropdown-control {
+  position: relative;
+  overflow: hidden;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  box-sizing: border-box;
+  color: #333;
+  cursor: default;
+  outline: none;
+  padding: 8px 52px 8px 10px;
+  transition: all 200ms ease;
+}
+
+.Dropdown-control:hover {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.Dropdown-arrow {
+  border-color: #999 transparent transparent;
+  border-style: solid;
+  border-width: 5px 5px 0;
+  content: ' ';
+  display: block;
+  height: 0;
+  margin-top: -ceil(2.5);
+  position: absolute;
+  right: 10px;
+  top: 14px;
+  width: 0
+}
+
+.is-open .Dropdown-arrow {
+  border-color: transparent transparent #999;
+  border-width: 0 5px 5px;
+}
+
+.Dropdown-menu {
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+  margin-top: -1px;
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  top: 100%;
+  width: 100%;
+  z-index: 1000;
+  -webkit-overflow-scrolling: touch;
+}
+
+.Dropdown-menu .Dropdown-group > .Dropdown-title {
+  padding: 8px 10px;
+  color: rgba(51, 51, 51, 1.2);
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.Dropdown-option {
+  box-sizing: border-box;
+  color: rgba(51, 51, 51, 0.8);
+  cursor: pointer;
+  display: block;
+  padding: 8px 10px;
+}
+
+.Dropdown-option:last-child {
+  border-bottom-right-radius: 2px;
+   border-bottom-left-radius: 2px;
+}
+
+.Dropdown-option:hover {
+  background-color: #f2f9fc;
+  color: #333;
+}
+
+.Dropdown-option.is-selected {
+  background-color: #f2f9fc;
+  color: #333;
+}
+
+.Dropdown-noresults {
+  box-sizing: border-box;
+  color: #ccc;
+  cursor: default;
+  display: block;
+  padding: 8px 10px;
+}
