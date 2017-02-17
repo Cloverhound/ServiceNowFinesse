@@ -26,9 +26,9 @@
 #desktop {
   position: relative;
   max-width: 500px;
-  height: 300px;
   margin: auto;
   padding: 20px;
+  height: calc(100% - 35px);
   /*bottom: calc(-15%);*/
 }
 
@@ -125,7 +125,23 @@
   padding: 10px;
   cursor: pointer;
   border: 1px solid;
-  border-color: #DDD #DDD transparent #DDD
+  border-color: #DDD #DDD transparent #DDD;
+  height: 40px;
+}
+
+.call-controls {
+  background-color: #EEE;
+  border: 1px solid;
+  border-color: #DDD #DDD transparent #DDD;
+  height: 40px;
+}
+
+.call-header .header-phone-icon {
+  margin-top: 0px;
+}
+
+.call-header .header-other-party {
+  margin-top: 0px;
 }
 
 .call-content {
@@ -138,6 +154,7 @@
 }
 
 /** Dial Pad **/
+
 
 .make-call input {
     display: inline-block;
@@ -380,4 +397,147 @@ a.cta.end {
   cursor: default;
   display: block;
   padding: 8px 10px;
+}
+
+
+
+
+.call-content {
+  float: left;
+  width: 100%;
+}
+
+
+/* buttons */
+.round-button {
+    display: inline-block;
+    position: relative;
+    width: 25%;
+    transition: all .2s ease-in-out;
+    border-radius: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    border: 0;
+    font-weight: lighter;
+    line-height: 1;
+    list-style-image: none;
+    list-style-type: none;
+    margin: 0;
+    outline: 0;
+    text-align: center;
+}
+
+
+
+
+#hangup-but {
+  float: right;
+  margin-top: -5px;
+}
+#answer-but {
+  float: right;
+  margin-top: -5px;
+}
+#hold-but, #resume-but, #transfer-but, #conference-but {
+  float: left;
+  margin-top: 4px;
+}
+
+
+
+.round-button .icon-container {
+  display: inline-block;
+  border-radius: 2000px;
+  height: 30px;
+  width: 30px;
+  text-align: center;
+  cursor: pointer;
+}
+
+
+
+.round-button .icon-container.hangup {
+    background-color: #d55146;
+}
+.round-button .icon-container.hold {
+    position: relative;
+    background-color: #ecbf11;
+}
+.round-button .icon-container.resume {
+    position: relative;
+    background-color: #87A3BB;
+}
+.round-button .icon-container.answer {
+    background-color: #6ACA54;
+}
+.round-button .icon-container.transfer {
+    position: relative;
+    background-color: #6ACA54;
+}
+.round-button .icon-container.conference {
+    position: relative;
+    background-color: #6ACA54;
+}
+
+
+
+.round-button .icon-container.hangup svg {
+  display: block;
+  fill: #fff;
+  height: 13px;
+  margin: 9px auto;
+  width: 18px;
+}
+.round-button .icon-container.hold svg {
+  display: block;
+  fill: #fff;
+  height: 10px;
+  margin: 10px auto;
+  width: 14px;
+}
+.round-button .icon-container.resume svg {
+  display: block;
+  fill: #fff;
+  height: 10px;
+  margin: 10px auto;
+  width: 14px;
+}
+.round-button .icon-container.conference svg {
+  display: block;
+  fill: #fff;
+  height: 10px;
+  margin: 10px auto;
+  width: 14px;
+}
+.round-button .icon-container.transfer svg {
+  display: block;
+  fill: #fff;
+  height: 10px;
+  margin: 10px auto;
+  width: 14px;
+}
+.round-button .icon-container.answer svg {
+  display: block;
+  fill: #fff;
+  height: 14px;
+  margin: 8px auto;
+  width: 14px;
+}
+
+.button-icon.resume {
+    color: white;
+    margin-top: 6px;
+    margin-left: 3px;
+}
+
+.button-icon.conference {
+    color: white;
+    margin-top: 6px;
+    margin-left: 1px;
+}
+
+
+
+.call-tab {
+  height: 120px;
 }
