@@ -69,15 +69,33 @@ function login(event) {
   window.extension = form.elements["extension"].value;
 
   console.log(window.username, window.extension);
-      
-  var tunnelFrame = document.getElementById("tunnel-frame");
-  var tunnelWindow = tunnelFrame.contentWindow;
 
-  tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + window.username, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + window.password, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + "uccx1.cloverhound.com", "*");
+  if(!window.username || !window.extension) {
+    handleLoginFailed("Please include credentials and extension");
+    return false;
+  }
 
-  return false;
+  $.ajax({
+    url: "/finesse/api/User/" + window.username,
+    type: "GET",
+    beforeSend: function (xhr) {
+      xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
+    }, 
+    success: function() {
+      var tunnelFrame = document.getElementById("tunnel-frame");
+      var tunnelWindow = tunnelFrame.contentWindow;
+
+      tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + window.username, "*");
+      tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + window.password, "*");
+      tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + "uccx1.cloverhound.com", "*");
+    },
+    error: function() {
+      handleLoginFailed("Invalid Credentials");
+    },
+    complete: function() {
+      return false;
+    }
+  });
 }
 
 window.addEventListener("message", receiveMessage, false);
@@ -100,8 +118,13 @@ function pushLoginToFinesse(username, password, extension) {
     success: function(data) {
       console.log(data);
 
-    }
+    },
   });
+}
+
+function handleLoginFailed(reason)
+{
+  rerender({reason: reason});
 }
 
 function receiveMessage(event)
@@ -112,6 +135,11 @@ function receiveMessage(event)
   if (event.data === "4|connected") {
     pushLoginToFinesse(window.username, window.password, window.extension);
   }
+
+  if (event.data === "4|unauthorized") {
+    handleLoginFailed("Invalid Credentials");
+  }
+
 
   var eventCode = event.data.split("|")[0];
   if (eventCode === "0") {
@@ -146,6 +174,10 @@ function receiveMessage(event)
           break;
       }
 
+    } else if (data.Update.data.apiErrors) {
+      if(data.Update.data.apiErrors.apiError.errorMessage._text === "CF_INVALID_LOGON_DEVICE_SPECIFIED") {
+        handleLoginFailed("Invalid Device");
+      }
     }
   }
 }
@@ -462,9 +494,9 @@ function make_base_auth(user, password) {
   return 'Basic ' + hash;
 }
 
-function rerender() {
+function rerender(previousLoginFailed=false) {
   ReactDOM.render(
-    <App agent={agent}/>,
+    <App agent={agent} previousLoginFailed={previousLoginFailed}/>,
     document.getElementById('root')
   );
 }
@@ -506,7 +538,7 @@ class App extends Component {
               <CallPanel />
             </div>
           ) : (
-            <LoginDialog handleLogin={this.handleLogin} />
+            <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={this.props.previousLoginFailed}/>
         )}
       </div>
     );
@@ -515,12 +547,22 @@ class App extends Component {
 
 function LoginDialog(props) {
 
+  let errorTextStyle = {
+    color: "red"
+  }
+
   return (
     <div id="login-section" className="login-section">
       <form id="login-form" className="login-form" onSubmit={props.handleLogin}>
         <input type="text" name="username"></input>
         <input type="password" name="password"></input>
         <input type="text" name="extension"></input>
+
+        {
+          props.previousLoginFailed ? (
+            <p style={errorTextStyle}> {props.previousLoginFailed.reason} </p>
+          ) : null
+        }
 
         <input type="submit" value="Login"></input>
       </form>
