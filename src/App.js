@@ -75,8 +75,8 @@ function login(event) {
 
   console.log(window.username, window.extension);
 
-  if(!window.username || !window.extension) {
-    handleLoginFailed("Please include credentials and extension");
+  if(!window.username) {
+    handleLoginFailed("Invalid Credentials");
     return false;
   }
 
@@ -584,8 +584,23 @@ class App extends Component {
 function LoginDialog(props) {
 
   let errorTextStyle = {
-    color: "red"
+    color: "red",
+    margin: 0
   }
+
+  let submitButtonStyle = {
+      border: "2px solid #333",
+      borderRadius: "25px",
+      backgroundColor: "transparent",
+      marginTop: "30px",
+      textTransform: "uppercase",
+      cursor: "pointer",
+      fontWeight: "bold"
+  }
+  
+  if(props.previousLoginFailed) {
+    submitButtonStyle.marginTop = "20px";
+  } 
 
   return (
     <div id="login-section" className="login-section">
@@ -600,7 +615,7 @@ function LoginDialog(props) {
           ) : null
         }
 
-        <input type="submit" value="Login"></input>
+        <input type="submit" value="Login" style={submitButtonStyle}></input>
       </form>
     </div>
   );
@@ -762,12 +777,12 @@ class CallPanel extends Component {
               <span className="header-other-party" style={headerTextStyle}>
                 {call.otherParty} ({formattedCallTime})
               </span> 
-                <AnswerButton call={call}/>    
-                <HangupButton call={call}/>
-                <ConferenceButton call={call}/> 
-                <TransferButton call={call}/>  
-                <ResumeButton call={call}/>
-                <HoldButton call={call}/> 
+              <AnswerButton call={call}/>    
+              <HangupButton call={call}/>
+              <ConferenceButton call={call}/> 
+              <TransferButton call={call}/>  
+              <ResumeButton call={call}/>
+              <HoldButton call={call}/> 
             </div>
   
             <div className="call-content" style={contentStyle}> 
