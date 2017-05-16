@@ -18,10 +18,6 @@
   font-size: large;
 }
 
-@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
 #desktop {
   position: relative;
@@ -98,12 +94,11 @@
   width: 100%;
   padding: 8px;
   margin: 10px 0px;
-  border: none;
+  border: 1px solid gray;
   border-radius: 5px;
 
   color: #333;
   background-blend-mode: multiply;
-  background-color: rgba(0, 0, 0, 0.3);
   font-size: 14px;
 }
 
@@ -150,7 +145,7 @@
   transition: 0.2s;
   overflow: hidden;
   border: 1px solid;
-  border-color: transparent #DDD #DDD #DDD
+  border-color: transparent #DDD #DDD #DDD;
 }
 
 /** Dial Pad **/
@@ -300,7 +295,7 @@ a.cta.end {
     }
   } // End form
 } // End .make-call
-*//
+*/
 
 
 /** Dropdown **/
@@ -338,7 +333,7 @@ a.cta.end {
   position: absolute;
   right: 10px;
   top: 14px;
-  width: 0
+  width: 0;
 }
 
 .is-open .Dropdown-arrow {
@@ -412,7 +407,7 @@ a.cta.end {
 .round-button {
     display: inline-block;
     position: relative;
-    width: 25%;
+    width: 10%;
     transition: all .2s ease-in-out;
     border-radius: 0;
     box-sizing: border-box;
@@ -439,8 +434,8 @@ a.cta.end {
   margin-top: -5px;
 }
 #hold-but, #resume-but, #transfer-but, #conference-but {
-  float: left;
-  margin-top: 4px;
+  float: right;
+  margin-top: -5px;
 }
 
 
@@ -448,8 +443,8 @@ a.cta.end {
 .round-button .icon-container {
   display: inline-block;
   border-radius: 2000px;
-  height: 30px;
-  width: 30px;
+  height: 25px;
+  width: 25px;
   text-align: center;
   cursor: pointer;
 }
@@ -485,14 +480,14 @@ a.cta.end {
   display: block;
   fill: #fff;
   height: 13px;
-  margin: 9px auto;
+  margin: 7px auto;
   width: 18px;
 }
 .round-button .icon-container.hold svg {
   display: block;
   fill: #fff;
   height: 10px;
-  margin: 10px auto;
+  margin: 8px auto;
   width: 14px;
 }
 .round-button .icon-container.resume svg {
@@ -520,13 +515,13 @@ a.cta.end {
   display: block;
   fill: #fff;
   height: 14px;
-  margin: 8px auto;
+  margin: 6px auto;
   width: 14px;
 }
 
 .button-icon.resume {
     color: white;
-    margin-top: 6px;
+    margin-top: 5px;
     margin-left: 3px;
 }
 
@@ -539,5 +534,11 @@ a.cta.end {
 
 
 .call-tab {
-  height: 120px;
+  height: 80px;
+}
+.call-controls {
+  border: 0;
+  height: 0;
+  width: 50%;
+  float: right;
 }

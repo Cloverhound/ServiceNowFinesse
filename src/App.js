@@ -38,12 +38,18 @@ var STATE_TEXT = {
   LOGOUT: 'Logout'
 }
 
+var INCIDENT_NUMBER_LENGTH = 7;
+
 var config = {
   height: 300,
   width: 350
 }
 function handleCommunicationEvent(context) {
   console.log("Communication from Topframe", context);
+  if(context["phone_number"]) {
+    call(context["phone_number"].replace(/-/g, ""));
+    window.openFrameAPI.show();
+  }
 }
 function initSuccess(snConfig) {
   console.log("openframe configuration",snConfig);
@@ -55,7 +61,6 @@ function initFailure(error) {
   console.log("OpenFrame init failed..", error);
 }
 
-console.log("openFrameApi: ", window.openFrameAPI)
 window.openFrameAPI.init(config, initSuccess, initFailure);
 
 
@@ -130,7 +135,7 @@ function receiveMessage(event)
           handleAllDialogsUpdated(data.Update.data.dialogs);
           break;
         case 'DELETE':
-          handleAllDialogsDeleted();
+          handleAllDialogsDeleted(data.Update.data.dialogs);
           break;
       }
 
@@ -285,6 +290,11 @@ function resume(call) {
   }
 }
 
+function getOtherCall(call) {
+  var otherLine = 3 - call.line;
+  return getCallByLine(otherLine);
+}
+
 function answer(call) {
   console.log("Answering call:", call);
 
@@ -295,6 +305,7 @@ function answer(call) {
 
 
   sendDialogCommand(call.id, xml);
+  window.openFrameAPI.hide();
 }
 
 function conference() {
@@ -401,6 +412,12 @@ function handleDialogUpdated(dialog) {
 
   var id = dialog.id._text;
 
+  if(calls[id]) {
+    console.log("Updating existing call:", calls[id]);
+  } else {
+    console.log("Creating new call");
+  }
+
   calls[id] = calls[id] || {};
   var call = calls[id];
 
@@ -410,6 +427,7 @@ function handleDialogUpdated(dialog) {
 
   call.id = id;
   call.startedAt = call.startedAt || new Date();
+  call.held = call.held || false;
   call.from = dialog.fromAddress._text;
   call.to = dialog.toAddress._text;
   call.state = dialog.state._text;
@@ -420,8 +438,9 @@ function handleDialogUpdated(dialog) {
   for(var i = 0; i < callVariables.length; i++) {
     var callVariable = callVariables[i];
     if(!call.openedIncident && callVariable.value._text) {
-      console.log("Opening incident with sys_id: " + callVariable)
-      window.openFrameAPI.openServiceNowForm({entity:'incident', query:'number=INC00' + callVariable.value._text});
+      var incidentNumber = getIncidentNumber(callVariable.value._text);
+      console.log("Opening incident with number: " + incidentNumber)
+      window.openFrameAPI.openServiceNowForm({entity:'incident', query:'sysparm_query=number=' + incidentNumber });
       call.openedIncident = true;
     }
     call.callVariables[callVariable.name._text] = callVariable.value._text;
@@ -436,18 +455,35 @@ function handleDialogUpdated(dialog) {
     call.direction = "inbound";
   }
 
+  console.log("Updated call:", call)
+
+  if(call.direction === "inbound" && call.state === "ALERTING") {
+    window.openFrameAPI.show();
+  }
+
   rerender();
 }
 
+function getIncidentNumber(number) {
+  // var numZeroes = INCIDENT_NUMBER_LENGTH - number.length;
+  // for(var i = 0; i < numZeroes; i++) {
+  //   number = "0" + number;
+  // }
+  return "INC00" + number;
+}
+
 function handleDialogDeleted(dialog) {
+  console.log("Handling dialog deleted of dialog:", dialog);
   delete calls[dialog.id];
 
   rerender();
 }
 
-function handleAllDialogsDeleted() {
-  calls = {};
-
+function handleAllDialogsDeleted(dialogs) {
+  console.log("Handling all dialogs deleted with dialogs:", dialogs)
+  
+  delete calls[dialogs.Dialog.id._text];
+  
   rerender();
 }
 
@@ -518,9 +554,9 @@ function LoginDialog(props) {
   return (
     <div id="login-section" className="login-section">
       <form id="login-form" className="login-form" onSubmit={props.handleLogin}>
-        <input type="text" name="username"></input>
-        <input type="password" name="password"></input>
-        <input type="text" name="extension"></input>
+        <input placeholder="username" type="text" name="username"></input>
+        <input placeholder="password" type="password" name="password"></input>
+        <input placeholder="extension" type="text" name="extension"></input>
 
         <input type="submit" value="Login"></input>
       </form>
@@ -656,7 +692,6 @@ class CallPanel extends Component {
       );
 
     } else {
-      console.log("Rendering calltabs");
       let callTabs = [];
       for(let i = 0; i < callIds.length; i++) {
         let call = calls[callIds[i]];
@@ -685,14 +720,14 @@ class CallPanel extends Component {
               <span className="header-other-party" style={headerTextStyle}>
                 {call.otherParty} ({formattedCallTime})
               </span> 
-              <AnswerButton call={call}/>    
-              <HangupButton call={call}/>    
+                <AnswerButton call={call}/>    
+                <HangupButton call={call}/>
+                <ConferenceButton call={call}/> 
+                <TransferButton call={call}/>  
+                <ResumeButton call={call}/>
+                <HoldButton call={call}/> 
             </div>
-            <div className="call-controls">
-              {call.held ? (<ResumeButton call={call}/>) :  (<HoldButton call={call}/>)}
-              <ConferenceButton call={call}/> 
-              <TransferButton call={call}/> 
-            </div>
+  
             <div className="call-content" style={contentStyle}> 
               <div>{"CallVariable1: " + callVariable1}</div>
             </div>
@@ -703,7 +738,7 @@ class CallPanel extends Component {
       return (
         <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
           {callTabs}
-          {callIds.length == 1 ? (<MakeCallForm />) : null}
+          <MakeCallForm />
         </div>
       );
     } 
@@ -714,7 +749,7 @@ class HoldButton extends Component {
 
   render() {
     var call = this.props.call;
-    if (call.state === "ACTIVE") {
+    if (call.state === "ACTIVE" && !call.held) {
       return <CallControlButton type="hold" function={hold.bind(null, call)} icon="pause"/>
     }
     return null;
@@ -727,7 +762,11 @@ class ResumeButton extends Component {
   render() {
     let icon = <i className="fa fa-play button-icon resume" aria-hidden="true"></i>;
     let call = this.props.call;
-    if (call.state === "ACTIVE") {
+    var otherCall = getOtherCall(call);
+    if(otherCall && otherCall.state != "ACTIVE") {
+      return null;
+    }
+    if (call.state === "ACTIVE" && call.held) {
       return <CallControlButton type="resume" function={resume.bind(null, call)} icon={icon} dontUseSvg={true}/>
     }
     return null;
@@ -767,7 +806,8 @@ class ConferenceButton extends Component {
   render() {
     let icon =  <i className="fa fa-users button-icon conference" aria-hidden="true"></i>;
     var call = this.props.call;
-    if(call.line === 1 && Object.keys(calls).length == 2 )  {
+    var otherCall = getOtherCall(call);
+    if(call.line === 1 && otherCall && !otherCall.held)  {
       return <CallControlButton  
             type="conference" 
             function={conference.bind(null)} 
@@ -784,7 +824,8 @@ class TransferButton extends Component {
 
   render() {
     var call = this.props.call;
-    if(call.line === 1 && Object.keys(calls).length === 2 )  {
+    var otherCall = getOtherCall(call);
+    if(call.line === 1 && otherCall && !otherCall.held)  {
       return <CallControlButton  
             type="transfer" 
             function={transfer.bind(null)} 
@@ -836,27 +877,32 @@ class MakeCallForm extends Component {
   }
 
   render() {
-    return (
-      <div className="tab-content make-call" data-structure="make-call" 
-        style={{
-          display: 'block',
-          position: 'absolute',
-          width: '100%',
-          bottom: '5px'
-        }}
-      >
-        <form>
-          <input onChange={this.handleChange.bind(this)}
-            id="dial_num" type="tel" placeholder="Enter a Number to Dial"
-            value={this.state.value}
-          />
-          <a onClick={this.handleMakeCall.bind(this)} className="cta hybrid">
-            <i className="fa fa-phone" aria-hidden="true"></i>
-            {Object.keys(calls) === 1 ? (<span>Consult</span>) : <span>Call</span>}
-          </a>
-        </form>
-      </div>
-    )
+    let callIds = Object.keys(calls);
+    if(callIds.length == 0 || (callIds.length == 1 && !calls[callIds[0]].held) ) {
+      return (
+        <div className="tab-content make-call" data-structure="make-call" 
+          style={{
+            display: 'block',
+            position: 'absolute',
+            width: '100%',
+            bottom: '5px'
+          }}
+        >
+          <form>
+            <input onChange={this.handleChange.bind(this)}
+              id="dial_num" type="tel" placeholder="Enter a Number to Dial"
+              value={this.state.value}
+            />
+            <a onClick={this.handleMakeCall.bind(this)} className="cta hybrid">
+              <i className="fa fa-phone" aria-hidden="true"></i>
+                <span>Call</span>
+            </a>
+          </form>
+        </div>
+      )
+    } else {
+      return null;
+    }
   }
 }
 

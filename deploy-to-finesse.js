@@ -49,7 +49,7 @@ sftp.connect({
 		console.log('done');
 		setTimeout(() => {
 			process.exit();
-		}, 2500);
+		}, 5000);
 		//process.exit();
 	});
 
