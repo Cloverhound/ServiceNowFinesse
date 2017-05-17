@@ -450,7 +450,17 @@ a.cta.end {
 }
 
 
+@keyframes answer {
+  0%   { background-color: #6aca54; }
+  50%  { background-color: #4fb338; }
+  100% { background-color: #6aca54; }
+}
 
+
+.round-button .icon-container.answer {
+    background-color: #6ACA54;
+    animation: answer 1.3s ease-in-out infinite;
+}
 .round-button .icon-container.hangup {
     background-color: #d55146;
 }
@@ -461,9 +471,6 @@ a.cta.end {
 .round-button .icon-container.resume {
     position: relative;
     background-color: #87A3BB;
-}
-.round-button .icon-container.answer {
-    background-color: #6ACA54;
 }
 .round-button .icon-container.transfer {
     position: relative;

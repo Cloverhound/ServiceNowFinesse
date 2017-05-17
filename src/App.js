@@ -44,6 +44,16 @@ var config = {
   height: 300,
   width: 350
 }
+
+
+function playInboundRingingMusic() {
+  $('#ringtone').trigger('play');
+}
+function stopInboundRingingMusic() {
+  $('#ringtone').trigger('pause');
+}
+
+
 function handleCommunicationEvent(context) {
   console.log("Communication from Topframe", context);
   if(context["phone_number"]) {
@@ -894,19 +904,37 @@ class TransferButton extends Component {
 
 }
 
-function CallControlButton(props) {
-  let icon = "";
-  if(props.dontUseSvg) {
-    icon = props.icon;
-  } else {
-    icon = <SvgIcon name ={props.icon} /> 
+
+class CallControlButton extends Component {
+  render() {
+    let icon = "";
+    if(this.props.dontUseSvg) {
+      icon = this.props.icon;
+    } else {
+      icon = <SvgIcon name ={this.props.icon} /> 
+    }
+    return (
+      <a className="round-button" id={this.props.type + "-but"} onClick={this.props.function}>
+        <span className={"icon-container " + this.props.type}>
+          {icon}
+        </span>
+      </a>
+    )
   }
-  return <a className="round-button" id={props.type + "-but"} onClick={props.function}>
-    <span className={"icon-container " + props.type}>
-      {icon}
-    </span>
-  </a>
+
+  componentDidMount() {
+    if(this.props.type === "answer") {
+      playInboundRingingMusic();
+    }
+  }
+
+  componentWillUnmount() {
+    if(this.props.type === "answer") {
+      stopInboundRingingMusic();
+    }
+  }
 }
+
 
 function SvgIcon(props) {
   return <svg dangerouslySetInnerHTML={{__html: '<use xlink:href="#' + props.name + '"/>' }} />;
