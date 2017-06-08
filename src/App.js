@@ -61,11 +61,16 @@ function handleCommunicationEvent(context) {
     window.openFrameAPI.show();
   }
 }
+function handleOpenFrameShownEvent(context) {
+  rerender();
+}
 function initSuccess(snConfig) {
   console.log("openframe configuration",snConfig);
   //register for communication event from TopFrame
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
   handleCommunicationEvent);
+  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
+  handleOpenFrameShownEvent);
 }
 function initFailure(error) {
   console.log("OpenFrame init failed..", error);
@@ -85,8 +90,13 @@ function login(event) {
 
   console.log(window.username, window.extension);
 
-  if(!window.username) {
+  if(!window.username || !window.password) {
     handleLoginFailed("Invalid Credentials");
+    return false;
+  }
+
+  if(!window.extension) {
+    handleLoginFailed("Invalid Device");
     return false;
   }
 
@@ -190,9 +200,7 @@ function receiveMessage(event)
       }
 
     } else if (data.Update.data.apiErrors) {
-      if(data.Update.data.apiErrors.apiError.errorMessage._text === "CF_INVALID_LOGON_DEVICE_SPECIFIED") {
-        handleLoginFailed("Invalid Device");
-      }
+        handleLoginFailed(data.Update.data.apiErrors.apiError.errorType._text);
     }
   }
 }
