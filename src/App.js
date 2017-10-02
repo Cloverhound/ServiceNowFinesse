@@ -1,22 +1,23 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import Dropdown from 'react-dropdown';
-import logo from './logo.svg';
 import './App.css';
 import $ from "jquery";
 import xmlToJSON from "./vendor/xmlToJSON";
 import moment from "moment";
 import "moment-duration-format";
+var Loader = require('halogen/PulseLoader');
 
+
+var RECENT_CALLS_LIST_LENGTH = 5;
 
 var agent = {
   state: 'LOGOUT'
 }
 
-var calls = {
+var calls = {}
+var recentCalls = []
 
-}
-    
 var MESSAGE_TYPE = {
   EVENT: 0,
   ID: 1,
@@ -80,8 +81,7 @@ window.openFrameAPI.init(config, initSuccess, initFailure);
 
 
 
-function login(event) {
-  event.preventDefault;
+function login() {
 
   var form = document.getElementById("login-form");
   window.username = form.elements["username"].value;
@@ -100,12 +100,12 @@ function login(event) {
     return false;
   }
 
-  $.ajax({
+  return $.ajax({
     url: "/finesse/api/User/" + window.username,
     type: "GET",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
-    }, 
+    },
     success: function() {
       var tunnelFrame = document.getElementById("tunnel-frame");
       var tunnelWindow = tunnelFrame.contentWindow;
@@ -113,13 +113,14 @@ function login(event) {
       tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + window.username, "*");
       tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + window.password, "*");
       tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + "uccx1.cloverhound.com", "*");
+
     },
     error: function() {
       handleLoginFailed("Invalid Credentials");
     },
     complete: function() {
       return false;
-    }
+     }
   });
 }
 
@@ -135,7 +136,7 @@ function pushLoginToFinesse(username, password, extension) {
   $.ajax({
     url: '/finesse/api/User/' + username,
     type: 'PUT',
-    data: xml,  
+    data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(username, password));
@@ -154,7 +155,6 @@ function handleLoginFailed(reason)
 
 function receiveMessage(event)
 {
-  var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
   console.log("Received:", event.data);
 
   if (event.data === "4|connected") {
@@ -213,7 +213,7 @@ function logout() {
   $.ajax({
     url: '/finesse/api/User/' + window.username,
     type: 'PUT',
-    data: xml,  
+    data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
@@ -233,7 +233,7 @@ function ready() {
   $.ajax({
     url: '/finesse/api/User/' + window.username,
     type: 'PUT',
-    data: xml,  
+    data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
@@ -254,7 +254,7 @@ function notReady() {
   $.ajax({
     url: '/finesse/api/User/' + window.username,
     type: 'PUT',
-    data: xml,  
+    data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
@@ -304,7 +304,7 @@ function hangup(call) {
               '<requestedAction>DROP</requestedAction>' +
               '</Dialog>';
 
-    
+
   sendDialogCommand(call.id, xml);
 }
 
@@ -317,7 +317,7 @@ function hold(call) {
               '<requestedAction>HOLD</requestedAction>' +
               '</Dialog>';
 
-    
+
   sendDialogCommand(call.id, xml);
   call.held = true;
 }
@@ -390,7 +390,7 @@ function sendPhoneCommand(xml) {
   $.ajax({
     url: '/finesse/api/User/' + window.username + '/Dialogs',
     type: 'POST',
-    data: xml,  
+    data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
@@ -406,7 +406,7 @@ function sendDialogCommand(id, xml) {
   $.ajax({
     url: '/finesse/api/Dialog/' + id,
     type: 'PUT',
-    data: xml,  
+    data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
@@ -462,10 +462,13 @@ function handleDialogUpdated(dialog) {
 
   var id = dialog.id._text;
 
+  var isNewCall;
   if(calls[id]) {
     console.log("Updating existing call:", calls[id]);
+    isNewCall = false;
   } else {
     console.log("Creating new call");
+    isNewCall = true;
   }
 
   calls[id] = calls[id] || {};
@@ -505,6 +508,10 @@ function handleDialogUpdated(dialog) {
     call.direction = "inbound";
   }
 
+  if(isNewCall) {
+    addCallToRecentsList(call);
+  }
+
   console.log("Updated call:", call)
 
   if(call.direction === "inbound" && call.state === "ALERTING") {
@@ -512,6 +519,15 @@ function handleDialogUpdated(dialog) {
   }
 
   rerender();
+}
+
+function addCallToRecentsList(call) {
+  console.log("Adding call to recents list", call);
+  if(recentCalls.length == RECENT_CALLS_LIST_LENGTH) {
+    recentCalls = agent.recentCalls.splice(0, 1);
+  }
+  recentCalls.push(call);
+  console.log("recent calls:", recentCalls);
 }
 
 function getIncidentNumber(number) {
@@ -531,9 +547,9 @@ function handleDialogDeleted(dialog) {
 
 function handleAllDialogsDeleted(dialogs) {
   console.log("Handling all dialogs deleted with dialogs:", dialogs)
-  
+
   delete calls[dialogs.Dialog.id._text];
-  
+
   rerender();
 }
 
@@ -572,7 +588,7 @@ class App extends Component {
 
   handleLogin(event) {
     event.preventDefault();
-    login(event);
+    return login();
   }
 
   render() {
@@ -599,45 +615,70 @@ class App extends Component {
   }
 }
 
-function LoginDialog(props) {
+class LoginDialog extends Component {
 
-  let errorTextStyle = {
-    color: "red",
-    margin: 0
+  constructor() {
+    super();
+    this.state = { "loading": false};
   }
 
-  let submitButtonStyle = {
-      border: "2px solid #333",
-      borderRadius: "25px",
-      backgroundColor: "transparent",
-      marginTop: "30px",
-      textTransform: "uppercase",
-      cursor: "pointer",
-      fontWeight: "bold"
+  handleLogin(event) {
+    var self = this;
+    self.setState({"loading": true});
+    var loginPromise = this.props.handleLogin(event)
+    if(!loginPromise) {
+      self.setState({"loading": false});
+    }else {
+      loginPromise.fail(function() {
+        self.setState({"loading": false});
+      });
+    }
   }
-  
-  if(props.previousLoginFailed) {
-    submitButtonStyle.marginTop = "20px";
-  } 
 
-  return (
-    <div id="login-section" className="login-section">
-      <form id="login-form" className="login-form" onSubmit={props.handleLogin}>
-        <input placeholder="username" type="text" name="username"></input>
-        <input placeholder="password" type="password" name="password"></input>
-        <input placeholder="extension" type="text" name="extension"></input>
+  render() {
+    let errorTextStyle = {
+      color: "red",
+      margin: 0
+    };
 
-        {
-          props.previousLoginFailed ? (
-            <p style={errorTextStyle}> {props.previousLoginFailed.reason} </p>
-          ) : null
-        }
+    let submitButtonStyle = {
+        border: "2px solid #333",
+        borderRadius: "25px",
+        backgroundColor: "transparent",
+        marginTop: "30px",
+        textTransform: "uppercase",
+        cursor: "pointer",
+        fontWeight: "bold"
+    };
 
-        <input type="submit" value="Login" style={submitButtonStyle}></input>
-      </form>
-    </div>
-  );
+    if(this.props.previousLoginFailed) {
+      submitButtonStyle.marginTop = "20px";
+    }
+
+    return (
+      <div id="login-section" className="login-section">
+        <form id="login-form" className="login-form" onSubmit={this.handleLogin.bind(this)}>
+          <input placeholder="username" type="text" name="username"></input>
+          <input placeholder="password" type="password" name="password"></input>
+          <input placeholder="extension" type="text" name="extension"></input>
+
+          {
+            this.props.previousLoginFailed  && !this.state.loading ? (
+              <p style={errorTextStyle}> {this.props.previousLoginFailed.reason} </p>
+            ) : null
+          }
+          {
+            this.state.loading ? (
+              <Loader color="#39C1A6" size="16px" margin="4px"/>
+            ) : null
+          }
+          <input type="submit" value="Login" style={submitButtonStyle}></input>
+        </form>
+      </div>
+    );
+  }
 }
+
 
 class AgentHeader extends Component {
   render() {
@@ -720,7 +761,7 @@ class CallPanel extends Component {
 
     let callsActive = (Object.keys(calls).length > 0);
 
-    let contentStyle = { 
+    let contentStyle = {
       maxHeight: '0px',
       paddingTop: '0px',
       paddingBottom: '0px',
@@ -728,7 +769,7 @@ class CallPanel extends Component {
       float: 'left'
     }
     if (callsActive) {
-      contentStyle = { 
+      contentStyle = {
         maxHeight: '500px'
       }
     }
@@ -748,7 +789,7 @@ class CallPanel extends Component {
       float: 'right'
     }
 
-  
+
     let callIds = Object.keys(calls);
 
     if(callIds.length === 0) {
@@ -794,16 +835,16 @@ class CallPanel extends Component {
               <i style={iconStyle} className="fa fa-phone header-phone-icon" aria-hidden="true"></i>
               <span className="header-other-party" style={headerTextStyle}>
                 {call.otherParty} ({formattedCallTime})
-              </span> 
-              <AnswerButton call={call}/>    
+              </span>
+              <AnswerButton call={call}/>
               <HangupButton call={call}/>
-              <ConferenceButton call={call}/> 
-              <TransferButton call={call}/>  
+              <ConferenceButton call={call}/>
+              <TransferButton call={call}/>
               <ResumeButton call={call}/>
-              <HoldButton call={call}/> 
+              <HoldButton call={call}/>
             </div>
-  
-            <div className="call-content" style={contentStyle}> 
+
+            <div className="call-content" style={contentStyle}>
               <div>{"CallVariable1: " + callVariable1}</div>
             </div>
           </div>
@@ -816,7 +857,7 @@ class CallPanel extends Component {
           <MakeCallForm />
         </div>
       );
-    } 
+    }
   }
 }
 
@@ -865,9 +906,9 @@ class AnswerButton extends Component {
   render() {
     var call = this.props.call;
     if(call.direction === "inbound" && call.state === "ALERTING" )  {
-      return <CallControlButton 
-            type="answer" 
-            function={answer.bind(null, call)} 
+      return <CallControlButton
+            type="answer"
+            function={answer.bind(null, call)}
             icon="answer"/>
     }
 
@@ -883,10 +924,10 @@ class ConferenceButton extends Component {
     var call = this.props.call;
     var otherCall = getOtherCall(call);
     if(call.line === 1 && otherCall && !otherCall.held)  {
-      return <CallControlButton  
-            type="conference" 
-            function={conference.bind(null)} 
-            icon={icon} 
+      return <CallControlButton
+            type="conference"
+            function={conference.bind(null)}
+            icon={icon}
             dontUseSvg={true} />
     }
 
@@ -901,9 +942,9 @@ class TransferButton extends Component {
     var call = this.props.call;
     var otherCall = getOtherCall(call);
     if(call.line === 1 && otherCall && !otherCall.held)  {
-      return <CallControlButton  
-            type="transfer" 
-            function={transfer.bind(null)} 
+      return <CallControlButton
+            type="transfer"
+            function={transfer.bind(null)}
             icon="transfer"/>
     }
 
@@ -919,7 +960,7 @@ class CallControlButton extends Component {
     if(this.props.dontUseSvg) {
       icon = this.props.icon;
     } else {
-      icon = <SvgIcon name ={this.props.icon} /> 
+      icon = <SvgIcon name ={this.props.icon} />
     }
     return (
       <a className="round-button" id={this.props.type + "-but"} onClick={this.props.function}>
@@ -973,7 +1014,7 @@ class MakeCallForm extends Component {
     let callIds = Object.keys(calls);
     if(callIds.length == 0 || (callIds.length == 1 && !calls[callIds[0]].held) ) {
       return (
-        <div className="tab-content make-call" data-structure="make-call" 
+        <div className="tab-content make-call" data-structure="make-call"
           style={{
             display: 'block',
             position: 'absolute',
