@@ -29,7 +29,8 @@ var MESSAGE_TYPE = {
   SUBSCRIBE: 7,
   UNSUBSCRIBE: 8,
   PRESENCE: 9,
-  CONNECT_REQ: 10
+  CONNECT_REQ: 10,
+  DISCONNECT_REQ: 11
 };
 
 var STATE_TEXT = {
@@ -40,6 +41,7 @@ var STATE_TEXT = {
 }
 
 var INCIDENT_NUMBER_LENGTH = 7;
+var previousLoginFailed = false;
 
 var config = {
   height: 300,
@@ -48,9 +50,11 @@ var config = {
 
 
 function playInboundRingingMusic() {
+  console.log("Playing inbound ringing music...");
   $('#ringtone').trigger('play');
 }
 function stopInboundRingingMusic() {
+  console.log("Stopping inbound ringing music...");
   $('#ringtone').trigger('pause');
 }
 
@@ -82,6 +86,9 @@ window.openFrameAPI.init(config, initSuccess, initFailure);
 
 
 function login() {
+  console.log("Logging in...");
+
+  rerender(previousLoginFailed, true)
 
   var form = document.getElementById("login-form");
   window.username = form.elements["username"].value;
@@ -100,7 +107,7 @@ function login() {
     return false;
   }
 
-  return $.ajax({
+  $.ajax({
     url: "/finesse/api/User/" + window.username,
     type: "GET",
     beforeSend: function (xhr) {
@@ -127,6 +134,7 @@ function login() {
 window.addEventListener("message", receiveMessage, false);
 
 function pushLoginToFinesse(username, password, extension) {
+  console.log("Pushing login to finesse...");
 
   var xml = '<User>' +
             ' <state>LOGIN</state>' +
@@ -150,7 +158,19 @@ function pushLoginToFinesse(username, password, extension) {
 
 function handleLoginFailed(reason)
 {
-  rerender({reason: reason});
+  console.log("Handling login failure with reason: " + reason);
+  disconnect();
+  previousLoginFailed = {reason: reason}
+  rerender(previousLoginFailed, false);
+}
+
+function disconnect() {
+  console.log("Disconnecting iframe...")
+
+  var tunnelFrame = document.getElementById("tunnel-frame");
+  var tunnelWindow = tunnelFrame.contentWindow;
+
+  tunnelWindow.postMessage(MESSAGE_TYPE.DISCONNECT_REQ + "|" + window.username, "*");
 }
 
 function receiveMessage(event)
@@ -430,13 +450,6 @@ function getCallByLine(line) {
 }
 
 
-function stateUpdated(state) {
-  if (agent.state != state) {
-    agent.state = state;
-    rerender();
-  }
-}
-
 function handleUserUpdate(updatedAgent) {
   setAgentFieldFromUserUpdate('state', updatedAgent);
   setAgentFieldFromUserUpdate('stateChangeTime', updatedAgent);
@@ -523,7 +536,7 @@ function handleDialogUpdated(dialog) {
 
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
-  if(recentCalls.length == RECENT_CALLS_LIST_LENGTH) {
+  if(recentCalls.length === RECENT_CALLS_LIST_LENGTH) {
     recentCalls = agent.recentCalls.splice(0, 1);
   }
   recentCalls.push(call);
@@ -564,9 +577,10 @@ function make_base_auth(user, password) {
   return 'Basic ' + hash;
 }
 
-function rerender(previousLoginFailed=false) {
+function rerender(previousLoginFailed=false, loading=false) {
+  console.log("Rerendering with previousLoginFailed: " + previousLoginFailed + " and loading: " + loading);
   ReactDOM.render(
-    <App agent={agent} previousLoginFailed={previousLoginFailed}/>,
+    <App agent={agent} previousLoginFailed={previousLoginFailed} loading={loading}/>,
     document.getElementById('root')
   );
 }
@@ -608,7 +622,7 @@ class App extends Component {
               <CallPanel />
             </div>
           ) : (
-            <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={this.props.previousLoginFailed}/>
+            <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={this.props.previousLoginFailed} loading={this.props.loading}/>
         )}
       </div>
     );
@@ -623,16 +637,7 @@ class LoginDialog extends Component {
   }
 
   handleLogin(event) {
-    var self = this;
-    self.setState({"loading": true});
-    var loginPromise = this.props.handleLogin(event)
-    if(!loginPromise) {
-      self.setState({"loading": false});
-    }else {
-      loginPromise.fail(function() {
-        self.setState({"loading": false});
-      });
-    }
+    this.props.handleLogin(event);
   }
 
   render() {
@@ -651,7 +656,8 @@ class LoginDialog extends Component {
         fontWeight: "bold"
     };
 
-    if(this.props.previousLoginFailed) {
+    if(this.props.previousLoginFailed && !this.props.loading) {
+      console.log("Previous login failed, setting margin top...");
       submitButtonStyle.marginTop = "20px";
     }
 
@@ -663,12 +669,12 @@ class LoginDialog extends Component {
           <input placeholder="extension" type="text" name="extension"></input>
 
           {
-            this.props.previousLoginFailed  && !this.state.loading ? (
+            this.props.previousLoginFailed  && !this.props.loading ? (
               <p style={errorTextStyle}> {this.props.previousLoginFailed.reason} </p>
             ) : null
           }
           {
-            this.state.loading ? (
+            this.props.loading ? (
               <Loader color="#39C1A6" size="16px" margin="4px"/>
             ) : null
           }
@@ -785,9 +791,6 @@ class CallPanel extends Component {
       verticalAlign: 'middle',
       float: 'left'
     }
-    let makeCallStyle = {
-      float: 'right'
-    }
 
 
     let callIds = Object.keys(calls);
@@ -854,10 +857,51 @@ class CallPanel extends Component {
       return (
         <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
           {callTabs}
-          <MakeCallForm />
         </div>
       );
     }
+  }
+}
+
+class RecentCalls extends Component {
+
+  render() {
+    let recentCallComponents = []
+    for(let i = 0; i < this.props.recentCalls.length; i++) {
+      let recentCall = this.props.recentCalls[i];
+      recentCallComponents.push(
+        <RecentCall call={recentCall}/>
+      );
+    }
+    return (
+      <div id="recent_calls">
+        <h1> Recent Calls </h1>
+        {
+          recentCallComponents.length > 0 ? (
+            <ul>
+              {recentCallComponents}
+            </ul>
+          ) : (<h3> No Recent Calls </h3>)
+        }
+      </div>
+    )
+  }
+}
+
+class RecentCall extends Component {
+  handleMakeCall() {
+    call(this.props.call.otherNumber);
+  }
+
+  render() {
+    let callButton = (
+      <button onClick={this.handleMakeCall.bind(this)}>
+        Call Back
+      </button>
+    )
+    return (
+      <li>{this.props.call.otherNumber} {callButton}</li>
+    )
   }
 }
 
@@ -879,7 +923,7 @@ class ResumeButton extends Component {
     let icon = <i className="fa fa-play button-icon resume" aria-hidden="true"></i>;
     let call = this.props.call;
     var otherCall = getOtherCall(call);
-    if(otherCall && otherCall.state != "ACTIVE") {
+    if(otherCall && otherCall.state !== "ACTIVE") {
       return null;
     }
     if (call.state === "ACTIVE" && call.held) {
@@ -960,7 +1004,7 @@ class CallControlButton extends Component {
     if(this.props.dontUseSvg) {
       icon = this.props.icon;
     } else {
-      icon = <SvgIcon name ={this.props.icon} />
+      icon = <SvgIcon name={this.props.icon} />
     }
     return (
       <a className="round-button" id={this.props.type + "-but"} onClick={this.props.function}>
@@ -1012,7 +1056,7 @@ class MakeCallForm extends Component {
 
   render() {
     let callIds = Object.keys(calls);
-    if(callIds.length == 0 || (callIds.length == 1 && !calls[callIds[0]].held) ) {
+    if(callIds.length === 0 || (callIds.length === 1 && !calls[callIds[0]].held) ) {
       return (
         <div className="tab-content make-call" data-structure="make-call"
           style={{
