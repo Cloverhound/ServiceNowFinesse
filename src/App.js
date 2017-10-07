@@ -42,6 +42,7 @@ var STATE_TEXT = {
 
 var INCIDENT_NUMBER_LENGTH = 7;
 var previousLoginFailed = false;
+var loggingOut = false;
 
 var config = {
   height: 300,
@@ -114,12 +115,7 @@ function login() {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
     },
     success: function() {
-      var tunnelFrame = document.getElementById("tunnel-frame");
-      var tunnelWindow = tunnelFrame.contentWindow;
-
-      tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + window.username, "*");
-      tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + window.password, "*");
-      tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + "uccx1.cloverhound.com", "*");
+      connect();
 
     },
     error: function() {
@@ -151,7 +147,6 @@ function pushLoginToFinesse(username, password, extension) {
     },
     success: function(data) {
       console.log(data);
-
     },
   });
 }
@@ -165,12 +160,23 @@ function handleLoginFailed(reason)
 }
 
 function disconnect() {
-  console.log("Disconnecting iframe...")
+  console.log("Disconnecting iframe with username: " + window.username)
 
   var tunnelFrame = document.getElementById("tunnel-frame");
   var tunnelWindow = tunnelFrame.contentWindow;
 
   tunnelWindow.postMessage(MESSAGE_TYPE.DISCONNECT_REQ + "|" + window.username, "*");
+}
+
+function connect() {
+  console.log("Connecting iframe with username: " + window.username + " and password: " + window.password)
+
+  var tunnelFrame = document.getElementById("tunnel-frame");
+  var tunnelWindow = tunnelFrame.contentWindow;
+
+  tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + window.username, "*");
+  tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + window.password, "*");
+  tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + "uccx1.cloverhound.com", "*");
 }
 
 function receiveMessage(event)
@@ -183,6 +189,14 @@ function receiveMessage(event)
 
   if (event.data === "4|unauthorized") {
     handleLoginFailed("Invalid Credentials");
+  }
+
+  if(event.data === "4|disconnected") {
+    "Received disconnected event..."
+    if(agent.state !== "LOGOUT" && !loggingOut) {
+      console.log("Reconnecting because logged in and not logging out, so shouldnt have disconnected")
+      connect();
+    }
   }
 
 
@@ -219,13 +233,16 @@ function receiveMessage(event)
           break;
       }
 
-    } else if (data.Update.data.apiErrors) {
+    } else if (data.Update.data.apiErrors && agent.state === "LOGOUT") {
         handleLoginFailed(data.Update.data.apiErrors.apiError.errorType._text);
     }
   }
 }
 
 function logout() {
+  console.log("Logging out...");
+  loggingOut = true;
+
   var xml = '<User>' +
             ' <state>LOGOUT</state>' +
             '</User>';
@@ -239,8 +256,11 @@ function logout() {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
     },
     success: function(data) {
+      console.log("Successfully logged out");
       console.log(data);
-
+    },
+    error: function(jqXHR, statusText) {
+      console.log("Failed to logout: ", statusText);
     }
   });
 }
@@ -407,6 +427,7 @@ function transfer() {
 }
 
 function sendPhoneCommand(xml) {
+  console.log("sending phone command with xml: ", xml);
   $.ajax({
     url: '/finesse/api/User/' + window.username + '/Dialogs',
     type: 'POST',
@@ -423,6 +444,7 @@ function sendPhoneCommand(xml) {
 
 
 function sendDialogCommand(id, xml) {
+  console.log("Sending dialog command with id: " + id + " and xml: ", xml);
   $.ajax({
     url: '/finesse/api/Dialog/' + id,
     type: 'PUT',
@@ -434,8 +456,18 @@ function sendDialogCommand(id, xml) {
     success: function(data) {
       console.log("Successfully sent dialog command", data);
 
+    },
+    error: function(jqXHR, textStatus) {
+      console.log("Failed to send dialog command: ", textStatus);
+      deleteCall(id)
+      rerender()
     }
   });
+}
+
+function deleteCall(id) {
+  console.log("Deleting call with id: " + id + " from calls: ", calls);
+  delete calls[id];
 }
 
 function getCallByLine(line) {
@@ -475,13 +507,10 @@ function handleDialogUpdated(dialog) {
 
   var id = dialog.id._text;
 
-  var isNewCall;
   if(calls[id]) {
     console.log("Updating existing call:", calls[id]);
-    isNewCall = false;
   } else {
     console.log("Creating new call");
-    isNewCall = true;
   }
 
   calls[id] = calls[id] || {};
@@ -495,7 +524,7 @@ function handleDialogUpdated(dialog) {
   call.startedAt = call.startedAt || new Date();
   call.held = call.held || false;
   call.from = dialog.fromAddress._text;
-  call.to = dialog.toAddress._text;
+  call.to = dialog.toAddress._text || call.to;
   call.state = dialog.state._text;
   call.callType = dialog.mediaProperties.callType._text;
 
@@ -521,8 +550,11 @@ function handleDialogUpdated(dialog) {
     call.direction = "inbound";
   }
 
-  if(isNewCall) {
+  if(call.to && !recentCallExists(call)) {
     addCallToRecentsList(call);
+  } else {
+    console.log("Not adding to recents list");
+    console.log("call.to: ", call.to);
   }
 
   console.log("Updated call:", call)
@@ -536,11 +568,22 @@ function handleDialogUpdated(dialog) {
 
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
+
   if(recentCalls.length === RECENT_CALLS_LIST_LENGTH) {
     recentCalls = agent.recentCalls.splice(0, 1);
   }
   recentCalls.push(call);
+
   console.log("recent calls:", recentCalls);
+}
+
+function recentCallExists(call) {
+  for(let i = 0; i < recentCalls.length; i++) {
+    if(recentCalls[i].id === call.id) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function getIncidentNumber(number) {
@@ -553,7 +596,7 @@ function getIncidentNumber(number) {
 
 function handleDialogDeleted(dialog) {
   console.log("Handling dialog deleted of dialog:", dialog);
-  delete calls[dialog.id];
+  deleteCall(dialog.id)
 
   rerender();
 }
@@ -561,14 +604,21 @@ function handleDialogDeleted(dialog) {
 function handleAllDialogsDeleted(dialogs) {
   console.log("Handling all dialogs deleted with dialogs:", dialogs)
 
-  delete calls[dialogs.Dialog.id._text];
+  deleteCall(dialogs.Dialog.id._text)
 
   rerender();
 }
 
 // Helps convert the xmlToJSON results to regular properties
 function setAgentFieldFromUserUpdate(fieldName, userObject) {
+  let previousState = agent["state"]
   agent[fieldName] = userObject[fieldName] && userObject[fieldName]._text || null;
+  let currentState = agent["state"]
+  if(previousState !== "LOGOUT" && currentState === "LOGOUT") {
+    disconnect();
+    loggingOut = false;
+  }
+
 }
 
 function make_base_auth(user, password) {
@@ -606,7 +656,7 @@ class App extends Component {
   }
 
   render() {
-    var loggedIn = false;
+    let loggedIn = false;
     if (DEBUG || this.props.agent && this.props.agent.state !== 'LOGOUT') {
       loggedIn = true
     }
@@ -807,6 +857,7 @@ class CallPanel extends Component {
           </div>
 
           <MakeCallForm />
+          <RecentCalls recentCalls={recentCalls}/>
         </div>
       );
 
@@ -866,6 +917,12 @@ class CallPanel extends Component {
 class RecentCalls extends Component {
 
   render() {
+
+    let ulStyle = {
+      listStyleType: "none",
+      border: "1px solid gray"
+    }
+
     let recentCallComponents = []
     for(let i = 0; i < this.props.recentCalls.length; i++) {
       let recentCall = this.props.recentCalls[i];
@@ -875,13 +932,13 @@ class RecentCalls extends Component {
     }
     return (
       <div id="recent_calls">
-        <h1> Recent Calls </h1>
+        <h3> Recent Calls </h3>
         {
           recentCallComponents.length > 0 ? (
-            <ul>
+            <ul style={ulStyle}>
               {recentCallComponents}
             </ul>
-          ) : (<h3> No Recent Calls </h3>)
+          ) : (<h5> No Recent Calls </h5>)
         }
       </div>
     )
@@ -890,17 +947,26 @@ class RecentCalls extends Component {
 
 class RecentCall extends Component {
   handleMakeCall() {
-    call(this.props.call.otherNumber);
+    call(this.props.call.otherParty);
   }
 
   render() {
+
+    let liStyle = {
+      border: "1px solid gray"
+    }
+
+    let buttonStyle = {
+      marginLeft: "60px"
+    }
+
     let callButton = (
-      <button onClick={this.handleMakeCall.bind(this)}>
-        Call Back
+      <button style={buttonStyle} onClick={this.handleMakeCall.bind(this)}>
+        Call
       </button>
     )
     return (
-      <li>{this.props.call.otherNumber} {callButton}</li>
+      <li style={liStyle}>{this.props.call.otherParty} {callButton}</li>
     )
   }
 }
