@@ -13,10 +13,10 @@ var RECENT_CALLS_LIST_LENGTH = 5;
 
 var agent = {
   state: 'LOGOUT'
-}
+};
 
-var calls = {}
-var recentCalls = []
+var calls = {};
+var recentCalls = [];
 
 var MESSAGE_TYPE = {
   EVENT: 0,
@@ -38,7 +38,9 @@ var STATE_TEXT = {
   NOT_READY: 'Not Ready',
   TALKING: 'Talking',
   LOGOUT: 'Logout'
-}
+};
+
+var reasonCodes = [];
 
 var INCIDENT_NUMBER_LENGTH = 7;
 var previousLoginFailed = false;
@@ -47,7 +49,7 @@ var loggingOut = false;
 var config = {
   height: 300,
   width: 350
-}
+};
 
 
 function playInboundRingingMusic() {
@@ -89,6 +91,7 @@ window.openFrameAPI.init(config, initSuccess, initFailure);
 function login() {
   console.log("Logging in...");
 
+  clearReasonCodes();
   rerender(previousLoginFailed, true)
 
   var form = document.getElementById("login-form");
@@ -115,6 +118,7 @@ function login() {
       xhr.setRequestHeader('Authorization', make_base_auth(window.username, window.password));
     },
     success: function() {
+      setReasonCodes();
       connect();
 
     },
@@ -265,6 +269,39 @@ function logout() {
   });
 }
 
+function clearReasonCodes() {
+  console.log("Clearing reason codes...")
+  reasonCodes = [];
+}
+
+function setReasonCodes() {
+  console.log("Setting reason codes...");
+  $.ajax({
+    url: '/finesse/api/User/' + window.username + '/ReasonCodes?category=NOT_READY',
+    type: 'GET',
+    dataType: "xml",
+    success: function(xmlReasonCodes) {
+      console.log("Successfully got reason codes");
+      console.log(xmlReasonCodes);
+
+      $(xmlReasonCodes).find("ReasonCode").each(function(reasonCodeIndex, reasonCodeXml) {
+        var reasonCode = {};
+        reasonCode.uri =  $(reasonCodeXml).find("uri").text();
+        reasonCode.category = $(reasonCodeXml).find("category").text();
+        reasonCode.code =  $(reasonCodeXml).find("code").text();
+        reasonCode.label =  $(reasonCodeXml).find("label").text();
+        reasonCode.forAll =  $(reasonCodeXml).find("forAll").text();
+        console.log("Pushing reason code to array: ", reasonCode);
+        reasonCodes.push(reasonCode)
+      });
+      console.log("Done setting reason codes", reasonCodes);
+    },
+    error: function(jqXHR, statusText) {
+      console.log("Failed to get reason codes: ", statusText);
+    }
+  });
+}
+
 function ready() {
   var xml = '<User>' +
             ' <state>READY</state>' +
@@ -280,15 +317,26 @@ function ready() {
     },
     success: function(data) {
       console.log(data);
-
     }
   });
 }
 
-function notReady() {
+function findReasonCodeByLabel(label) {
+  for(var i = 0; i < reasonCodes.length; i++) {
+    var reasonCode = reasonCodes[i];
+    if(reasonCode.label === label) {
+      return reasonCode;
+    }
+  }
+  return false;
+}
+
+function notReady(label) {
+  var reasonCode = findReasonCodeByLabel(label);
+  var reasonCodeId = reasonCode.uri[reasonCode.uri.length - 1]
   var xml = '<User>' +
             ' <state>NOT_READY</state>' +
-            ' <reasonCodeId>2</reasonCodeId>' +
+            ' <reasonCodeId>' + reasonCodeId + '</reasonCodeId>' +
             '</User>';
 
   $.ajax({
@@ -483,6 +531,7 @@ function getCallByLine(line) {
 
 
 function handleUserUpdate(updatedAgent) {
+  setAgentReasonCodeFromUserUpdate(updatedAgent);
   setAgentFieldFromUserUpdate('state', updatedAgent);
   setAgentFieldFromUserUpdate('stateChangeTime', updatedAgent);
   setAgentFieldFromUserUpdate('reasonCodeId', updatedAgent);
@@ -621,6 +670,25 @@ function setAgentFieldFromUserUpdate(fieldName, userObject) {
 
 }
 
+function setAgentReasonCodeFromUserUpdate(userObject) {
+  console.log("Setting agent reason code from user update", userObject);
+  if(userObject.reasonCode) {
+    console.log("Reason code is included in the user update...")
+    var reasonCode = {};
+    reasonCode.category = userObject.reasonCode.category._text;
+    reasonCode.code = userObject.reasonCode.code._text;
+    reasonCode.forAll = userObject.reasonCode.forAll._text;
+    reasonCode.id = userObject.reasonCode.id._text;
+    reasonCode.label = userObject.reasonCode.label._text;
+    reasonCode.uri = userObject.reasonCode.uri._text;
+    agent.reasonCode = reasonCode;
+    console.log("Done updating reason code: ", reasonCode);
+  } else {
+    console.log("Reason code is NOT included in the user update");
+    agent.reasonCode = null;
+  }
+}
+
 function make_base_auth(user, password) {
   var tok = user + ':' + password;
   var hash = btoa(tok);
@@ -668,7 +736,7 @@ class App extends Component {
         }
         {loggedIn ? (
             <div id="desktop">
-              <StateControls state={this.props.agent.state} />
+              <StateControls agent={this.props.agent} />
               <CallPanel />
             </div>
           ) : (
@@ -757,36 +825,67 @@ class AgentHeader extends Component {
 
 class StateControls extends Component {
 
-  stateOption(state) {
+  readyStateOption() {
     return {
-      value: state,
-      label: STATE_TEXT[state] || state
+      value: STATE_TEXT['READY'],
+      label: STATE_TEXT['READY']
     }
+  }
+
+  notReadyStateOptions(agent) {
+    console.log("Creatomg not ready state options for agent: ", agent);
+    var notReadyStateOptions= [];
+    for(var i = 0; i < reasonCodes.length; i++) {
+      var label = reasonCodes[i].label;
+      console.log("potentially creating option for label: " + label);
+
+      if(agent.reasonCode && agent.reasonCode.label === label) {
+        console.log("continuing!!!");
+        continue;
+      } else {
+        console.log("NOT continuing!!!");
+      }
+
+      notReadyStateOptions.push({
+        value: STATE_TEXT['NOT_READY'] + " - " + label,
+        label: STATE_TEXT['NOT_READY'] + " - " + label
+      });
+    }
+
+    return notReadyStateOptions;
+  }
+
+  options(agent) {
+    var options = this.notReadyStateOptions(agent)
+    if(agent.state !== "READY") {
+      options.unshift(this.readyStateOption())
+    }
+
+    return options;
   }
 
   onSelect(option) {
-    if (option.value === 'READY')
+    if (option.value === STATE_TEXT['READY']) {
       ready();
-    else if (option.value === 'NOT_READY')
-      notReady();
-    else if (option.value === 'LOGOUT')
-      logout();
+    } else if (option.value.includes(STATE_TEXT['NOT_READY'])) {
+      notReady(option.value.split("-")[1].replace(/ /g,''));
+    }
   }
 
   render() {
-    var stateString = STATE_TEXT[this.props.state] || this.props.state;
-    var options = {
-      READY: [this.stateOption('NOT_READY')],
-      NOT_READY: [this.stateOption('READY')]
+    var value = STATE_TEXT[this.props.agent.state]
+    if (value === STATE_TEXT["NOT_READY"] && this.props.agent.reasonCode) {
+      value += (" - " + this.props.agent.reasonCode.label);
     }
+    var options = this.options(this.props.agent)
 
     return (
       <div>
-        <div id="agent-state" className={this.props.state}>
+        <div id="agent-state" className={this.props.agent.state}>
           <Dropdown
             onChange={this.onSelect}
-            options={options[this.props.state]}
-            value={stateString}
+            options={options}
+            value={value}
           />
         </div>
       </div>
@@ -857,7 +956,6 @@ class CallPanel extends Component {
           </div>
 
           <MakeCallForm />
-          <RecentCalls recentCalls={recentCalls}/>
         </div>
       );
 
@@ -908,6 +1006,7 @@ class CallPanel extends Component {
       return (
         <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
           {callTabs}
+          <MakeCallForm />
         </div>
       );
     }
@@ -1108,6 +1207,7 @@ class MakeCallForm extends Component {
   }
 
   handleMakeCall() {
+    console.log("Handling make call...");
     if(Object.keys(calls).length === 1) {
       consult(this.state.value);
     } else {

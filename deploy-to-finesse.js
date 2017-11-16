@@ -49,13 +49,13 @@ sftp.connect({
 		console.log('done');
 		setTimeout(() => {
 			process.exit();
-		}, 5000);
+		}, 10000);
 		//process.exit();
 	});
 
   //return sftp.put('./build/index.html', '/files/snow-finesse/index.html');
 }).then(() => {
-  
+
   //process.exit();
 }).catch((err) => {
   debugger;
