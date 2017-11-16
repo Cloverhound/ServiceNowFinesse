@@ -379,7 +379,6 @@ function consult(number) {
 
 
   sendDialogCommand(call.id, xml);
-  call.held = true;
 }
 
 
@@ -407,7 +406,6 @@ function hold(call) {
 
 
   sendDialogCommand(call.id, xml);
-  call.held = true;
 }
 
 function resume(call) {
@@ -420,12 +418,6 @@ function resume(call) {
 
 
   sendDialogCommand(call.id, xml);
-  call.held = false;
-  var otherLine = 3 - call.line;
-  var otherCall = getCallByLine(otherLine);
-  if(otherCall) {
-    otherCall.held = true;
-  }
 }
 
 function getOtherCall(call) {
@@ -577,6 +569,16 @@ function handleDialogUpdated(dialog) {
   call.state = dialog.state._text;
   call.callType = dialog.mediaProperties.callType._text;
 
+  var participantState = getParticipantState(dialog);
+
+  if(participantState === "HELD") {
+    call.held = true;
+  }
+  if(participantState === "ACTIVE") {
+    call.held = false;
+  }
+
+
   call.callVariables = call.callVariables || {};
   var callVariables = dialog.mediaProperties.callvariables.CallVariable;
   for(var i = 0; i < callVariables.length; i++) {
@@ -613,6 +615,19 @@ function handleDialogUpdated(dialog) {
   }
 
   rerender();
+}
+
+function getParticipantState(dialog) {
+  console.log("Getting participant state for dialog: ", dialog);
+  var participants = dialog.participants.Participant;
+  for(var i = 0; i < participants.length; i++) {
+    if(participants[i].mediaAddress._text === agent.extension) {
+      console.log("Returning participant state: " + participants[i].state._text);
+      return participants[i].state._text;
+    }
+  }
+  console.log("No participant state found");
+  return false;
 }
 
 function addCallToRecentsList(call) {
@@ -833,17 +848,12 @@ class StateControls extends Component {
   }
 
   notReadyStateOptions(agent) {
-    console.log("Creatomg not ready state options for agent: ", agent);
     var notReadyStateOptions= [];
     for(var i = 0; i < reasonCodes.length; i++) {
       var label = reasonCodes[i].label;
-      console.log("potentially creating option for label: " + label);
 
       if(agent.reasonCode && agent.reasonCode.label === label) {
-        console.log("continuing!!!");
         continue;
-      } else {
-        console.log("NOT continuing!!!");
       }
 
       notReadyStateOptions.push({
@@ -913,7 +923,7 @@ class CallPanel extends Component {
   }
 
   render() {
-
+    console.log("Rendering calls:", JSON.stringify(calls));
     let callsActive = (Object.keys(calls).length > 0);
 
     let contentStyle = {
