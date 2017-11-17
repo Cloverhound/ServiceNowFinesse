@@ -355,6 +355,10 @@ function notReady(label) {
 }
 
 function call(number) {
+  if(!number) {
+    console.log("No number to call, cancelling make call..");
+    return;
+  }
   console.log("Calling:", number);
 
   var xml = '<Dialog>' +
