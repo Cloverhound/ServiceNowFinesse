@@ -211,10 +211,13 @@ function receiveMessage(event)
     var data = xmlToJSON.parseString(dataString, { childrenAsArray: false });
     console.log(data);
 
-    if (data.Update.data.user) {
-      handleUserUpdate(data.Update.data.user);
+
+    if (data.Update.data.apiErrors && agent.state === "LOGOUT") {
+        handleLoginFailed(data.Update.data.apiErrors.apiError.errorType._text);
     } else if (data.Update.data.apiErrors){
       handleApiErrors(data.Update.data.apiErrors);
+    } else if (data.Update.data.user) {
+      handleUserUpdate(data.Update.data.user);
     } else if (data.Update.data.dialogs) {
 
       switch (data.Update.event._text) {
@@ -239,8 +242,6 @@ function receiveMessage(event)
           break;
       }
 
-    } else if (data.Update.data.apiErrors && agent.state === "LOGOUT") {
-        handleLoginFailed(data.Update.data.apiErrors.apiError.errorType._text);
     }
   }
 }
