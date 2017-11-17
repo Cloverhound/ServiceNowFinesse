@@ -317,6 +317,10 @@ function ready() {
     },
     success: function(data) {
       console.log(data);
+    },
+    error: function(jqXHR, textStatus) {
+      alert("Failed to set state to ready: ", textStatus);
+      console.log("Failed to set state to ready: ", textStatus);
     }
   });
 }
@@ -350,15 +354,15 @@ function notReady(label) {
     success: function(data) {
       console.log(data);
 
+    },
+    error: function(jqXHR, textStatus) {
+      alert("Failed to set state to not_ready: ", textStatus);
+      console.log("Failed to set state to not_ready: ", textStatus);
     }
   });
 }
 
 function call(number) {
-  if(!number) {
-    console.log("No number to call, cancelling make call..");
-    return;
-  }
   console.log("Calling:", number);
 
   var xml = '<Dialog>' +
@@ -482,6 +486,10 @@ function sendPhoneCommand(xml) {
     },
     success: function(data) {
       console.log("Successfully sent phone command", data);
+    },
+    error: function(jqXHR, textStatus) {
+      alert($($.parseXML(jqXHR.responseText)).find("ErrorMessage").text());
+      console.log("Failed to send phone command: " + jqXHR.responseText);
     }
   });
 }
@@ -499,12 +507,10 @@ function sendDialogCommand(id, xml) {
     },
     success: function(data) {
       console.log("Successfully sent dialog command", data);
-
     },
     error: function(jqXHR, textStatus) {
-      console.log("Failed to send dialog command: ", textStatus);
-      deleteCall(id)
-      rerender()
+      alert($($.parseXML(jqXHR.responseText)).find("ErrorMessage").text());
+      console.log("Failed to send dialog command: " + jqXHR.responseText);
     }
   });
 }
