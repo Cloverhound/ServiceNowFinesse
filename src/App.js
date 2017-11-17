@@ -950,7 +950,6 @@ class CallPanel extends Component {
   }
 
   render() {
-    console.log("Rendering calls:", JSON.stringify(calls));
     let callsActive = (Object.keys(calls).length > 0);
 
     let contentStyle = {
