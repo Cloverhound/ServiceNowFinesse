@@ -213,6 +213,8 @@ function receiveMessage(event)
 
     if (data.Update.data.user) {
       handleUserUpdate(data.Update.data.user);
+    } else if (data.Update.data.apiErrors){
+      handleApiErrors(data.Update.data.apiErrors);
     } else if (data.Update.data.dialogs) {
 
       switch (data.Update.event._text) {
@@ -509,6 +511,10 @@ function sendDialogCommand(id, xml) {
       console.log("Successfully sent dialog command", data);
     },
     error: function(jqXHR, textStatus) {
+      if(!jqXHR.responseText) {
+        alert("No Response From Finesse: Possible Network Error");
+        return;
+      }
       alert($($.parseXML(jqXHR.responseText)).find("ErrorMessage").text());
       console.log("Failed to send dialog command: " + jqXHR.responseText);
     }
@@ -546,6 +552,10 @@ function handleUserUpdate(updatedAgent) {
   setAgentFieldFromUserUpdate('extension', updatedAgent);
 
   rerender();
+}
+
+function handleApiErrors(apiErrors) {
+  alert(apiErrors.apiError.errorType._text);
 }
 
 function handleAllDialogsUpdated(dialogs) {
@@ -713,6 +723,13 @@ function setAgentReasonCodeFromUserUpdate(userObject) {
     agent.reasonCode = null;
   }
 }
+
+
+$("#dial_num").on('keyup', function (e) {
+    if (e.keyCode == 13) {
+
+    }
+});
 
 function make_base_auth(user, password) {
   var tok = user + ':' + password;
@@ -1240,6 +1257,13 @@ class MakeCallForm extends Component {
     this.setState({value: event.target.value});
   }
 
+  _handleKeyPress(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      this.handleMakeCall();
+    }
+  }
+
   render() {
     let callIds = Object.keys(calls);
     if(callIds.length === 0 || (callIds.length === 1 && !calls[callIds[0]].held) ) {
@@ -1256,6 +1280,7 @@ class MakeCallForm extends Component {
             <input onChange={this.handleChange.bind(this)}
               id="dial_num" type="tel" placeholder="Enter a Number to Dial"
               value={this.state.value}
+              onKeyPress={this._handleKeyPress.bind(this)}
             />
             <a onClick={this.handleMakeCall.bind(this)} className="cta hybrid">
               <i className="fa fa-phone" aria-hidden="true"></i>
