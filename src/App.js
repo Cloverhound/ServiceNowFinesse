@@ -555,7 +555,9 @@ function handleUserUpdate(updatedAgent) {
 }
 
 function handleApiErrors(apiErrors) {
-  alert(apiErrors.apiError.errorType._text);
+  var errorMessage = apiErrors.apiError.errorMessage._text;
+  var errorType = apiErrors.apiError.errorType._text;
+  alert(errorMessage + " - " + errorType);
 }
 
 function handleAllDialogsUpdated(dialogs) {
