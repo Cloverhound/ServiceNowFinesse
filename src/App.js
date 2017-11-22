@@ -7,6 +7,7 @@ import xmlToJSON from "./vendor/xmlToJSON";
 import moment from "moment";
 import "moment-duration-format";
 var Loader = require('halogen/PulseLoader');
+var FontAwesome = require('react-fontawesome');
 
 
 var RECENT_CALLS_LIST_LENGTH = 5;
@@ -15,8 +16,11 @@ var agent = {
   state: 'LOGOUT'
 };
 
+var tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};
 var calls = {};
 var recentCalls = [];
+
+var currentTab = tabNames.HOME;
 
 var MESSAGE_TYPE = {
   EVENT: 0,
@@ -47,7 +51,7 @@ var previousLoginFailed = false;
 var loggingOut = false;
 
 var config = {
-  height: 300,
+  height: 350,
   width: 350
 };
 
@@ -375,6 +379,8 @@ function call(number) {
             '</Dialog>';
 
   sendPhoneCommand(xml);
+  currentTab = tabNames.HOME;
+  rerender();
 }
 
 function consult(number) {
@@ -743,7 +749,7 @@ function make_base_auth(user, password) {
 function rerender(previousLoginFailed=false, loading=false) {
   console.log("Rerendering with previousLoginFailed: " + previousLoginFailed + " and loading: " + loading);
   ReactDOM.render(
-    <App agent={agent} previousLoginFailed={previousLoginFailed} loading={loading}/>,
+    <App agent={agent} previousLoginFailed={previousLoginFailed} loading={loading} recentCalls={recentCalls} currentTab={currentTab}/>,
     document.getElementById('root')
   );
 }
@@ -770,25 +776,25 @@ class App extends Component {
 
   render() {
     let loggedIn = false;
-    if (DEBUG || this.props.agent && this.props.agent.state !== 'LOGOUT') {
+    if (DEBUG || (this.props.agent && this.props.agent.state !== 'LOGOUT') ) {
       loggedIn = true
     }
 
-    return (
-      <div id="main">
-        {loggedIn &&
-          <AgentHeader agent={this.props.agent} />
-        }
-        {loggedIn ? (
-            <div id="desktop">
-              <StateControls agent={this.props.agent} />
-              <CallPanel />
-            </div>
-          ) : (
-            <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={this.props.previousLoginFailed} loading={this.props.loading}/>
-        )}
-      </div>
-    );
+    if(!loggedIn) {
+      return (
+          <div id="main">
+              <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={this.props.previousLoginFailed} loading={this.props.loading}/>
+          </div>
+      );
+    } else {
+      return (
+          <div id="main">
+              <HomeView agent={this.props.agent} currentTab={this.props.currentTab}/>
+              <RecentCallsView recentCalls={this.props.recentCalls} currentTab={this.props.currentTab}/>
+              <Tabs currentTab={this.props.currentTab}/>
+          </div>
+      );
+    }
   }
 }
 
@@ -813,16 +819,28 @@ class LoginDialog extends Component {
         border: "2px solid #333",
         borderRadius: "25px",
         backgroundColor: "transparent",
-        marginTop: "30px",
+        margin: "0px",
         textTransform: "uppercase",
         cursor: "pointer",
         fontWeight: "bold"
     };
 
+    var loaderStyle = {
+      margin: "0px",
+      marginTop: "17px",
+      marginBottom: "5px"
+    };
+
+    if(!this.props.loading) {
+      loaderStyle.visibility = "hidden";
+    }
+
     if(this.props.previousLoginFailed && !this.props.loading) {
       console.log("Previous login failed, setting margin top...");
-      submitButtonStyle.marginTop = "20px";
+      submitButtonStyle.marginTop = "25px";
+      loaderStyle.display = "none";
     }
+
 
     return (
       <div id="login-section" className="login-section">
@@ -833,18 +851,119 @@ class LoginDialog extends Component {
 
           {
             this.props.previousLoginFailed  && !this.props.loading ? (
-              <p style={errorTextStyle}> {this.props.previousLoginFailed.reason} </p>
+              <div id="loginErrorText" style={errorTextStyle}>
+                {this.props.previousLoginFailed.reason}
+              </div>
             ) : null
           }
-          {
-            this.props.loading ? (
-              <Loader color="#39C1A6" size="16px" margin="4px"/>
-            ) : null
-          }
+
+          <div id="loaderDiv" style={loaderStyle}>
+            <Loader color="#39C1A6" size="16px" margin="5px"/>
+          </div>
+
           <input type="submit" value="Login" style={submitButtonStyle}></input>
         </form>
       </div>
     );
+  }
+}
+
+class Tabs extends Component {
+
+  onHomeClick() {
+    console.log("running onhome click...");
+    currentTab = tabNames.HOME;
+    rerender();
+  }
+
+  onRecentsClick() {
+    console.log("running onrecents click...");
+    currentTab = tabNames.RECENTS;
+    rerender();
+  }
+
+  render() {
+
+
+    var tabBarStyle = {
+      position: "absolute",
+      bottom: "0px",
+      width: "100%",
+      background: "whitesmoke",
+      cursor: "pointer"
+    };
+
+    var tabStyle = {
+      display: "inline-block",
+      borderTop: "1px solid gray",
+      width: "50%",
+      color: "dimgray",
+      textAlign: "center",
+      fontSize: "smaller"
+    }
+
+    var tabTextStyle = {
+      fontSize: "8px"
+    }
+
+    var homeStyle = $.extend(true, {}, tabStyle);
+    var recentsStyle = $.extend(true, {}, tabStyle);
+
+    homeStyle.borderRight = "1px solid gray";
+
+    if(this.props.currentTab === tabNames.HOME) {
+      homeStyle.color = "blue";
+    } else {
+      recentsStyle.color = "blue";
+    }
+
+    return (
+      <div style={tabBarStyle} class="tabbar">
+        <div style={homeStyle} className="tab home" onClick={this.onHomeClick.bind(this)}>
+          <FontAwesome name='home' size="lg"/>
+          <div style={tabTextStyle} className="tab-text">Home</div>
+        </div>
+        <div style={recentsStyle} className="tab recents" onClick={this.onRecentsClick.bind(this)}>
+          <FontAwesome name='clock-o' size="lg"/>
+          <div style={tabTextStyle} className="tab-text">Recents</div>
+        </div>
+      </div>
+    );
+  }
+
+}
+
+class HomeView extends Component {
+  render(){
+
+      if(this.props.currentTab !== tabNames.HOME) {
+        console.log("Current tab is not home...");
+        return null;
+      }
+
+      return (
+        <div id="homeView" style={{height: "calc(100% - 35px)"}}>
+          <AgentHeader agent={this.props.agent} />
+          <div id="desktop">
+            <StateControls agent={this.props.agent} />
+            <CallPanel />
+          </div>
+        </div>
+      )
+  }
+}
+
+
+class RecentCallsView extends Component {
+  render(){
+
+      if(this.props.currentTab !== tabNames.RECENTS) {
+        return null;
+      }
+
+      return (
+        <RecentCalls recentCalls={this.props.recentCalls}/>
+      )
   }
 }
 
@@ -1068,15 +1187,23 @@ class RecentCalls extends Component {
         <RecentCall call={recentCall}/>
       );
     }
+
+    var noRecentsStyle = {
+      marginTop: "5px",
+      width: "100%",
+      textAlign: "center",
+      padding: "40px",
+      color: "darkslategray"
+    };
+
     return (
       <div id="recent_calls">
-        <h3> Recent Calls </h3>
         {
           recentCallComponents.length > 0 ? (
             <ul style={ulStyle}>
               {recentCallComponents}
             </ul>
-          ) : (<h5> No Recent Calls </h5>)
+          ) : (<div style={noRecentsStyle}> No Recent Calls </div>)
         }
       </div>
     )
@@ -1094,14 +1221,15 @@ class RecentCall extends Component {
       border: "1px solid gray"
     }
 
-    let buttonStyle = {
+    let callButtonStyle = {
+      display: "inline-block",
       marginLeft: "60px"
     }
 
     let callButton = (
-      <button style={buttonStyle} onClick={this.handleMakeCall.bind(this)}>
+      <div style={callButtonStyle} onClick={this.handleMakeCall.bind(this)}>
         Call
-      </button>
+      </div>
     )
     return (
       <li style={liStyle}>{this.props.call.otherParty} {callButton}</li>
@@ -1267,7 +1395,14 @@ class MakeCallForm extends Component {
   }
 
   render() {
+
     let callIds = Object.keys(calls);
+
+    var callButtonText = "CALL";
+    if(callIds.length > 0) {
+      callButtonText = "ADD";
+    }
+
     if(callIds.length === 0 || (callIds.length === 1 && !calls[callIds[0]].held) ) {
       return (
         <div className="tab-content make-call" data-structure="make-call"
@@ -1286,7 +1421,7 @@ class MakeCallForm extends Component {
             />
             <a onClick={this.handleMakeCall.bind(this)} className="cta hybrid">
               <i className="fa fa-phone" aria-hidden="true"></i>
-                <span>Call</span>
+                <span>{callButtonText}</span>
             </a>
           </form>
         </div>
