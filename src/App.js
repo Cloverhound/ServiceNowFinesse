@@ -310,6 +310,7 @@ function setReasonCodes() {
 }
 
 function ready() {
+  console.log("Running ready");
   var xml = '<User>' +
             ' <state>READY</state>' +
             '</User>';
@@ -333,9 +334,11 @@ function ready() {
 }
 
 function findReasonCodeByLabel(label) {
+  console.log("Finding reason code by label: " + label);
   for(var i = 0; i < reasonCodes.length; i++) {
     var reasonCode = reasonCodes[i];
     if(reasonCode.label === label) {
+      console.log("Returning reason code: ", JSON.stringify(reasonCode));
       return reasonCode;
     }
   }
@@ -343,6 +346,7 @@ function findReasonCodeByLabel(label) {
 }
 
 function notReady(label) {
+  console.log("Running not ready with label: " + label);
 
   var xml = '<User>' +
             ' <state>NOT_READY</state>' +
@@ -350,12 +354,14 @@ function notReady(label) {
 
   if(label) {
     var reasonCode = findReasonCodeByLabel(label);
-    var reasonCodeId = reasonCode.uri[reasonCode.uri.length - 1]
+    var reasonCodeId = reasonCode.uri.split("/").pop();
     xml = '<User>' +
               ' <state>NOT_READY</state>' +
               ' <reasonCodeId>' + reasonCodeId + '</reasonCodeId>' +
               '</User>';
   }
+
+  console.log("Sending not ready xml: " + xml);
 
 
   $.ajax({
