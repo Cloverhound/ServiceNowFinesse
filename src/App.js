@@ -343,12 +343,20 @@ function findReasonCodeByLabel(label) {
 }
 
 function notReady(label) {
-  var reasonCode = findReasonCodeByLabel(label);
-  var reasonCodeId = reasonCode.uri[reasonCode.uri.length - 1]
+
   var xml = '<User>' +
             ' <state>NOT_READY</state>' +
-            ' <reasonCodeId>' + reasonCodeId + '</reasonCodeId>' +
             '</User>';
+
+  if(label) {
+    var reasonCode = findReasonCodeByLabel(label);
+    var reasonCodeId = reasonCode.uri[reasonCode.uri.length - 1]
+    xml = '<User>' +
+              ' <state>NOT_READY</state>' +
+              ' <reasonCodeId>' + reasonCodeId + '</reasonCodeId>' +
+              '</User>';
+  }
+
 
   $.ajax({
     url: '/finesse/api/User/' + window.username,
@@ -997,6 +1005,11 @@ class StateControls extends Component {
   }
 
   notReadyStateOptions(agent) {
+
+    if(reasonCodes.length === 0 && agent.state != "NOT_READY") {
+        return [{value: STATE_TEXT['NOT_READY'], label: STATE_TEXT['NOT_READY']}]
+    }
+
     var notReadyStateOptions= [];
     for(var i = 0; i < reasonCodes.length; i++) {
       var label = reasonCodes[i].label;
@@ -1026,8 +1039,10 @@ class StateControls extends Component {
   onSelect(option) {
     if (option.value === STATE_TEXT['READY']) {
       ready();
-    } else if (option.value.includes(STATE_TEXT['NOT_READY'])) {
+    } else if (option.value.includes(STATE_TEXT['NOT_READY']) && option.value.includes("-")) {
       notReady(option.value.split("-")[1].replace(/ /g,''));
+    } else {
+      notReady();
     }
   }
 
