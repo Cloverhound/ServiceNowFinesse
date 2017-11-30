@@ -78,6 +78,7 @@ class StateControls extends Component {
             onChange={this.onSelect.bind(this)}
             options={options}
             value={value}
+            className="state-dropdown"
           />
         </div>
       </div>

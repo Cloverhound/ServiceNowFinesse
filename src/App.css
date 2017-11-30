@@ -1,3 +1,9 @@
+#root {
+  margin: 0px;
+  padding: 0px;
+}
+
+
 .App {
   text-align: center;
 }
@@ -18,6 +24,24 @@
   font-size: large;
 }
 
+.signout-dropdown {
+  display: inline-block;
+  float: right;
+  font-size: smaller;
+  margin-top: 6px;
+  margin-right: 4px;
+}
+
+#header .Dropdown-arrow {
+  right: 6px;
+  top: 9px;
+}
+
+#header .Dropdown-control {
+  padding: 4px;
+  padding-right: 20px;
+  background-color: whitesmoke;
+}
 
 #desktop {
   position: relative;
@@ -28,14 +52,6 @@
   /*bottom: calc(-15%);*/
 }
 
-#header {
-  background-color: #6d7175;
-  padding: 10px;
-  padding-left: 10px;
-  color: #FFF;
-  font-size: 13px;
-  font-weight: 300;
-}
 
 #agent-state {
   position: relative;
@@ -256,7 +272,7 @@ a.cta.end {
 
 /**
   form {
-    
+
 
     .dial-pad {
       @include full-box;

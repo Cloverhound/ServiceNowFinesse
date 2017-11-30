@@ -244,11 +244,16 @@ function receiveMessage(event)
   }
 }
 
-
 function setReasonCodes() {
-  console.log("Setting reason codes...");
+  setReasonCodesWithCategory("NOT_READY", agent.notReadyReasonCodes);
+  setReasonCodesWithCategory("LOGOUT", agent.signOutReasonCodes);
+}
+
+
+function setReasonCodesWithCategory(category, reasonCodes) {
+  console.log("Setting reason codes for category: " + category);
   $.ajax({
-    url: '/finesse/api/User/' + agent.username + '/ReasonCodes?category=NOT_READY',
+    url: '/finesse/api/User/' + agent.username + '/ReasonCodes?category=' + category,
     type: 'GET',
     dataType: "xml",
     success: function(xmlReasonCodes) {
@@ -263,9 +268,9 @@ function setReasonCodes() {
         reasonCode.label =  $(reasonCodeXml).find("label").text();
         reasonCode.forAll =  $(reasonCodeXml).find("forAll").text();
         console.log("Pushing reason code to array: ", reasonCode);
-        agent.notReadyReasonCodes.push(reasonCode)
+        reasonCodes.push(reasonCode)
       });
-      console.log("Done setting reason codes",   agent.notReadyReasonCodes);
+      console.log("Done setting reason codes", reasonCodes);
     },
     error: function(jqXHR, statusText) {
       console.log("Failed to get reason codes: ", statusText);

@@ -33,10 +33,10 @@ function ready(agent) {
   });
 }
 
-function findNotReadyReasonCodeByLabel(label, notReadyReasonCodes) {
+function findReasonCodeByLabel(label, reasonCodes) {
   console.log("Finding reason code by label: " + label);
-  for(var i = 0; i < notReadyReasonCodes.length; i++) {
-    var reasonCode = notReadyReasonCodes[i];
+  for(var i = 0; i < reasonCodes.length; i++) {
+    var reasonCode = reasonCodes[i];
     if(reasonCode.label === label) {
       console.log("Returning reason code: ", JSON.stringify(reasonCode));
       return reasonCode;
@@ -54,7 +54,7 @@ function notReady(agent, label) {
             '</User>';
 
   if(label) {
-    var reasonCode = findNotReadyReasonCodeByLabel(label, agent.notReadyReasonCodes);
+    var reasonCode = findReasonCodeByLabel(label, agent.notReadyReasonCodes);
     var reasonCodeId = reasonCode.uri.split("/").pop();
     xml = '<User>' +
               ' <state>NOT_READY</state>' +
@@ -85,14 +85,30 @@ function notReady(agent, label) {
 }
 
 
-function logout(agent) {
+function logout(agent, label) {
   console.log("Logging out...");
+
+  if(agent.state === "READY") {
+    alert("Must be in a NOT READY state to logout");
+    return;
+  }
+
   agent.loggingOut = true;
   window.rerender(agent);
 
   var xml = '<User>' +
             ' <state>LOGOUT</state>' +
             '</User>';
+
+  if(label) {
+    var reasonCode = findReasonCodeByLabel(label, agent.signOutReasonCodes);
+    var reasonCodeId = reasonCode.uri.split("/").pop();
+    xml = '<User>' +
+              ' <state>LOGOUT</state>' +
+              ' <reasonCodeId>' + reasonCodeId + '</reasonCodeId>' +
+              '</User>';
+  }
+
 
   $.ajax({
     url: '/finesse/api/User/' + agent.username,
