@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import moment from "moment";
 import ReactDOM from 'react-dom';
 import './App.css';
 import $ from "jquery";
@@ -281,7 +282,25 @@ function setReasonCodesWithCategory(category, reasonCodes) {
 
 function deleteCall(id) {
   console.log("Deleting call with id: " + id + " from calls: ", agent.calls);
+  let recentCall = getRecentCallById(id);
+  if(recentCall && !recentCall.endTime) {
+    recentCall.endedAt = moment();
+    recentCall.duration = recentCall.endedAt.diff(recentCall.startedAt);
+  }
   delete agent.calls[id];
+  console.log("Agent: ", agent);
+}
+
+function getRecentCallById(id) {
+  console.log("Getting recent call by id");
+
+  for(let i = 0; i < agent.recentCalls.length; i++) {
+    let recentCall = agent.recentCalls[i];
+    if(recentCall.id == id) {
+      return recentCall;
+    }
+  }
+  return false;
 }
 
 
@@ -489,7 +508,6 @@ function rerender(agent) {
     document.getElementById('root')
   );
 }
-
 window.rerender = rerender;
 
 
@@ -518,7 +536,7 @@ class App extends Component {
           <div id="main">
               <AgentHeader agent={agent} stateApi={FinesseStateApi}/>
               <HomeView agent={agent} tabNames={tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi}/>
-              <RecentCallsView recentCalls={agent.recentCalls} currentTab={agent.currentTab} phoneApi={FinessePhoneApi} tabNames={tabNames}/>
+              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={tabNames}/>
               <Tabs agent={agent} rerender={rerender} tabNames={tabNames}/>
           </div>
       );

@@ -52,6 +52,10 @@
   /*bottom: calc(-15%);*/
 }
 
+.recent-call-number:hover {
+  text-decoration: underline;
+}
+
 
 #agent-state {
   position: relative;

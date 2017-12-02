@@ -1,14 +1,15 @@
 import React, { Component } from 'react';
+import moment from "moment";
 
 class RecentCallsView extends Component {
   render(){
       let tabNames = this.props.tabNames;
-      if(this.props.currentTab !== tabNames.RECENTS) {
+      if(this.props.agent.currentTab !== tabNames.RECENTS) {
         return null;
       }
 
       return (
-        <RecentCalls recentCalls={this.props.recentCalls} phoneApi={this.props.phoneApi}/>
+        <RecentCalls agent={this.props.agent} phoneApi={this.props.phoneApi} tabNames={this.props.tabNames}/>
       )
   }
 }
@@ -17,16 +18,21 @@ class RecentCalls extends Component {
 
   render() {
 
+    let agent = this.props.agent;
+    let recentCalls = agent.recentCalls;
+
     let ulStyle = {
       listStyleType: "none",
-      border: "1px solid gray"
+      margin: "0",
+      border: "0",
+      padding: "0"
     }
 
     let recentCallComponents = []
-    for(let i = 0; i < this.props.recentCalls.length; i++) {
-      let recentCall = this.props.recentCalls[i];
+    for(let i = 0; i < recentCalls.length; i++) {
+      let recentCall = recentCalls[i];
       recentCallComponents.push(
-        <RecentCall call={recentCall} phoneApi={this.props.phoneApi}/>
+        <RecentCall agent={this.props.agent} tabNames={this.props.tabNames} call={recentCall} phoneApi={this.props.phoneApi}/>
       );
     }
 
@@ -53,28 +59,88 @@ class RecentCalls extends Component {
 }
 
 class RecentCall extends Component {
+
   handleMakeCall() {
-    this.props.phoneApi.call(this.props.call.otherParty);
+    this.props.phoneApi.call(this.props.agent, this.props.call.otherParty);
+    this.props.agent.currentTab = this.props.tabNames.HOME;
+    window.rerender(this.props.agent);
   }
 
   render() {
 
-    let liStyle = {
-      border: "1px solid gray"
+    let phoneIconStyle = {
+      float: "left",
+      marginLeft: "10px",
+      marginTop: "4px",
+      fontSize: "14px"
+    }
+    let phoneIcon = <i style={phoneIconStyle} className="material-icons">call</i>
+
+    let callIconStyle = {
+      marginLeft: "0",
+      marginTop: "4px",
+      marginRight: "15px",
+      fontSize: "14px"
+    }
+    let callIcon = <i style={callIconStyle}className="material-icons">call_received</i>
+    if(this.props.call.direction === "outbound") {
+      callIcon = <i style={callIconStyle} className="material-icons">call_made</i>
     }
 
-    let callButtonStyle = {
+
+    let callNumberStyle = {
       display: "inline-block",
-      marginLeft: "60px"
+      cursor: "pointer"
     }
 
-    let callButton = (
-      <div style={callButtonStyle} onClick={this.handleMakeCall.bind(this)}>
-        Call
-      </div>
+    let callNumber = (
+      <div className={"recent-call-number"} style={callNumberStyle} onClick={this.handleMakeCall.bind(this)}>{this.props.call.otherParty}</div>
     )
+
+
+    let callDateStyle = {
+      display: "inline-block",
+      marginLeft: "10px"
+    }
+    let startedAtMoment = moment(this.props.call.startedAt)
+    if(moment().diff(startedAtMoment) > 0) {
+      startedAtMoment = startedAtMoment.format('h:mm a')
+    } else {
+      startedAtMoment = startedAtMoment.format('L')
+    }
+    let callDate = <div style={callDateStyle}>{startedAtMoment}</div>
+
+    let callDurationStyle={
+      display: "inline-block",
+      marginLeft: "10px"
+    }
+
+    let callDuration = moment.duration(this.props.call.duration)
+    let hr = ""
+    if(callDuration.hours() > 0) {
+      hr = callDuration.hours() + "h ";
+    }
+    let min = ""
+    if(callDuration.minutes() > 0) {
+      min = callDuration.minutes() + "m "
+    }
+    let sec = ""
+    if(callDuration.seconds() > 0 && callDuration.hours() == 0) {
+      sec = callDuration.seconds() + "s"
+    }
+
+    callDuration = <div style={callDurationStyle}>{hr + min + sec}</div>
+
+
+
+    let liStyle = {
+      border: "0",
+      borderBottom: "1px solid gray",
+    }
+
     return (
-      <li style={liStyle}>{this.props.call.otherParty} {callButton}</li>
+
+      <li style={liStyle}>{phoneIcon} {callIcon} {callNumber} {callDate} {callDuration}</li>
     )
   }
 }
