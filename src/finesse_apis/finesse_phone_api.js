@@ -128,7 +128,7 @@ function transfer(agent, call) {
 function sendDialogCommand(agent, id, xml) {
   console.log("Sending dialog command with id: " + id + " and xml: ", xml);
   $.ajax({
-    url: '/finesse/api/Dialog/' + id,
+    url: window.finesseUrl + '/finesse/api/Dialog/' + id,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",
@@ -152,7 +152,7 @@ function sendDialogCommand(agent, id, xml) {
 function sendPhoneCommand(agent, xml) {
   console.log("sending phone command with xml: ", xml);
   $.ajax({
-    url: '/finesse/api/User/' + agent.username + '/Dialogs',
+    url: window.finesseUrl + '/finesse/api/User/' + agent.username + '/Dialogs',
     type: 'POST',
     data: xml,
     contentType: "application/xml",
