@@ -16,7 +16,7 @@ function ready(agent) {
             '</User>';
 
   $.ajax({
-    url: '/finesse/api/User/' + agent.username,
+    url: window.finesseUrl + '/finesse/api/User/' + agent.username,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",
@@ -66,7 +66,7 @@ function notReady(agent, label) {
 
 
   $.ajax({
-    url: '/finesse/api/User/' + agent.username,
+    url: window.finesseUrl + '/finesse/api/User/' + agent.username,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",
@@ -111,7 +111,7 @@ function logout(agent, label) {
 
 
   $.ajax({
-    url: '/finesse/api/User/' + agent.username,
+    url: window.finesseUrl + '/finesse/api/User/' + agent.username,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",

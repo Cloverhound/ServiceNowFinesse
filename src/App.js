@@ -12,6 +12,33 @@ import RecentCallsView from './components/recent_calls';
 import FinessePhoneApi from './finesse_apis/finesse_phone_api';
 import FinesseStateApi from './finesse_apis/finesse_state_api';
 
+// TODO make this support ServiceNow configuration object
+window.finesseUrl = decodeURIComponent(getQueryParameter("finesseUrl"));
+if (!window.finesseUrl) {
+  window.finesseUrl = ""
+}
+
+setupUrl();
+
+function setupUrl() {
+  var urlParts = window.finesseUrl.split(":");
+  if (urlParts.length > 2) {
+    window.finesseUrlWithoutPort = urlParts[0] + ":" + urlParts[1];
+  } else {
+    window.finesseUrlWithoutPort = window.finesseUrl;
+  }
+}
+
+function getQueryParameter(name, url) {
+  if (!url) url = window.location.href;
+  name = name.replace(/[\[\]]/g, "\\$&");
+  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+  if (!results) return null;
+  if (!results[2]) return '';
+  return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
 var tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4}; // I forsee dialpad and contacts in the future
 
 var agent = emptyAgent();
@@ -107,7 +134,7 @@ function login() {
   }
 
   $.ajax({
-    url: "/finesse/api/User/" + agent.username,
+    url: window.finesseUrl + "/finesse/api/User/" + agent.username,
     type: "GET",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
@@ -137,7 +164,7 @@ function pushLoginToFinesse(username, password, extension) {
             '</User>';
 
   $.ajax({
-    url: '/finesse/api/User/' + username,
+    url: window.finesseUrl + '/finesse/api/User/' + username,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",
@@ -254,9 +281,12 @@ function setReasonCodes() {
 function setReasonCodesWithCategory(category, reasonCodes) {
   console.log("Setting reason codes for category: " + category);
   $.ajax({
-    url: '/finesse/api/User/' + agent.username + '/ReasonCodes?category=' + category,
+    url: window.finesseUrl + '/finesse/api/User/' + agent.username + '/ReasonCodes?category=' + category,
     type: 'GET',
     dataType: "xml",
+    beforeSend: function (xhr) {
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
+    },
     success: function(xmlReasonCodes) {
       console.log("Successfully got reason codes");
       console.log(xmlReasonCodes);
@@ -512,6 +542,10 @@ window.rerender = rerender;
 
 
 class App extends Component {
+
+  componentDidMount() {
+    document.getElementById('tunnel-frame').src = window.finesseUrlWithoutPort + ":7443/tunnel";
+  }
 
   handleLogin(event) {
     event.preventDefault();
