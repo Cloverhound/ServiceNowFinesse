@@ -2,7 +2,7 @@
   "name": "snow-finesse",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/",
+  "homepage": "/3rdpartygadget/files/snow-finesse",
   "devDependencies": {
     "react-scripts": "0.8.4",
     "ssh2-sftp-client": "^1.0.5",

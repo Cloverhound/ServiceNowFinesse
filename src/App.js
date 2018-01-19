@@ -11,22 +11,74 @@ import Tabs from './components/tabs';
 import RecentCallsView from './components/recent_calls';
 import FinessePhoneApi from './finesse_apis/finesse_phone_api';
 import FinesseStateApi from './finesse_apis/finesse_state_api';
+import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
+import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 
-// TODO make this support ServiceNow configuration object
-window.finesseUrl = decodeURIComponent(getQueryParameter("finesseUrl"));
-if (!window.finesseUrl) {
-  window.finesseUrl = ""
+window.finesseUrl = ""
+window.finesseUrlWithoutPort = ""
+window.tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};  // I forsee dialpad and contacts in the future
+window.agent = emptyAgent();
+
+
+window.openFrameAPI.init({ height: 350, width: 350 }, initSuccess, initFailure);
+
+function emptyAgent() {
+  return {
+    username: "",
+    password: "",
+    extension: "",
+    state: 'LOGOUT',
+    reasonCode: {},
+    calls: {},
+    recentCalls: [],
+    currentTab: window.tabNames.HOME,
+    notReadyReasonCodes: [],
+    signOutReasonCodes: [],
+    previousLoginFailed: false,
+    loggingOut: false,
+    loggingIn: false
+  };
 }
 
-setupUrl();
 
-function setupUrl() {
+function handleCommunicationEvent(context) {
+  console.log("Communication from Topframe", context);
+  if(context["phone_number"]) {
+    FinessePhoneApi.call(context["phone_number"].replace(/-/g, ""));
+    window.openFrameAPI.show();
+  }
+}
+function handleOpenFrameShownEvent(context) {
+  rerender(window.agent);
+}
+function initSuccess(snConfig) {
+  console.log("openframe configuration",snConfig);
+
+  setupFinesseUrl(snConfig)
+
+  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
+  handleCommunicationEvent);
+  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
+  handleOpenFrameShownEvent);
+}
+function initFailure(error) {
+  console.log("Error: OpenFrame init failed..", error);
+}
+
+
+
+function setupFinesseUrl(snConfig) {
+  console.log('Setting up finesse url...')
+  window.finesseUrl = snConfig.configuration || decodeURIComponent(getQueryParameter("finesseUrl")) || ""
+  window.finesseUrlWithoutPort = window.finesseUrl;
+
   var urlParts = window.finesseUrl.split(":");
   if (urlParts.length > 2) {
     window.finesseUrlWithoutPort = urlParts[0] + ":" + urlParts[1];
-  } else {
-    window.finesseUrlWithoutPort = window.finesseUrl;
   }
+
+  console.log('Finesse URL: ' + window.finesseUrl)
+  console.log('Finesse URL without Port: ' + window.finesseUrlWithoutPort)
 }
 
 function getQueryParameter(name, url) {
@@ -39,109 +91,44 @@ function getQueryParameter(name, url) {
   return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-var tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4}; // I forsee dialpad and contacts in the future
-
-var agent = emptyAgent();
-
-var RECENT_CALLS_LIST_LENGTH = 5;
-
-var MESSAGE_TYPE = {
-  EVENT: 0,
-  ID: 1,
-  PASSWORD: 2,
-  RESOURCEID: 3,
-  STATUS: 4,
-  XMPPDOMAIN: 5,
-  PUBSUBDOMAIN: 6,
-  SUBSCRIBE: 7,
-  UNSUBSCRIBE: 8,
-  PRESENCE: 9,
-  CONNECT_REQ: 10,
-  DISCONNECT_REQ: 11
-};
-
-var config = {
-  height: 350,
-  width: 350
-};
-
-function emptyAgent() {
-  return {
-    username: "",
-    password: "",
-    extension: "",
-    state: 'LOGOUT',
-    reasonCode: {},
-    calls: {},
-    recentCalls: [],
-    currentTab: tabNames.HOME,
-    notReadyReasonCodes: [],
-    signOutReasonCodes: [],
-    previousLoginFailed: false,
-    loggingOut: false,
-    loggingIn: false
-  };
-}
-
-function handleCommunicationEvent(context) {
-  console.log("Communication from Topframe", context);
-  if(context["phone_number"]) {
-    FinessePhoneApi.call(context["phone_number"].replace(/-/g, ""));
-    window.openFrameAPI.show();
-  }
-}
-function handleOpenFrameShownEvent(context) {
-  rerender(agent);
-}
-function initSuccess(snConfig) {
-  console.log("openframe configuration",snConfig);
-  //register for communication event from TopFrame
-  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
-  handleCommunicationEvent);
-  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
-  handleOpenFrameShownEvent);
-}
-function initFailure(error) {
-  console.log("OpenFrame init failed..", error);
-}
-
-window.openFrameAPI.init(config, initSuccess, initFailure);
 
 
 
 function login() {
   console.log("Logging in...");
 
-  agent = emptyAgent();
-  agent.loggingIn = true;
-  rerender(agent);
+  document.getElementById('tunnel-frame').src = window.finesseUrlWithoutPort + ":7443/tunnel"
+
+  window.agent = emptyAgent();
+  window.agent.loggingIn = true;
+  rerender(window.agent);
 
   var form = document.getElementById("login-form");
-  agent.username = form.elements["username"].value;
-  agent.password = form.elements["password"].value;
-  agent.extension = form.elements["extension"].value;
+  window.agent.username = form.elements["username"].value;
+  window.agent.password = form.elements["password"].value;
+  window.agent.extension = form.elements["extension"].value;
 
-  console.log(agent.username, agent.extension);
+  console.log(window.agent.username, window.agent.extension);
 
-  if(!agent.username || !agent.password) {
+  if(!window.agent.username || !window.agent.password) {
     handleLoginFailed("Invalid Credentials");
     return false;
   }
 
-  if(!agent.extension) {
+  if(!window.agent.extension) {
     handleLoginFailed("Invalid Device");
     return false;
   }
 
   $.ajax({
-    url: window.finesseUrl + "/finesse/api/User/" + agent.username,
+    url: 'https://' + window.finesseUrl + '/finesse/api/User/' + window.agent.username,
     type: "GET",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.agent.password));
     },
     success: function() {
-      setReasonCodes();
-      connect();
+      FinesseReasonCodesApi.setReasonCodes();
+      FinesseTunnelApi.connect();
 
     },
     error: function() {
@@ -183,38 +170,19 @@ function pushLoginToFinesse(username, password, extension) {
 function handleLoginFailed(reason)
 {
   console.log("Handling login failure with reason: " + reason);
-  disconnect();
-  agent.previousLoginFailed = {reason: reason}
-  agent.loggingIn = false;
-  rerender(agent);
+  FinesseTunnelApi.disconnect(window.agent);
+  window.agent.previousLoginFailed = {reason: reason}
+  window.agent.loggingIn = false;
+  rerender(window.agent);
 }
 
-function disconnect() {
-  console.log("Disconnecting iframe with username: " + agent.username)
-
-  var tunnelFrame = document.getElementById("tunnel-frame");
-  var tunnelWindow = tunnelFrame.contentWindow;
-
-  tunnelWindow.postMessage(MESSAGE_TYPE.DISCONNECT_REQ + "|" + agent.username, "*");
-}
-
-function connect() {
-  console.log("Connecting iframe with username: " + agent.username + " and password: " + agent.password)
-
-  var tunnelFrame = document.getElementById("tunnel-frame");
-  var tunnelWindow = tunnelFrame.contentWindow;
-
-  tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + agent.username, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + agent.password, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + "uccx1.cloverhound.com", "*");
-}
 
 function receiveMessage(event)
 {
   console.log("Received:", event.data);
 
   if (event.data === "4|connected") {
-    pushLoginToFinesse(agent.username, agent.password, agent.extension);
+    pushLoginToFinesse(window.agent.username, window.agent.password, window.agent.extension);
   }
 
   if (event.data === "4|unauthorized") {
@@ -223,9 +191,9 @@ function receiveMessage(event)
 
   if(event.data === "4|disconnected") {
     "Received disconnected event..."
-    if(agent.state !== "LOGOUT" && !agent.loggingOut) {
+    if(window.agent.state !== "LOGOUT" && !window.agent.loggingOut) {
       console.log("Reconnecting because logged in and not logging out, so shouldnt have disconnected");
-      connect();
+      FinesseTunnelApi.connect();
     }
   }
 
@@ -238,7 +206,7 @@ function receiveMessage(event)
     console.log(data);
 
 
-    if (data.Update.data.apiErrors && agent.state === "LOGOUT") {
+    if (data.Update.data.apiErrors && window.agent.state === "LOGOUT") {
         handleLoginFailed(data.Update.data.apiErrors.apiError.errorType._text);
     } else if (data.Update.data.apiErrors){
       handleApiErrors(data.Update.data.apiErrors);
@@ -272,60 +240,23 @@ function receiveMessage(event)
   }
 }
 
-function setReasonCodes() {
-  setReasonCodesWithCategory("NOT_READY", agent.notReadyReasonCodes);
-  setReasonCodesWithCategory("LOGOUT", agent.signOutReasonCodes);
-}
-
-
-function setReasonCodesWithCategory(category, reasonCodes) {
-  console.log("Setting reason codes for category: " + category);
-  $.ajax({
-    url: window.finesseUrl + '/finesse/api/User/' + agent.username + '/ReasonCodes?category=' + category,
-    type: 'GET',
-    dataType: "xml",
-    beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
-    },
-    success: function(xmlReasonCodes) {
-      console.log("Successfully got reason codes");
-      console.log(xmlReasonCodes);
-
-      $(xmlReasonCodes).find("ReasonCode").each(function(reasonCodeIndex, reasonCodeXml) {
-        var reasonCode = {};
-        reasonCode.uri =  $(reasonCodeXml).find("uri").text();
-        reasonCode.category = $(reasonCodeXml).find("category").text();
-        reasonCode.code =  $(reasonCodeXml).find("code").text();
-        reasonCode.label =  $(reasonCodeXml).find("label").text();
-        reasonCode.forAll =  $(reasonCodeXml).find("forAll").text();
-        console.log("Pushing reason code to array: ", reasonCode);
-        reasonCodes.push(reasonCode)
-      });
-      console.log("Done setting reason codes", reasonCodes);
-    },
-    error: function(jqXHR, statusText) {
-      console.log("Failed to get reason codes: ", statusText);
-    }
-  });
-}
-
 
 function deleteCall(id) {
-  console.log("Deleting call with id: " + id + " from calls: ", agent.calls);
+  console.log("Deleting call with id: " + id + " from calls: ", window.agent.calls);
   let recentCall = getRecentCallById(id);
   if(recentCall && !recentCall.endTime) {
     recentCall.endedAt = moment();
     recentCall.duration = recentCall.endedAt.diff(recentCall.startedAt);
   }
-  delete agent.calls[id];
-  console.log("Agent: ", agent);
+  delete window.agent.calls[id];
+  console.log("Agent: ", window.agent);
 }
 
 function getRecentCallById(id) {
   console.log("Getting recent call by id");
 
-  for(let i = 0; i < agent.recentCalls.length; i++) {
-    let recentCall = agent.recentCalls[i];
+  for(let i = 0; i < window.agent.recentCalls.length; i++) {
+    let recentCall = window.agent.recentCalls[i];
     if(recentCall.id == id) {
       return recentCall;
     }
@@ -347,7 +278,7 @@ function handleUserUpdate(updatedAgent) {
   setAgentFieldFromUserUpdate('teamName', updatedAgent);
   setAgentFieldFromUserUpdate('extension', updatedAgent);
 
-  rerender(agent);
+  rerender(window.agent);
 }
 
 function handleApiErrors(apiErrors) {
@@ -363,7 +294,7 @@ function handleAllDialogsUpdated(dialogs) {
 
 function handleDialogUpdated(dialog) {
   console.log("Handling dialog updated..", dialog);
-  let calls = agent.calls;
+  let calls = window.agent.calls;
 
   var id = dialog.id._text;
 
@@ -412,7 +343,7 @@ function handleDialogUpdated(dialog) {
   }
 
 
-  if (call.from === agent.extension) {
+  if (call.from === window.agent.extension) {
     call.otherParty = call.to;
     call.direction = "outbound";
   } else {
@@ -433,14 +364,14 @@ function handleDialogUpdated(dialog) {
     window.openFrameAPI.show();
   }
 
-  rerender(agent);
+  rerender(window.agent);
 }
 
 function getParticipantState(dialog) {
   console.log("Getting participant state for dialog: ", dialog);
   var participants = dialog.participants.Participant;
   for(var i = 0; i < participants.length; i++) {
-    if(participants[i].mediaAddress._text === agent.extension) {
+    if(participants[i].mediaAddress._text === window.agent.extension) {
       console.log("Returning participant state: " + participants[i].state._text);
       return participants[i].state._text;
     }
@@ -451,9 +382,10 @@ function getParticipantState(dialog) {
 
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
-  let recentCalls = agent.recentCalls;
-  if(recentCalls.length === RECENT_CALLS_LIST_LENGTH) {
-    recentCalls = agent.recentCalls.splice(0, 1);
+  let recentCalls = window.agent.recentCalls;
+  let recent_calls_list_length = 5;
+  if(recentCalls.length === recent_calls_list_length) {
+    recentCalls = window.agent.recentCalls.splice(0, 1);
   }
   recentCalls.push(call);
 
@@ -461,7 +393,7 @@ function addCallToRecentsList(call) {
 }
 
 function recentCallExists(call) {
-  let recentCalls = agent.recentCalls;
+  let recentCalls = window.agent.recentCalls;
   for(let i = 0; i < recentCalls.length; i++) {
     if(recentCalls[i].id === call.id) {
       return true;
@@ -474,7 +406,7 @@ function handleDialogDeleted(dialog) {
   console.log("Handling dialog deleted of dialog:", dialog);
   deleteCall(dialog.id)
 
-  rerender(agent);
+  rerender(window.agent);
 }
 
 function handleAllDialogsDeleted(dialogs) {
@@ -482,19 +414,19 @@ function handleAllDialogsDeleted(dialogs) {
 
   deleteCall(dialogs.Dialog.id._text)
 
-  rerender(agent);
+  rerender(window.agent);
 }
 
 // Helps convert the xmlToJSON results to regular properties
 function setAgentFieldFromUserUpdate(fieldName, userObject) {
-  let previousState = agent["state"]
-  agent[fieldName] = userObject[fieldName] && userObject[fieldName]._text || null;
-  let currentState = agent["state"]
+  let previousState = window.agent["state"]
+  window.agent[fieldName] = userObject[fieldName] && userObject[fieldName]._text || null;
+  let currentState = window.agent["state"]
   if(previousState !== "LOGOUT" && currentState === "LOGOUT") {
-    disconnect();
-    agent.loggingOut = false;
-    agent.loggingIn = false;
-    agent.previousLoginFailed = false;
+    FinesseTunnelApi.disconnect(window.agent);
+    window.agent.loggingOut = false;
+    window.agent.loggingIn = false;
+    window.agent.previousLoginFailed = false;
   }
 
 }
@@ -510,11 +442,11 @@ function setAgentReasonCodeFromUserUpdate(userObject) {
     reasonCode.id = userObject.reasonCode.id._text;
     reasonCode.label = userObject.reasonCode.label._text;
     reasonCode.uri = userObject.reasonCode.uri._text;
-    agent.reasonCode = reasonCode;
+    window.agent.reasonCode = reasonCode;
     console.log("Done updating reason code: ", reasonCode);
   } else {
     console.log("Reason code is NOT included in the user update");
-    agent.reasonCode = null;
+    window.agent.reasonCode = null;
   }
 }
 
@@ -540,12 +472,7 @@ function rerender(agent) {
 }
 window.rerender = rerender;
 
-
 class App extends Component {
-
-  componentDidMount() {
-    document.getElementById('tunnel-frame').src = window.finesseUrlWithoutPort + ":7443/tunnel";
-  }
 
   handleLogin(event) {
     event.preventDefault();
@@ -569,9 +496,9 @@ class App extends Component {
       return (
           <div id="main">
               <AgentHeader agent={agent} stateApi={FinesseStateApi}/>
-              <HomeView agent={agent} tabNames={tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi}/>
-              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={tabNames}/>
-              <Tabs agent={agent} rerender={rerender} tabNames={tabNames}/>
+              <HomeView agent={agent} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi}/>
+              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames}/>
+              <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames}/>
           </div>
       );
     }
