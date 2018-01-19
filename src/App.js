@@ -127,8 +127,8 @@ function login() {
       xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.agent.password));
     },
     success: function() {
-      FinesseReasonCodesApi.setReasonCodes();
-      FinesseTunnelApi.connect();
+      FinesseReasonCodesApi.setReasonCodes(window.agent);
+      FinesseTunnelApi.connect(window.agent);
 
     },
     error: function() {
