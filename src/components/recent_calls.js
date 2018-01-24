@@ -25,14 +25,15 @@ class RecentCalls extends Component {
       listStyleType: "none",
       margin: "0",
       border: "0",
-      padding: "0"
+      padding: "0",
+      fontSize: "0.9rem"
     }
 
     let recentCallComponents = []
     for(let i = 0; i < recentCalls.length; i++) {
       let recentCall = recentCalls[i];
       recentCallComponents.push(
-        <RecentCall agent={this.props.agent} tabNames={this.props.tabNames} call={recentCall} phoneApi={this.props.phoneApi}/>
+        <RecentCall key={recentCall.id} agent={this.props.agent} tabNames={this.props.tabNames} call={recentCall} phoneApi={this.props.phoneApi}/>
       );
     }
 
@@ -72,7 +73,8 @@ class RecentCall extends Component {
       float: "left",
       marginLeft: "10px",
       marginTop: "4px",
-      fontSize: "14px"
+      fontSize: "14px",
+      color: "rgb(100, 100, 100)"
     }
     let phoneIcon = <i style={phoneIconStyle} className="material-icons">call</i>
 
@@ -80,7 +82,8 @@ class RecentCall extends Component {
       marginLeft: "0",
       marginTop: "4px",
       marginRight: "15px",
-      fontSize: "14px"
+      fontSize: "14px",
+      color: "rgb(100, 100, 100)"
     }
     let callIcon = <i style={callIconStyle}className="material-icons">call_received</i>
     if(this.props.call.direction === "outbound") {
@@ -90,7 +93,10 @@ class RecentCall extends Component {
 
     let callNumberStyle = {
       display: "inline-block",
-      cursor: "pointer"
+      cursor: "pointer",
+      verticalAlign: "top",
+      marginTop: "3px",
+      color: "rgb(36, 83, 199)"
     }
 
     let callNumber = (
@@ -100,7 +106,10 @@ class RecentCall extends Component {
 
     let callDateStyle = {
       display: "inline-block",
-      marginLeft: "10px"
+      marginLeft: "10px",
+      verticalAlign: "top",
+      marginTop: "3px",
+      color: "rgb(120, 120, 120)"
     }
     let startedAtMoment = moment(this.props.call.startedAt)
     if(moment().diff(startedAtMoment) > 0) {
@@ -112,7 +121,10 @@ class RecentCall extends Component {
 
     let callDurationStyle={
       display: "inline-block",
-      marginLeft: "10px"
+      marginLeft: "10px",
+      verticalAlign: "top",
+      marginTop: "3px",
+      color: "rgb(120, 120, 120)"
     }
 
     let callDuration = moment.duration(this.props.call.duration)
@@ -125,7 +137,7 @@ class RecentCall extends Component {
       min = callDuration.minutes() + "m "
     }
     let sec = ""
-    if(callDuration.seconds() > 0 && callDuration.hours() == 0) {
+    if(callDuration.seconds() > 0 && callDuration.hours() === 0) {
       sec = callDuration.seconds() + "s"
     }
 
@@ -135,7 +147,8 @@ class RecentCall extends Component {
 
     let liStyle = {
       border: "0",
-      borderBottom: "1px solid gray",
+      borderBottom: "1px solid #cccccc",
+      padding: "4px 0px"
     }
 
     return (

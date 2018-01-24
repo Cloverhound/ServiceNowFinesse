@@ -14,13 +14,20 @@ import FinesseStateApi from './finesse_apis/finesse_state_api';
 import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 
-window.finesseUrl = ""
-window.finesseUrlWithoutPort = ""
+window.finesseUrl = "";
+window.finesseUrlWithoutPort = "";
 window.tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};  // I forsee dialpad and contacts in the future
 window.agent = emptyAgent();
+window.entityTemplate = "incident";
+window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
 
+window.$ = $;
 
-window.openFrameAPI.init({ height: 350, width: 350 }, initSuccess, initFailure);
+if (window.openFrameAPI) {
+  window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
+} else {
+  window.setupFinesseUrl({});
+}
 
 function emptyAgent() {
   return {
@@ -44,41 +51,91 @@ function emptyAgent() {
 function handleCommunicationEvent(context) {
   console.log("Communication from Topframe", context);
   if(context["phone_number"]) {
-    FinessePhoneApi.call(context["phone_number"].replace(/-/g, ""));
+    FinessePhoneApi.call(window.agent, context["phone_number"].replace(/-/g, ""));
     window.openFrameAPI.show();
   }
 }
 function handleOpenFrameShownEvent(context) {
   rerender(window.agent);
 }
-function initSuccess(snConfig) {
-  console.log("openframe configuration",snConfig);
+function openFrameInitSuccess(snConfig) {
+  window.openFrameConfig = snConfig;
+  console.log("openframe configuration", snConfig);
 
-  setupFinesseUrl(snConfig)
+  var config = {}
+
+  var paramsList = snConfig.configuration.split("\n");
+  for(var i = 0; i < paramsList.length; i++) {
+    if (paramsList[i].startsWith("#")) {
+      continue;
+    }
+
+    var keyValue = paramsList[i].split("=");
+
+    if (keyValue.length <= 1) {
+      continue;
+    }
+
+    var key = keyValue[0].trim();
+    var value = keyValue[1];
+    if (keyValue.length > 2) {
+      for(var j = 2; j < keyValue.length; j++) {
+        value += ("="+keyValue[j]);
+      }
+    }
+    value = value.trim();
+
+    config[key] = value;
+  }
+
+  if (config.query) {
+    window.queryTemplate = config.query;
+  }
+  if (config.entity) {
+    window.entityTemplate = config.entity;
+  }
+
+  console.log("Loaded config from OpenFrame:", config);
+
+  setupFinesseUrl(config)
 
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
   handleCommunicationEvent);
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
   handleOpenFrameShownEvent);
 }
-function initFailure(error) {
-  console.log("Error: OpenFrame init failed..", error);
+function openFrameInitFailure(error) {
+  console.log("Error: OpenFrame init failed:", error);
+
+  //window.openFrameAPI = null;
+
+  setupFinesseUrl({});
 }
 
 
 
-function setupFinesseUrl(snConfig) {
+function setupFinesseUrl(config) {
   console.log('Setting up finesse url...')
-  window.finesseUrl = snConfig.configuration || decodeURIComponent(getQueryParameter("finesseUrl")) || ""
+  window.finesseUrl = config.finesseUrl || decodeURIComponent(getQueryParameter("finesseUrl")) || ""
   window.finesseUrlWithoutPort = window.finesseUrl;
 
-  var urlParts = window.finesseUrl.split(":");
-  if (urlParts.length > 2) {
-    window.finesseUrlWithoutPort = urlParts[0] + ":" + urlParts[1];
-  }
+  var el = document.createElement('a');
+  el.href = window.finesseUrl;
 
-  console.log('Finesse URL: ' + window.finesseUrl)
-  console.log('Finesse URL without Port: ' + window.finesseUrlWithoutPort)
+  window.finesseUrlWithoutPort = el.protocol + "//" + el.hostname;
+  window.finessePort = el.port;
+  window.finesseProtocol = el.protocol;
+  window.finesseHostname = el.hostname;
+
+  // var urlParts = window.finesseUrl.split(":");
+  // if (urlParts.length > 2) {
+  //   window.finesseUrlWithoutPort = urlParts[0] + ":" + urlParts[1];
+  // }
+
+  console.log('Finesse URL: ' + window.finesseUrl);
+  console.log('Finesse URL without Port: ' + window.finesseUrlWithoutPort);
+
+  document.getElementById('tunnel-frame').src = window.finesseUrlWithoutPort + ":7443/tunnel"
 }
 
 function getQueryParameter(name, url) {
@@ -97,8 +154,6 @@ function getQueryParameter(name, url) {
 function login() {
   console.log("Logging in...");
 
-  document.getElementById('tunnel-frame').src = window.finesseUrlWithoutPort + ":7443/tunnel"
-
   window.agent = emptyAgent();
   window.agent.loggingIn = true;
   rerender(window.agent);
@@ -106,7 +161,8 @@ function login() {
   var form = document.getElementById("login-form");
   window.agent.username = form.elements["username"].value;
   window.agent.password = form.elements["password"].value;
-  window.agent.extension = form.elements["extension"].value;
+  window.agent.extension = String(form.elements["extension"].value);
+  //FinesseTunnelApi.connect(window.agent);
 
   console.log(window.agent.username, window.agent.extension);
 
@@ -121,15 +177,16 @@ function login() {
   }
 
   $.ajax({
-    url: 'https://' + window.finesseUrl + '/finesse/api/User/' + window.agent.username,
+    url: window.finesseUrl + '/finesse/api/User/' + window.agent.username,
     type: "GET",
+    cache: false,
+    dataType: "xml",
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.agent.password));
     },
     success: function() {
       FinesseReasonCodesApi.setReasonCodes(window.agent);
       FinesseTunnelApi.connect(window.agent);
-
     },
     error: function() {
       handleLoginFailed("Invalid Credentials");
@@ -159,6 +216,21 @@ function pushLoginToFinesse(username, password, extension) {
       xhr.setRequestHeader('Authorization', make_base_auth(username, password));
     },
     success: function(data) {
+      $.ajax({
+        url: window.finesseUrl + '/finesse/api/User/' + window.agent.username,
+        type: "GET",
+        cache: false,
+        dataType: "text",
+        beforeSend: function (xhr) {
+          xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.agent.password));
+        },
+        success: function(xml) {
+          console.log(xml);
+          var data = xmlToJSON.parseString(xml, { childrenAsArray: false });
+          console.log("Got agent update after login:", data);
+          handleUserUpdate(data.User);
+        }
+      });
       console.log(data);
     },
     error: function() {
@@ -190,13 +262,16 @@ function receiveMessage(event)
   }
 
   if(event.data === "4|disconnected") {
-    "Received disconnected event..."
+    console.log("Received disconnected event...");
     if(window.agent.state !== "LOGOUT" && !window.agent.loggingOut) {
       console.log("Reconnecting because logged in and not logging out, so shouldnt have disconnected");
       FinesseTunnelApi.connect();
     }
   }
 
+  if (!event.data || !event.data.split) {
+    return;
+  }
 
   var eventCode = event.data.split("|")[0];
   if (eventCode === "0") {
@@ -273,10 +348,10 @@ function handleUserUpdate(updatedAgent) {
   setAgentFieldFromUserUpdate('pendingState', updatedAgent);
   setAgentFieldFromUserUpdate('firstName', updatedAgent);
   setAgentFieldFromUserUpdate('lastName', updatedAgent);
-  setAgentFieldFromUserUpdate('loginId', updatedAgent);
+  setAgentFieldFromUserUpdate('loginId', updatedAgent, "String");
   setAgentFieldFromUserUpdate('loginName', updatedAgent);
   setAgentFieldFromUserUpdate('teamName', updatedAgent);
-  setAgentFieldFromUserUpdate('extension', updatedAgent);
+  setAgentFieldFromUserUpdate('extension', updatedAgent, "String");
 
   rerender(window.agent);
 }
@@ -307,15 +382,15 @@ function handleDialogUpdated(dialog) {
   calls[id] = calls[id] || {};
   var call = calls[id];
 
-  if(!call.line) {
+  if (!call.line) {
     call.line = Object.keys(calls).length;
   }
 
-  call.id = id;
+  call.id = String(id);
   call.startedAt = call.startedAt || new Date();
   call.held = call.held || false;
-  call.from = dialog.fromAddress._text;
-  call.to = dialog.toAddress._text || call.to;
+  call.from = String(dialog.fromAddress._text);
+  call.to = String(dialog.toAddress._text) || call.to;
   call.state = dialog.state._text;
   call.callType = dialog.mediaProperties.callType._text;
 
@@ -328,20 +403,7 @@ function handleDialogUpdated(dialog) {
     call.held = false;
   }
 
-
-  call.callVariables = call.callVariables || {};
-  var callVariables = dialog.mediaProperties.callvariables.CallVariable;
-  for(var i = 0; i < callVariables.length; i++) {
-    var callVariable = callVariables[i];
-    if(!call.openedIncident && callVariable.value._text) {
-      var incidentNumber = "INC00" + callVariable.value._text;
-      console.log("Opening incident with number: " + incidentNumber)
-      window.openFrameAPI.openServiceNowForm({entity:'incident', query:'sysparm_query=number=' + incidentNumber });
-      call.openedIncident = true;
-    }
-    call.callVariables[callVariable.name._text] = callVariable.value._text;
-  }
-
+  call.type = dialog.mediaProperties.callType._text;
 
   if (call.from === window.agent.extension) {
     call.otherParty = call.to;
@@ -351,6 +413,39 @@ function handleDialogUpdated(dialog) {
     call.direction = "inbound";
   }
 
+  // sys_user
+  // sysparm_view=screenpop&sysparm_query=phoneLIKE9803338415
+  // sysparm_view=screenpop&sysparm_query=employee_number=1234567
+
+  call.callVariables = call.callVariables || {};
+  var callVariables = dialog.mediaProperties.callvariables.CallVariable;
+  var query = window.queryTemplate;
+  var entity = window.entityTemplate;
+  for(var i = 0; i < callVariables.length; i++) {
+    var value = callVariables[i].value._text;
+    var name = callVariables[i].name._text;
+
+    query = query.replace("{{" + name + "}}", value);
+    entity = entity.replace("{{" + name + "}}", value);
+      
+    call.callVariables[name] = value;
+  }
+
+  query = query.replace("{{from}}", call.from);
+  entity = entity.replace("{{from}}", call.from);
+
+  query = query.replace("{{to}}", call.to);
+  entity = entity.replace("{{to}}", call.to);
+
+  query = query.replace("{{direction}}", call.direction);
+  entity = entity.replace("{{direction}}", call.direction);
+
+  query = query.replace("{{username}}", window.agent.username);
+  entity = entity.replace("{{username}}", window.agent.username);
+
+  query = query.replace("{{extension}}", window.agent.extension);
+  entity = entity.replace("{{extension}}", window.agent.extension);
+
   if(call.to && !recentCallExists(call)) {
     addCallToRecentsList(call);
   } else {
@@ -359,19 +454,24 @@ function handleDialogUpdated(dialog) {
   }
 
   console.log("Updated call:", call)
+  rerender(window.agent);
 
-  if(call.direction === "inbound" && call.state === "ALERTING") {
+  if(!call.alreadyPopped && call.direction === "inbound" && window.openFrameAPI) {
+    console.log("Screen-popping form", window.entityTemplate, query, call);
+    window.openFrameAPI.openServiceNowForm({entity: window.entityTemplate, query: query });
+    call.alreadyPopped = true;
+  }
+  
+  if(call.direction === "inbound" && call.state === "ALERTING" && window.openFrameAPI) {
     window.openFrameAPI.show();
   }
-
-  rerender(window.agent);
 }
 
 function getParticipantState(dialog) {
   console.log("Getting participant state for dialog: ", dialog);
   var participants = dialog.participants.Participant;
   for(var i = 0; i < participants.length; i++) {
-    if(participants[i].mediaAddress._text === window.agent.extension) {
+    if(String(participants[i].mediaAddress._text) === window.agent.extension) {
       console.log("Returning participant state: " + participants[i].state._text);
       return participants[i].state._text;
     }
@@ -418,9 +518,13 @@ function handleAllDialogsDeleted(dialogs) {
 }
 
 // Helps convert the xmlToJSON results to regular properties
-function setAgentFieldFromUserUpdate(fieldName, userObject) {
+function setAgentFieldFromUserUpdate(fieldName, userObject, type) {
   let previousState = window.agent["state"]
-  window.agent[fieldName] = userObject[fieldName] && userObject[fieldName]._text || null;
+  let value = userObject[fieldName] && userObject[fieldName]._text || null;
+  if (value && type === "String") {
+    value = String(value);
+  }
+  window.agent[fieldName] = value;
   let currentState = window.agent["state"]
   if(previousState !== "LOGOUT" && currentState === "LOGOUT") {
     FinesseTunnelApi.disconnect(window.agent);

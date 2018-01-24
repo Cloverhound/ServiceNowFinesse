@@ -2,10 +2,18 @@ import React, { Component } from 'react';
 import Dropdown from 'react-dropdown';
 
 var STATE_TEXT = {
+  LOGOUT: 'Logged out',
+  LOGIN: "Logging in",
   READY: 'Ready',
+  RESERVED: 'Reserved',
+  RESERVED_OUTBOUND: 'Outbound Reserved',
+  RESERVED_OUTBOUND_PREVIEW: 'Outbound Reserved',
+  WORK: 'Wrap-Up',
+  WORK_READY: 'Wrap-Up',
   NOT_READY: 'Not Ready',
   TALKING: 'Talking',
-  LOGOUT: 'Logout'
+  LOGOUT: 'Logout',
+  HOLD: 'On Hold'
 };
 
 class StateControls extends Component {
@@ -21,7 +29,7 @@ class StateControls extends Component {
 
     let reasonCodes = agent.notReadyReasonCodes;
 
-    if(reasonCodes.length === 0 && agent.state != "NOT_READY") {
+    if(reasonCodes.length === 0 && agent.state !== "NOT_READY") {
         return [{value: STATE_TEXT['NOT_READY'], label: STATE_TEXT['NOT_READY']}]
     }
 

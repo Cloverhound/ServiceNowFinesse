@@ -1,5 +1,3 @@
-import $ from "jquery";
-
 
 const FinesseTunnelApi = {
   connect: connect,
@@ -29,7 +27,7 @@ function connect(agent) {
 
   tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + agent.username, "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + agent.password, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + window.finesseUrlWithoutPort, "*");
+  tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + window.finesseHostname, "*");
 }
 
 function disconnect(agent) {

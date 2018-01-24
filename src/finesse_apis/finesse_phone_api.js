@@ -13,6 +13,13 @@ const FinessePhoneApi = {
 }
 
 function call(agent, number) {
+  console.log("Preparing call request to:", "'" + number + "'");
+
+  if (number.length === 10) {
+    number = "91" + number;
+  } else if (number.length === 11) {
+    number = "9" + number;
+  }
   console.log("Calling:", number);
 
   var xml = '<Dialog>' +
@@ -25,6 +32,13 @@ function call(agent, number) {
 }
 
 function consult(agent, number) {
+  console.log("Preparing consult request to:", "'" + number + "'");
+
+  if (number.length === 10) {
+    number = "91" + number;
+  } else if (number.length === 11) {
+    number = "9" + number;
+  }
   console.log("Consulting:", number);
   let call = getCallByLine(agent.calls, 1);
 
@@ -98,7 +112,7 @@ function answer(agent, call) {
 
 
   sendDialogCommand(agent, call.id, xml);
-  window.openFrameAPI.hide();
+  window.openFrameAPI && window.openFrameAPI.hide();
 }
 
 function conference(agent, call) {

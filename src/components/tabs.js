@@ -34,30 +34,38 @@ class Tabs extends Component {
 
     var tabStyle = {
       display: "inline-block",
-      borderTop: "1px solid gray",
+      borderTop: "2px solid rgb(230, 230, 230)",
       width: "50%",
-      color: "dimgray",
+      color: "rgb(200, 200, 200)",
       textAlign: "center",
-      fontSize: "smaller"
+      fontSize: "smaller",
+      padding: "5px"
     }
 
     var tabTextStyle = {
-      fontSize: "8px"
+      fontSize: "8px",
+      display: "none"
     }
 
-    var homeStyle = $.extend(true, {}, tabStyle);
+    var homeStyle = $.extend(true, {
+
+    }, tabStyle);
     var recentsStyle = $.extend(true, {}, tabStyle);
 
-    homeStyle.borderRight = "1px solid gray";
+    //homeStyle.borderRight = "1px solid gray";
 
     if(this.props.agent.currentTab === tabNames.HOME) {
-      homeStyle.color = "blue";
+      homeStyle.color = "rgb(54, 125, 236)";
+      homeStyle.borderColor = "rgb(99, 149, 226)";
+      //recentsStyle.background = "linear-gradient(rgb(249, 249, 249), rgb(250, 250, 250) 40%, white 95%)"
     } else {
-      recentsStyle.color = "blue";
+      recentsStyle.color = "rgb(54, 125, 236)";
+      recentsStyle.borderColor = "rgb(99, 149, 226)";
+      //homeStyle.background = "linear-gradient(rgb(249, 249, 249), rgb(250, 250, 250) 40%, white 95%)"
     }
 
     return (
-      <div style={tabBarStyle} class="tabbar">
+      <div style={tabBarStyle} className="tabbar">
         <div style={homeStyle} className="tab home" onClick={this.onHomeClick.bind(this)}>
           <FontAwesome name='home' size="lg"/>
           <div style={tabTextStyle} className="tab-text">Home</div>

@@ -54,7 +54,7 @@ class MakeCallForm extends Component {
         >
           <form>
             <input onChange={this.handleChange.bind(this)}
-              id="dial_num" type="tel" placeholder="Enter a Number to Dial"
+              id="dial_num" type="tel" placeholder="Number to Dial"
               value={this.state.value}
               onKeyPress={this._handleKeyPress.bind(this)}
             />

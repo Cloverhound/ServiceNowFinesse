@@ -19,9 +19,12 @@ class LoginDialog extends Component {
     };
 
     let submitButtonStyle = {
-        border: "2px solid #333",
+        border: "none",  
+      //border: "2px solid #333",
         borderRadius: "25px",
-        backgroundColor: "transparent",
+        backgroundColor: "#4b7fde",
+        color: "#FFF",
+        //backgroundColor: "transparent",
         margin: "0px",
         textTransform: "uppercase",
         cursor: "pointer",

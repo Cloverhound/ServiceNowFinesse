@@ -16,16 +16,18 @@ class CallPanel extends Component {
     this.state = { "open": false, now: (new Date()) };
   }
 
-  toggleContent() {
-    this.setState({"open": !this.state.open});
+  componentDidMount() {
+    this.interval = setInterval(() => {
+      this.setState({ now: (new Date()) });
+    }, 500);
   }
 
-  startCallTimer() {
-    var timer = setInterval(() => {
-      this.setState({ now: (new Date()) });
-    }, 1000);
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
 
-    this.setState({timer: timer});
+  toggleContent() {
+    this.setState({"open": !this.state.open});
   }
 
   render() {
@@ -55,6 +57,11 @@ class CallPanel extends Component {
     }
     let headerTextStyle = {
       verticalAlign: 'middle',
+      float: 'left',
+      fontSize: '13px'
+    }
+    let noCallsTextStyle = {
+      verticalAlign: 'middle',
       float: 'left'
     }
 
@@ -67,7 +74,7 @@ class CallPanel extends Component {
         <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
           <div className="call-header" onClick={this.toggleContent.bind(this)}>
             <i style={iconStyle} className="fa fa-phone" aria-hidden="true"></i>
-            <span style={headerTextStyle}>
+            <span style={noCallsTextStyle}>
               No Calls
             </span>
           </div>
@@ -94,14 +101,14 @@ class CallPanel extends Component {
         formattedCallTime = moment.duration(elapsedTime);
         formattedCallTime = formattedCallTime.format('mm:ss', { trim: false });
 
-        if (!this.state.timer) {
-          this.startCallTimer.apply(this);
-        }
+        //if (!this.state.timer) {
+          //this.startCallTimer.apply(this);
+        //}
 
         callTabs.push(
-          <div className="call-tab">
+          <div className="call-tab" key={call.id}>
             <div className="call-header">
-              <i style={iconStyle} className="fa fa-phone header-phone-icon" aria-hidden="true"></i>
+              <i style={{display: "none"}} className="fa fa-phone header-phone-icon" aria-hidden="true"></i>
               <span className="header-other-party" style={headerTextStyle}>
                 {call.otherParty} ({formattedCallTime})
               </span>
