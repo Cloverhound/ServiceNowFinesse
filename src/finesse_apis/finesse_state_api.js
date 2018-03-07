@@ -1,10 +1,11 @@
 import $ from "jquery";
-
+import xmlToJSON from "../vendor/xmlToJSON";
 
 const FinesseStateApi = {
   ready: ready,
   notReady: notReady,
-  logout: logout
+  logout: logout,
+  updateAgentState: updateAgentState
 }
 
 
@@ -29,6 +30,27 @@ function ready(agent) {
     error: function(jqXHR, textStatus) {
       alert("Failed to set state to ready: ", textStatus);
       console.log("Failed to set state to ready: ", textStatus);
+    }
+  });
+}
+
+function updateAgentState(callback) {
+  $.ajax({
+    url: window.finesseUrl + '/finesse/api/User/' + window.agent.username,
+    type: "GET",
+    cache: false,
+    dataType: "text",
+    beforeSend: function (xhr) {
+      xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.Finesse.password));
+    },
+    success: function(xml) {
+      console.log(xml);
+      var data = xmlToJSON.parseString(xml, { childrenAsArray: false });
+      console.log("Got agent update after login:", data);
+      window.handleUserUpdate(data.User);
+
+      if (callback)
+        callback();
     }
   });
 }

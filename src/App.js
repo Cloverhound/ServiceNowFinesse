@@ -282,40 +282,32 @@ window.addEventListener("message", receiveMessage, false);
 function pushLoginToFinesse(username, password, extension) {
   console.log("Pushing login to finesse with username: " + username);
 
-  var xml = '<User>' +
-            ' <state>LOGIN</state>' +
-            ' <extension>' + extension + '</extension>' +
-            '</User>';
-
-  $.ajax({
-    url: window.finesseUrl + '/finesse/api/User/' + username,
-    type: 'PUT',
-    data: xml,
-    contentType: "application/xml",
-    beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(username, password));
-    },
-    success: function(data) {
-      $.ajax({
-        url: window.finesseUrl + '/finesse/api/User/' + window.agent.username,
-        type: "GET",
-        cache: false,
-        dataType: "text",
-        beforeSend: function (xhr) {
-          xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.agent.password));
-        },
-        success: function(xml) {
-          console.log(xml);
-          var data = xmlToJSON.parseString(xml, { childrenAsArray: false });
-          console.log("Got agent update after login:", data);
-          handleUserUpdate(data.User);
-        }
-      });
-      console.log(data);
-    },
-    error: function() {
-      handleLoginFailed("Failed to login to finesse");
+  FinesseStateApi.updateAgentState(function () {
+    if (window.agent.state !== "LOGOUT") {
+      return;
     }
+
+    var xml = '<User>' +
+              ' <state>LOGIN</state>' +
+              ' <extension>' + extension + '</extension>' +
+              '</User>';
+
+    $.ajax({
+      url: window.finesseUrl + '/finesse/api/User/' + username,
+      type: 'PUT',
+      data: xml,
+      contentType: "application/xml",
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader('Authorization', make_base_auth(username, password));
+      },
+      success: function(data) {
+        FinesseStateApi.updateAgentState();
+        console.log(data);
+      },
+      error: function() {
+        handleLoginFailed("Failed to login to finesse");
+      }
+    });
   });
 }
 
@@ -436,6 +428,7 @@ function handleUserUpdate(updatedAgent) {
 
   rerender(window.agent);
 }
+window.handleUserUpdate = handleUserUpdate;
 
 function handleApiErrors(apiErrors) {
   var errorMessage = apiErrors.apiError.errorMessage._text;
@@ -542,7 +535,7 @@ function handleDialogUpdated(dialog) {
     window.openFrameAPI.openServiceNowForm({entity: window.entityTemplate, query: query });
     call.alreadyPopped = true;
   }
-  
+
   if(call.direction === "inbound" && call.state === "ALERTING" && window.openFrameAPI) {
     window.openFrameAPI.show();
   }
