@@ -28,7 +28,7 @@ class Tabs extends Component {
       position: "absolute",
       bottom: "0px",
       width: "100%",
-      background: "whitesmoke",
+      background: "#FFF",
       cursor: "pointer"
     };
 
