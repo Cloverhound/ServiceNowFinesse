@@ -121,9 +121,14 @@ function emptyAgent() {
 
 function handleCommunicationEvent(context) {
   console.log("Communication from Topframe", context);
-  if(context["phone_number"]) {
-    FinessePhoneApi.call(window.agent, context["phone_number"].replace(/-/g, ""));
+  if(context.type == "OUTGOING_CALL" && context.phoneNumber) {
+    var phoneNumber = context.phoneNumber.replace(/[\(\)\s-]/g, "");
+    phoneNumber = phoneNumber.split('x')[0]
+
+    FinessePhoneApi.call(window.agent, phoneNumber);
     window.openFrameAPI.show();
+  } else {
+    console.log("Unknown communication type.");
   }
 }
 function handleOpenFrameShownEvent(context) {
