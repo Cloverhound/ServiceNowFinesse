@@ -350,7 +350,19 @@ function receiveMessage(event)
     return;
   }
 
-  var eventCode = event.data.split("|")[0];
+  let eventData = event.data.split("|");
+  let eventCode = eventData[0];
+  let eventValue = eventData[1];
+
+  if (eventData.length < 2) {
+    return;
+  }
+
+  if (eventCode === "4" && eventValue === "conflict") {
+    console.warn("Agent logged in on another screen.");
+    window.rerender(null);
+  }
+
   if (eventCode === "0") {
     if (FinesseTunnelApi.state !== "connected") {
       console.log("Tunnel not connected, ignoring data update.");
