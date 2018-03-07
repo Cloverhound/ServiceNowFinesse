@@ -323,9 +323,10 @@ function handleLoginFailed(reason)
 
 function receiveMessage(event)
 {
-  console.log("Received:", event.data);
+  console.log("Received from tunnel:", event.data);
 
   if (event.data === "4|connected") {
+    FinesseTunnelApi.state = "connected";
     pushLoginToFinesse(window.agent.username, window.Finesse.password, window.agent.extension);
   }
 
@@ -334,12 +335,15 @@ function receiveMessage(event)
   }
 
   if(event.data === "4|disconnected") {
+    FinesseTunnelApi.state = "disconnected";
     console.log("Received disconnected event...");
     if(window.agent.state !== "LOGOUT" && !window.agent.loggingOut) {
       console.log("Reconnecting because logged in and not logging out, so shouldnt have disconnected");
       FinesseTunnelApi.connect(window.agent);
       return;
     }
+
+    window.rerender(null);
   }
 
   if (!event.data || !event.data.split) {
@@ -348,6 +352,11 @@ function receiveMessage(event)
 
   var eventCode = event.data.split("|")[0];
   if (eventCode === "0") {
+    if (FinesseTunnelApi.state !== "connected") {
+      console.log("Tunnel not connected, ignoring data update.");
+      return; 
+    }
+
     var dataString = event.data.split('|')[1];
     dataString = dataString.replace(/^[^<]+/, '')
     var data = xmlToJSON.parseString(dataString, { childrenAsArray: false });
@@ -591,6 +600,14 @@ function handleAllDialogsDeleted(dialogs) {
   rerender(window.agent);
 }
 
+function disconnectSession() {
+  window.agent.loggingOut = false;
+  window.agent.loggingIn = false;
+  window.agent.previousLoginFailed = false;
+  window.agent.state = "LOGOUT";
+  FinesseTunnelApi.disconnect(window.agent);
+}
+
 // Helps convert the xmlToJSON results to regular properties
 function setAgentFieldFromUserUpdate(fieldName, userObject, type) {
   let previousState = window.agent["state"]
@@ -601,10 +618,7 @@ function setAgentFieldFromUserUpdate(fieldName, userObject, type) {
   window.agent[fieldName] = value;
   let currentState = window.agent["state"]
   if(previousState !== "LOGOUT" && currentState === "LOGOUT") {
-    FinesseTunnelApi.disconnect(window.agent);
-    window.agent.loggingOut = false;
-    window.agent.loggingIn = false;
-    window.agent.previousLoginFailed = false;
+    disconnectSession();
   }
 
 }

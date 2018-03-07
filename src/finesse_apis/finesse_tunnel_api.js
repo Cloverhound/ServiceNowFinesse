@@ -1,7 +1,8 @@
 
 const FinesseTunnelApi = {
   connect: connect,
-  disconnect: disconnect
+  disconnect: disconnect,
+  state: "disconnected"
 }
 
 var MESSAGE_TYPE = {
@@ -22,6 +23,8 @@ var MESSAGE_TYPE = {
 function connect(agent) {
   console.log("Connecting iframe with username: " + agent.username)
 
+  FinesseTunnelApi.state = "connecting";
+
   var tunnelFrame = document.getElementById("tunnel-frame");
   var tunnelWindow = tunnelFrame.contentWindow;
 
@@ -32,6 +35,8 @@ function connect(agent) {
 
 function disconnect(agent) {
   console.log("Disconnecting iframe with username: " + agent.username)
+
+  FinesseTunnelApi.state = "disconnecting";
 
   var tunnelFrame = document.getElementById("tunnel-frame");
   var tunnelWindow = tunnelFrame.contentWindow;
