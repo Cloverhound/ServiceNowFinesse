@@ -192,7 +192,7 @@ function openFrameInitFailure(error) {
 
 function setupFinesseUrl(config) {
   console.log('Setting up finesse url...')
-  window.finesseUrl = config.finesseUrl || decodeURIComponent(getQueryParameter("finesseUrl")) || ""
+  window.finesseUrl = (config.finesseUrl || decodeURIComponent(getQueryParameter("finesseUrl"))) || ""
   window.finesseUrlWithoutPort = window.finesseUrl;
 
   var el = document.createElement('a');
