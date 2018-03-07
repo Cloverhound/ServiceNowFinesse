@@ -142,7 +142,7 @@ function openFrameInitSuccess(snConfig) {
 
   var paramsList = snConfig.configuration.split("\n");
   for(var i = 0; i < paramsList.length; i++) {
-    if (paramsList[i].startsWith("#")) {
+    if (paramsList[i].startsWith("#") || paramsList[i].trim() === "") {
       continue;
     }
 
