@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-var Loader = require('halogen/PulseLoader');
+//var Loader = require('halogen/PulseLoader');
+import { PulseLoader } from 'react-spinners';
 
 class LoginDialog extends Component {
 
@@ -64,7 +65,7 @@ class LoginDialog extends Component {
           }
 
           <div id="loaderDiv" style={loaderStyle}>
-            <Loader color="#39C1A6" size="16px" margin="5px"/>
+            <PulseLoader color="#39C1A6" width={116} margin="5px"/>
           </div>
 
           <input type="submit" value="Login" style={submitButtonStyle}></input>

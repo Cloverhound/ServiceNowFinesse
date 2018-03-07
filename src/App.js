@@ -14,6 +14,18 @@ import FinesseStateApi from './finesse_apis/finesse_state_api';
 import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 
+import LogRocket from 'logrocket';
+LogRocket.init('cloverhound/snow-finesse-dev',  {
+  // Scrub Auth header from all logged requests.
+  network: {
+    requestSanitizer: function (request) {
+      request.headers['Authorization'] = "**HIDDEN**";
+      return request;
+    },
+  },
+});
+//LogRocket.startNewSession();
+
 window.finesseUrl = "";
 window.finesseUrlWithoutPort = "";
 window.tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};  // I forsee dialpad and contacts in the future
@@ -223,6 +235,10 @@ function login() {
   //FinesseTunnelApi.connect(window.agent);
 
   console.log(window.agent.username, window.agent.extension);
+
+  LogRocket.identify(window.agent.username, {
+    extension: window.agent.extension,
+  });
 
   if(!window.agent.username || !window.Finesse.password) {
     handleLoginFailed("Invalid Credentials");
