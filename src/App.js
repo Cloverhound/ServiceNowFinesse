@@ -345,7 +345,8 @@ function receiveMessage(event)
     console.log("Received disconnected event...");
     if(window.agent.state !== "LOGOUT" && !window.agent.loggingOut) {
       console.log("Reconnecting because logged in and not logging out, so shouldnt have disconnected");
-      FinesseTunnelApi.connect();
+      FinesseTunnelApi.connect(window.agent);
+      return;
     }
   }
 
