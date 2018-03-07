@@ -20,13 +20,13 @@ var MESSAGE_TYPE = {
 };
 
 function connect(agent) {
-  console.log("Connecting iframe with username: " + agent.username + " and password: " + agent.password)
+  console.log("Connecting iframe with username: " + agent.username)
 
   var tunnelFrame = document.getElementById("tunnel-frame");
   var tunnelWindow = tunnelFrame.contentWindow;
 
   tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + agent.username, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + agent.password, "*");
+  tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + window.Finesse.password, "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + window.finesseHostname, "*");
 }
 

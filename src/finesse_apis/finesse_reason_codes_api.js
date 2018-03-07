@@ -18,7 +18,7 @@ function setReasonCodesWithCategory(agent, category, reasonCodes) {
     type: 'GET',
     dataType: "xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
     },
     success: function(xmlReasonCodes) {
       console.log("Successfully got reason codes");

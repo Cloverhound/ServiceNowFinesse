@@ -23,10 +23,68 @@ window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
 
 window.$ = $;
 
+window.Finesse = {
+  agent: emptyAgent(),
+
+  sessionId: null,
+
+  password: "",
+
+  url: {
+    full: "",
+    withoutPort: ""
+  },
+
+  screenPop: {
+    entityTemplate: "incident",
+    queryTemplate: "sysparm_query=number=INC00{{callVariable1}}"
+  },
+
+  tabNames: {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4},  // I forsee dialpad and contacts in the future
+
+  setupUrl() {
+
+  },
+
+  blah() {
+
+  }
+}
+
+window.OpenFrame = {
+  available: false,
+
+  config: {},
+
+  init() {
+    if (window.openFrameAPI) {
+      window.openFrameAPI.init({ height: 350, width: 350 }, this.initSuccess, this.initFailure);
+    } else {
+      window.Finesse.setupUrl({});
+    }
+  },
+
+  initSuccess() {
+
+  },
+
+  initFailure() {
+
+  },
+
+  handleCommunicationEvent(context) {
+    console.log("Communication from Topframe", context);
+    if(context["phone_number"]) {
+      FinessePhoneApi.call(window.Finesse.agent, context["phone_number"].replace(/[-]/g, ""));
+      window.openFrameAPI.show();
+    }
+  }
+}
+
 if (window.openFrameAPI) {
   window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
 } else {
-  window.setupFinesseUrl({});
+  setupFinesseUrl({});
 }
 
 function emptyAgent() {
@@ -160,13 +218,13 @@ function login() {
 
   var form = document.getElementById("login-form");
   window.agent.username = form.elements["username"].value;
-  window.agent.password = form.elements["password"].value;
+  window.Finesse.password = form.elements["password"].value;
   window.agent.extension = String(form.elements["extension"].value);
   //FinesseTunnelApi.connect(window.agent);
 
   console.log(window.agent.username, window.agent.extension);
 
-  if(!window.agent.username || !window.agent.password) {
+  if(!window.agent.username || !window.Finesse.password) {
     handleLoginFailed("Invalid Credentials");
     return false;
   }
@@ -182,7 +240,7 @@ function login() {
     cache: false,
     dataType: "xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.agent.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.Finesse.password));
     },
     success: function() {
       FinesseReasonCodesApi.setReasonCodes(window.agent);
@@ -200,7 +258,7 @@ function login() {
 window.addEventListener("message", receiveMessage, false);
 
 function pushLoginToFinesse(username, password, extension) {
-  console.log("Pushing login to finesse with username: " + username + " and password: " + password);
+  console.log("Pushing login to finesse with username: " + username);
 
   var xml = '<User>' +
             ' <state>LOGIN</state>' +
@@ -254,7 +312,7 @@ function receiveMessage(event)
   console.log("Received:", event.data);
 
   if (event.data === "4|connected") {
-    pushLoginToFinesse(window.agent.username, window.agent.password, window.agent.extension);
+    pushLoginToFinesse(window.agent.username, window.Finesse.password, window.agent.extension);
   }
 
   if (event.data === "4|unauthorized") {

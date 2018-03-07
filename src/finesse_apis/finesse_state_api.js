@@ -21,7 +21,7 @@ function ready(agent) {
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
     },
     success: function(data) {
       console.log(data);
@@ -71,7 +71,7 @@ function notReady(agent, label) {
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
     },
     success: function(data) {
       console.log(data);
@@ -116,7 +116,7 @@ function logout(agent, label) {
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
     },
     success: function(data) {
       console.log("Successfully logged out");

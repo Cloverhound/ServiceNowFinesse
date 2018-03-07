@@ -147,7 +147,7 @@ function sendDialogCommand(agent, id, xml) {
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
     },
     success: function(data) {
       console.log("Successfully sent dialog command", data);
@@ -171,7 +171,7 @@ function sendPhoneCommand(agent, xml) {
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, agent.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
     },
     success: function(data) {
       console.log("Successfully sent phone command", data);
