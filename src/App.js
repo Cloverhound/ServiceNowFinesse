@@ -428,12 +428,21 @@ function handleUserUpdate(updatedAgent) {
   setAgentFieldFromUserUpdate('stateChangeTime', updatedAgent);
   setAgentFieldFromUserUpdate('reasonCodeId', updatedAgent);
   setAgentFieldFromUserUpdate('pendingState', updatedAgent);
-  setAgentFieldFromUserUpdate('firstName', updatedAgent);
-  setAgentFieldFromUserUpdate('lastName', updatedAgent);
+  setAgentFieldFromUserUpdate('firstName', updatedAgent, "String");
+  setAgentFieldFromUserUpdate('lastName', updatedAgent, "String");
   setAgentFieldFromUserUpdate('loginId', updatedAgent, "String");
-  setAgentFieldFromUserUpdate('loginName', updatedAgent);
-  setAgentFieldFromUserUpdate('teamName', updatedAgent);
+  setAgentFieldFromUserUpdate('loginName', updatedAgent, "String");
+  setAgentFieldFromUserUpdate('teamName', updatedAgent, "String");
   setAgentFieldFromUserUpdate('extension', updatedAgent, "String");
+
+  LogRocket.identify(window.agent.username, {
+    firstName: window.agent.firstName,
+    lastName: window.agent.lastName,
+    name: window.agent.firstName + " " + window.agent.lastName,
+    teamName: window.agent.teamName,
+    loginId: window.agent.loginId,
+    loginName: window.agent.loginName
+  });
 
   rerender(window.agent);
 }
