@@ -13,6 +13,7 @@ import FinessePhoneApi from './finesse_apis/finesse_phone_api';
 import FinesseStateApi from './finesse_apis/finesse_state_api';
 import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
+import Polyfills from "./polyfills";
 
 import LogRocket from 'logrocket';
 LogRocket.init('cloverhound/snow-finesse-dev',  {
