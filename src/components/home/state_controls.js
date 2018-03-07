@@ -65,7 +65,7 @@ class StateControls extends Component {
     if (option.value === STATE_TEXT['READY']) {
       stateApi.ready(agent);
     } else if (option.value.includes(STATE_TEXT['NOT_READY']) && option.value.includes("-")) {
-      stateApi.notReady(agent, option.value.split("-")[1].replace(/ /g,''));
+      stateApi.notReady(agent, option.value.split("-")[1].substring(1));
     } else {
       stateApi.notReady(agent);
     }
