@@ -16,7 +16,13 @@ import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 import Polyfills from "./polyfills";
 
 import LogRocket from 'logrocket';
-LogRocket.init('cloverhound/snow-finesse-dev',  {
+
+let env = getQueryParameter("ENV");
+let logRocketApp = "cloverhound/snow-finesse";
+if (env) {
+  logRocketApp += "-" + env;
+}
+LogRocket.init(logRocketApp,  {
   // Scrub Auth header from all logged requests.
   network: {
     requestSanitizer: function (request) {
@@ -25,6 +31,14 @@ LogRocket.init('cloverhound/snow-finesse-dev',  {
     },
   },
 });
+
+window.reportError = function(message) {
+  if (!LogRocket && !LogRocket.captureMessage) {
+    return;
+  }
+
+  LogRocket.captureMessage(message);
+}
 //LogRocket.startNewSession();
 
 window.finesseUrl = "";
@@ -247,12 +261,12 @@ function login() {
   });
 
   if(!window.agent.username || !window.Finesse.password) {
-    handleLoginFailed("Invalid Credentials");
+    handleLoginFailed("Username and password required.");
     return false;
   }
 
   if(!window.agent.extension) {
-    handleLoginFailed("Invalid Device");
+    handleLoginFailed("Extension required.");
     return false;
   }
 
@@ -261,6 +275,7 @@ function login() {
     type: "GET",
     cache: false,
     dataType: "xml",
+    timeout: 6000,
     beforeSend: function (xhr) {
       xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.Finesse.password));
     },
@@ -268,7 +283,21 @@ function login() {
       FinesseReasonCodesApi.setReasonCodes(window.agent);
       FinesseTunnelApi.connect(window.agent);
     },
-    error: function() {
+    error: function(req, status, err) {
+      if (status === "timeout") {
+        console.error("Timed out testing agent credentials:", status, err);
+        window.reportError("Timed out testing agent credentials: " + status + ", " + err);
+        handleLoginFailed("Can't reach Finesse, contact support.");
+        return;
+      }
+      if (status === "parsererror") {
+        console.error("Error parsing result while testing agent credentials:", status, err);
+        window.reportError("Error parsing result while testing agent credentials: " + status + ", " + err);
+        handleLoginFailed("There was an error reaching Finesse, contact support.");
+        return;
+      }
+      
+      console.warn("Error testing agent credentials:", status, err);
       handleLoginFailed("Invalid Credentials");
     },
     complete: function() {
@@ -304,8 +333,10 @@ function pushLoginToFinesse(username, password, extension) {
         FinesseStateApi.updateAgentState();
         console.log(data);
       },
-      error: function() {
-        handleLoginFailed("Failed to login to finesse");
+      error: function(req, status, err) {
+        console.error("Error logging in to Finesse:", status, err);
+        window.reportError("Error logging in to Finesse: " + status + ", " + err);
+        handleLoginFailed("Error logging in to Finesse.");
       }
     });
   });
@@ -376,7 +407,15 @@ function receiveMessage(event)
 
 
     if (data.Update.data.apiErrors && window.agent.state === "LOGOUT") {
-        handleLoginFailed(data.Update.data.apiErrors.apiError.errorType._text);
+      let errorMessage = data.Update.data.apiErrors.apiError.errorType._text;
+
+      if (errorMessage === "Invalid Device") {
+        handleLoginFailed("Invalid Extension");
+      } else {
+        console.error("Received API error while logging in to Finesse:", errorMessage);
+        window.reportError("Received API error while logging in to Finesse: " + errorMessage);
+        handleLoginFailed(errorMessage);
+      }
     } else if (data.Update.data.apiErrors){
       handleApiErrors(data.Update.data.apiErrors);
     } else if (data.Update.data.user) {
@@ -463,6 +502,10 @@ window.handleUserUpdate = handleUserUpdate;
 function handleApiErrors(apiErrors) {
   var errorMessage = apiErrors.apiError.errorMessage._text;
   var errorType = apiErrors.apiError.errorType._text;
+
+  console.error("Received API error:", errorType,  errorMessage);
+  window.reportError("Received API error: " + errorType + ", " + errorMessage);
+
   alert(errorMessage + " - " + errorType);
 }
 
