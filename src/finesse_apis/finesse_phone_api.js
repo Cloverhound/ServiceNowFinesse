@@ -152,11 +152,18 @@ function sendDialogCommand(agent, id, xml) {
     success: function(data) {
       console.log("Successfully sent dialog command", data);
     },
-    error: function(jqXHR, textStatus) {
+    error: function(jqXHR, status, err) {
       if(!jqXHR.responseText) {
+        console.error("No response from Finesse for Dialog Command:", status, err);
+        window.reportError("No response from Finesse for Dialog Command: " + status + ", " + err);
+
         alert("No Response From Finesse: Possible Network Error");
         return;
       }
+
+      console.error("Received error for Dialog Command:", status, err);
+      window.reportError("Received error for Dialog Command: " + status + ", " + err);
+
       alert($($.parseXML(jqXHR.responseText)).find("ErrorMessage").text());
       console.log("Failed to send dialog command: " + jqXHR.responseText);
     }
@@ -176,7 +183,10 @@ function sendPhoneCommand(agent, xml) {
     success: function(data) {
       console.log("Successfully sent phone command", data);
     },
-    error: function(jqXHR, textStatus) {
+    error: function(jqXHR, status, err) {
+      console.error("No response from Finesse for Phone Command:", status, err);
+      window.reportError("No response from Finesse for Phone Command: " + status + ", " + err);
+
       alert($($.parseXML(jqXHR.responseText)).find("ErrorMessage").text());
       console.log("Failed to send phone command: " + jqXHR.responseText);
     }

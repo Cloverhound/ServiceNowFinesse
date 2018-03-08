@@ -27,9 +27,11 @@ function ready(agent) {
     success: function(data) {
       console.log(data);
     },
-    error: function(jqXHR, textStatus) {
-      alert("Failed to set state to ready: ", textStatus);
-      console.log("Failed to set state to ready: ", textStatus);
+    error: function(jqXHR, status, err) {
+      console.error("Error setting state to Ready:", status, err);
+      window.reportError("Error setting state to Ready: " + status + ", " + err);
+
+      alert("Failed to set state to Ready: ", status);
     }
   });
 }
@@ -51,6 +53,11 @@ function updateAgentState(callback) {
 
       if (callback)
         callback();
+    },
+    error: function(jqXHR, status, err) {
+      console.error("Error updating agent state:", status, err);
+      window.reportError("Error updating agent state: " + status + ", " + err);
+      // TODO handle?
     }
   });
 }
@@ -99,9 +106,11 @@ function notReady(agent, label) {
       console.log(data);
 
     },
-    error: function(jqXHR, textStatus) {
-      alert("Failed to set state to not_ready: ", textStatus);
-      console.log("Failed to set state to not_ready: ", textStatus);
+    error: function(jqXHR, status, err) {
+      console.error("Error setting state to NOT_READY:", status, err);
+      window.reportError("Error setting state to NOT_READY: " + status + ", " + err);
+      
+      alert("Failed to set state to Not Ready: ", status);
     }
   });
 }
@@ -144,8 +153,9 @@ function logout(agent, label) {
       console.log("Successfully logged out");
       console.log(data);
     },
-    error: function(jqXHR, statusText) {
-      console.log("Failed to logout: ", statusText);
+    error: function(jqXHR, status, err) {
+      console.error("Error setting state to Logout:", status, err);
+      window.reportError("Error setting state to Logout: " + status + ", " + err);
     }
   });
 }

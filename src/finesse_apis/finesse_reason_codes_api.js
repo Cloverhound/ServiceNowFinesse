@@ -36,8 +36,9 @@ function setReasonCodesWithCategory(agent, category, reasonCodes) {
       });
       console.log("Done setting reason codes", reasonCodes);
     },
-    error: function(jqXHR, statusText) {
-      console.log("Failed to get reason codes: ", statusText);
+    error: function(jqXHR, status, err) {
+      console.error("Error getting reason codes:", status, err);
+      window.reportError("Error getting reason codes: " + status + ", " + err);
     }
   });
 }
