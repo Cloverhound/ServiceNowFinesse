@@ -1,29 +1,32 @@
 import React, { Component } from 'react';
-
+import Finesse from '../../finesse_apis/finesse_api';
 
 class MakeCallForm extends Component {
 
-  constructor() {
-    super();
-
-    this.state = { value: '' };
-  }
-
   handleMakeCall() {
+    console.log("Make call control making call.");
+
     let agent = this.props.agent;
     let calls = agent.calls;
-    console.log("Handling make call...");
+    
     if(Object.keys(calls).length === 1) {
-      this.props.phoneApi.consult(agent, this.state.value);
+      this.props.phoneApi.consult(agent, this.props.digits);
     } else {
-      this.props.phoneApi.call(agent, this.state.value);
+      this.props.phoneApi.call(agent, this.props.digits);
     }
-    this.setState({value: ''});
+    
+    Finesse.agent.currentTab = Finesse.tabNames.HOME;
+    window.MainApp.updateDigits("");
   }
 
   handleChange(event) {
-    console.log("Handling change, setting state to: ", event.target.value);
-    this.setState({value: event.target.value});
+    //this.setState({value: event.target.value});
+    window.MainApp.updateDigits(event.target.value);
+  }
+
+  clear() {
+    console.log("Make call clear button clicked, clearing.");
+    window.MainApp.updateDigits("");
   }
 
   _handleKeyPress(e) {
@@ -52,12 +55,15 @@ class MakeCallForm extends Component {
             bottom: '5px'
           }}
         >
-          <form>
+          <form className="make-call-form">
             <input onChange={this.handleChange.bind(this)}
               id="dial_num" type="tel" placeholder="Number to Dial"
-              value={this.state.value}
+              value={this.props.digits}
               onKeyPress={this._handleKeyPress.bind(this)}
             />
+            <a className="make-call-clear" onClick={this.clear.bind(this)}>
+              <i className="fa fa-times" aria-hidden="true"></i>
+            </a>
             <a onClick={this.handleMakeCall.bind(this)} className="cta hybrid">
               <i className="fa fa-phone" aria-hidden="true"></i>
                 <span>{callButtonText}</span>

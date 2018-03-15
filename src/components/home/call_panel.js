@@ -68,6 +68,8 @@ class CallPanel extends Component {
 
     let callIds = Object.keys(calls);
 
+    let makeCallForm = <MakeCallForm agent={this.props.agent} digits={this.props.digits} phoneApi={this.props.phoneApi}/>;
+
     if(callIds.length === 0) {
 
       return (
@@ -79,7 +81,7 @@ class CallPanel extends Component {
             </span>
           </div>
 
-          <MakeCallForm agent={agent} phoneApi={this.props.phoneApi}/>
+          {makeCallForm}
         </div>
       );
 
@@ -130,7 +132,7 @@ class CallPanel extends Component {
       return (
         <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
           {callTabs}
-          <MakeCallForm agent={this.props.agent} phoneApi={this.props.phoneApi}/>
+          {makeCallForm}
         </div>
       );
     }

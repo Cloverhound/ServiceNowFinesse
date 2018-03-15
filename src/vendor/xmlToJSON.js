@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /* Copyright 2015 William Summers, MetaTribal LLC
  * adapted from https://developer.mozilla.org/en-US/docs/JXON
  *

@@ -1,5 +1,5 @@
 import $ from "jquery";
-
+import Finesse from './finesse_api';
 
 const FinessePhoneApi = {
   call: call,
@@ -9,7 +9,9 @@ const FinessePhoneApi = {
   resume: resume,
   conference: conference,
   answer: answer,
-  transfer: transfer
+  transfer: transfer,
+  sendDtmf: sendDtmf,
+  getActiveCall: getActiveCall
 }
 
 function call(agent, number) {
@@ -63,7 +65,16 @@ function getCallByLine(calls, line) {
   return false;
 }
 
-
+function getActiveCall(agent) {
+  var callIds = Object.keys(agent.calls);
+  for(var i = 0; i < callIds.length; i++) {
+    var call = agent.calls[callIds[i]];
+    if (call.state == "ACTIVE" && !call.held) {
+      return call;
+    }
+  }
+  return null;
+}
 
 function hangup(agent, call) {
   console.log("Hanging up call:", call);
@@ -139,15 +150,32 @@ function transfer(agent, call) {
   sendDialogCommand(agent, call.id, xml);
 }
 
+function sendDtmf(digit, agent, call) {
+  console.log("Sending DTMF:", call);
+
+  var xml = '<Dialog>' +
+            '  <targetMediaAddress>' + agent.extension + '</targetMediaAddress>' +
+            '  <requestedAction>SEND_DTMF</requestedAction>' +
+            '  <actionParams>' +
+            '    <ActionParam>' +
+            '      <name>dtmfString</name>' +
+            '      <value>' + digit + '</value>' +
+            '    </ActionParam>' +
+            '  </actionParams>' +
+            '</Dialog>';
+
+  sendDialogCommand(agent, call.id, xml);
+}
+
 function sendDialogCommand(agent, id, xml) {
   console.log("Sending dialog command with id: " + id + " and xml: ", xml);
   $.ajax({
-    url: window.finesseUrl + '/finesse/api/Dialog/' + id,
+    url: Finesse.url.full + '/finesse/api/Dialog/' + id,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, Finesse.password));
     },
     success: function(data) {
       console.log("Successfully sent dialog command", data);
@@ -173,12 +201,12 @@ function sendDialogCommand(agent, id, xml) {
 function sendPhoneCommand(agent, xml) {
   console.log("sending phone command with xml: ", xml);
   $.ajax({
-    url: window.finesseUrl + '/finesse/api/User/' + agent.username + '/Dialogs',
+    url: Finesse.url.full + '/finesse/api/User/' + agent.username + '/Dialogs',
     type: 'POST',
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, Finesse.password));
     },
     success: function(data) {
       console.log("Successfully sent phone command", data);

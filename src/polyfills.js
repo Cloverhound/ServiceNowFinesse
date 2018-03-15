@@ -1,4 +1,5 @@
 if (!String.prototype.startsWith) {
+  // eslint-disable-next-line 
 	String.prototype.startsWith = function(search, pos) {
 		return this.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
 	};
@@ -6,6 +7,7 @@ if (!String.prototype.startsWith) {
 
 // https://tc39.github.io/ecma262/#sec-array.prototype.includes
 if (!Array.prototype.includes) {
+  // eslint-disable-next-line 
   Object.defineProperty(Array.prototype, 'includes', {
     value: function(searchElement, fromIndex) {
 
@@ -57,16 +59,16 @@ if (!Array.prototype.includes) {
 }
 
 if (!String.prototype.includes) {
-    String.prototype.includes = function(search, start) {
-      'use strict';
-      if (typeof start !== 'number') {
-        start = 0;
-      }
-      
-      if (start + search.length > this.length) {
-        return false;
-      } else {
-        return this.indexOf(search, start) !== -1;
-      }
-    };
-  }
+  // eslint-disable-next-line 
+  String.prototype.includes = function(search, start) {
+    if (typeof start !== 'number') {
+      start = 0;
+    }
+    
+    if (start + search.length > this.length) {
+      return false;
+    } else {
+      return this.indexOf(search, start) !== -1;
+    }
+  };
+}

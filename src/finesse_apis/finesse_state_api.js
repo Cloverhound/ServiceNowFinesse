@@ -1,5 +1,6 @@
 import $ from "jquery";
 import xmlToJSON from "../vendor/xmlToJSON";
+import Finesse from './finesse_api';
 
 const FinesseStateApi = {
   ready: ready,
@@ -17,12 +18,12 @@ function ready(agent) {
             '</User>';
 
   $.ajax({
-    url: window.finesseUrl + '/finesse/api/User/' + agent.username,
+    url: Finesse.url.full + '/finesse/api/User/' + agent.username,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, Finesse.password));
     },
     success: function(data) {
       console.log(data);
@@ -38,12 +39,12 @@ function ready(agent) {
 
 function updateAgentState(callback) {
   $.ajax({
-    url: window.finesseUrl + '/finesse/api/User/' + window.agent.username,
+    url: Finesse.url.full + '/finesse/api/User/' + Finesse.agent.username,
     type: "GET",
     cache: false,
     dataType: "text",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(window.agent.username, window.Finesse.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(Finesse.agent.username, Finesse.password));
     },
     success: function(xml) {
       console.log(xml);
@@ -95,12 +96,12 @@ function notReady(agent, label) {
 
 
   $.ajax({
-    url: window.finesseUrl + '/finesse/api/User/' + agent.username,
+    url: Finesse.url.full + '/finesse/api/User/' + agent.username,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, Finesse.password));
     },
     success: function(data) {
       console.log(data);
@@ -142,12 +143,12 @@ function logout(agent, label) {
 
 
   $.ajax({
-    url: window.finesseUrl + '/finesse/api/User/' + agent.username,
+    url: Finesse.url.full + '/finesse/api/User/' + agent.username,
     type: 'PUT',
     data: xml,
     contentType: "application/xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, Finesse.password));
     },
     success: function(data) {
       console.log("Successfully logged out");

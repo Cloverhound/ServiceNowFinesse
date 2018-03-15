@@ -14,7 +14,7 @@ class HomeView extends Component {
         <div id="homeView" style={{height: "calc(100% - 35px)"}}>
           <div id="desktop">
             <StateControls agent={agent} stateApi={this.props.stateApi}/>
-            <CallPanel agent={agent} phoneApi={this.props.phoneApi}/>
+            <CallPanel agent={agent} digits={this.props.digits} phoneApi={this.props.phoneApi}/>
           </div>
         </div>
       )

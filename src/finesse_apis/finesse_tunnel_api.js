@@ -1,3 +1,4 @@
+import Finesse from './finesse_api';
 
 const FinesseTunnelApi = {
   connect: connect,
@@ -28,9 +29,9 @@ function connect(agent) {
   var tunnelFrame = document.getElementById("tunnel-frame");
   var tunnelWindow = tunnelFrame.contentWindow;
 
-  tunnelWindow.postMessage(MESSAGE_TYPE.RESOURCEID + "|" + "snow", "*");
+  tunnelWindow.postMessage(MESSAGE_TYPE.RESOURCEID + "|snow", "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + agent.username, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + window.Finesse.password, "*");
+  tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + Finesse.password, "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + window.finesseHostname, "*");
 }
 

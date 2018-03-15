@@ -12,7 +12,6 @@ var STATE_TEXT = {
   WORK_READY: 'Wrap-Up',
   NOT_READY: 'Not Ready',
   TALKING: 'Talking',
-  LOGOUT: 'Logout',
   HOLD: 'On Hold'
 };
 

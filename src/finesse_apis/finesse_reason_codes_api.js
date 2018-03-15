@@ -1,5 +1,5 @@
 import $ from "jquery";
-
+import Finesse from './finesse_api';
 
 const FinesseReasonCodesApi = {
   setReasonCodes: setReasonCodes
@@ -14,11 +14,11 @@ function setReasonCodes(agent) {
 function setReasonCodesWithCategory(agent, category, reasonCodes) {
   console.log("Setting reason codes for category: " + category);
   $.ajax({
-    url: window.finesseUrl + '/finesse/api/User/' + agent.username + '/ReasonCodes?category=' + category,
+    url: Finesse.url.full + '/finesse/api/User/' + agent.username + '/ReasonCodes?category=' + category,
     type: 'GET',
     dataType: "xml",
     beforeSend: function (xhr) {
-      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, window.Finesse.password));
+      xhr.setRequestHeader('Authorization', make_base_auth(agent.username, Finesse.password));
     },
     success: function(xmlReasonCodes) {
       console.log("Successfully got reason codes");
