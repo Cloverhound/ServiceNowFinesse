@@ -20,7 +20,10 @@ import getQueryParameter from "./query_params";
 
 import LogRocket from 'logrocket';
 
+let maxRecentCalls = 100;
+
 window.moment = moment;
+window.Finesse = Finesse;
 
 let env = getQueryParameter("ENV");
 let logRocketApp = "cloverhound/snow-finesse";
@@ -147,6 +150,10 @@ function openFrameInitSuccess(snConfig) {
 
   setupFinesseUrl(config)
 
+  if (config.maxRecentCalls && !isNaN(Number(config.maxRecentCalls))) {
+    maxRecentCalls = Number(config.maxRecentCalls);
+  }
+
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
   handleCommunicationEvent);
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
@@ -239,6 +246,7 @@ function pushLoginToFinesse(username, password, extension) {
 
   FinesseStateApi.updateAgentState(function () {
     if (Finesse.agent.state !== "LOGOUT") {
+      Finesse.reloadRecentCalls();
       return;
     }
 
@@ -257,7 +265,8 @@ function pushLoginToFinesse(username, password, extension) {
       },
       success: function(data) {
         FinesseStateApi.updateAgentState();
-        console.log(data);
+        Finesse.reloadRecentCalls();
+        console.log("Successfully submitted login request:", data);
       },
       error: function(req, status, err) {
         console.error("Error logging in to Finesse:", status, err);
@@ -266,10 +275,6 @@ function pushLoginToFinesse(username, password, extension) {
       }
     });
   });
-}
-
-function loadRecentCalls() {
-// TODO
 }
 
 function handleLoginFailed(reason)
@@ -389,6 +394,8 @@ function deleteCall(id) {
   if(recentCall && !recentCall.endTime) {
     recentCall.endedAt = moment();
     recentCall.duration = recentCall.endedAt.diff(recentCall.startedAt);
+
+    Finesse.saveRecentCalls();
   }
   delete Finesse.agent.calls[id];
   console.log("Agent: ", Finesse.agent);
@@ -570,13 +577,15 @@ function getParticipantState(dialog) {
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
   let recentCalls = Finesse.agent.recentCalls;
-  let recent_calls_list_length = 5;
-  if(recentCalls.length === recent_calls_list_length) {
+  
+  if(recentCalls.length === maxRecentCalls) {
     recentCalls = Finesse.agent.recentCalls.splice(0, 1);
   }
+  
   recentCalls.push(call);
+  Finesse.saveRecentCalls();
 
-  console.log("recent calls:", recentCalls);
+  console.log("Recent calls updated:", recentCalls);
 }
 
 function recentCallExists(call) {

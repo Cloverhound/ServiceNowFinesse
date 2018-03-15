@@ -1,3 +1,4 @@
+import moment from "moment";
 import getQueryParameter from "../query_params";
 
 const tabNames = {
@@ -53,8 +54,41 @@ const Finesse = {
     document.getElementById('tunnel-frame').src = this.url.withoutPort + ":7443/tunnel"
   },
 
-  blah() {
+  saveRecentCalls() {
+    localStorage[this.agent.loginId + ".recentCalls"] = JSON.stringify(this.agent.recentCalls);
+  },
 
+  reloadRecentCalls() {
+    let recents = [];
+  
+    let rs = localStorage[this.agent.loginId + ".recentCalls"];
+    if (!rs) { 
+      return recents
+    };
+  
+    let loadedRecents = JSON.parse(rs);
+    for(let i = 0; i < loadedRecents.length; i++) {
+      let call = loadedRecents[i];
+      
+      call.startedAt = moment(call.startedAt);
+      call.endedAt = moment(call.endedAt);
+  
+      let startDay = call.startedAt.clone().startOf('day');
+      let today = moment().startOf('day');
+  
+      // Ignore calls older than today.
+      if (startDay.isBefore(today)) {
+        continue;
+      }
+  
+      recents.push(call);
+    }
+  
+    this.agent.recentCalls = recents;
+    this.saveRecentCalls();
+    window.rerender(this.agent);
+    
+    return recents;
   },
 
   call() {

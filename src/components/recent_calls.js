@@ -46,7 +46,10 @@ class RecentCalls extends Component {
     };
 
     return (
-      <div id="recent_calls">
+      <div id="recent_calls" style={{
+        overflowY: 'scroll',
+        height: 'calc(100% - 63px)'
+      }}>
         {
           recentCallComponents.length > 0 ? (
             <ul style={ulStyle}>
