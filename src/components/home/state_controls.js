@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Dropdown from 'react-dropdown';
+import moment from "moment";
 
 var STATE_TEXT = {
   LOGOUT: 'Logged out',
@@ -16,6 +17,22 @@ var STATE_TEXT = {
 };
 
 class StateControls extends Component {
+
+  constructor() {
+    super();
+
+    this.state = { now: (new Date()) };
+  }
+
+  componentDidMount() {
+    this.interval = setInterval(() => {
+      this.setState({ now: (new Date()) });
+    }, 500);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
 
   readyStateOption() {
     return {
@@ -77,6 +94,17 @@ class StateControls extends Component {
       value += (" - " + agent.reasonCode.label);
     }
     var options = this.options(agent)
+
+
+    let formattedCallTime = '';
+    let elapsedTime = this.state.now - agent.localStateChangeTime;
+
+    if (elapsedTime < 0) {
+      elapsedTime = 0;
+    }
+    formattedCallTime = moment.duration(elapsedTime);
+    formattedCallTime = formattedCallTime.format('mm:ss', { trim: false });
+    value += (" - (" + formattedCallTime + ")");
 
     return (
       <div>

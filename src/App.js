@@ -628,6 +628,12 @@ function setAgentFieldFromUserUpdate(fieldName, userObject, type) {
   if (value && type === "String") {
     value = String(value);
   }
+
+  if(fieldName == "stateChangeTime" && Finesse.agent[fieldName] != value) {
+    window.Finesse.agent.localStateChangeTime = new Date();
+  }
+
+
   Finesse.agent[fieldName] = value;
   let currentState = Finesse.agent["state"]
   if(previousState !== "LOGOUT" && currentState === "LOGOUT") {
