@@ -635,3 +635,15 @@ a.cta.end {
   width: 50%;
   float: right;
 }
+
+
+
+.state-dropdown {
+  display: inline-block;
+  width: 100%;
+  margin-right: -220px;
+}
+
+.state-timer {
+  opacity: 0.75;
+}

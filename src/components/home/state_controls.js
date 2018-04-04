@@ -104,7 +104,19 @@ class StateControls extends Component {
     }
     formattedCallTime = moment.duration(elapsedTime);
     formattedCallTime = formattedCallTime.format('mm:ss', { trim: false });
-    value += (" - (" + formattedCallTime + ")");
+
+    let timerStyle = {
+      display: "inline-block",
+      marginBottom: "20px",
+      float: "right",
+      marginRight: "30px",
+      marginTop: "9px",
+      color: "white",
+      position: "relative",
+      zIndex: 10,
+      fontSize: "12px",
+      backgroundImage: "linear-gradient(white-lightgray)"
+    }
 
     return (
       <div>
@@ -115,6 +127,7 @@ class StateControls extends Component {
             value={value}
             className="state-dropdown"
           />
+          <div className={"state-timer"} style={timerStyle}>({formattedCallTime})</div>
         </div>
       </div>
     )
