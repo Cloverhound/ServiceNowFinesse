@@ -115,7 +115,8 @@ class StateControls extends Component {
       position: "relative",
       zIndex: 10,
       fontSize: "12px",
-      backgroundImage: "linear-gradient(white-lightgray)"
+      backgroundImage: "linear-gradient(white-lightgray)",
+      pointerEvents: "none"
     }
 
     return (

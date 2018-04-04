@@ -647,3 +647,10 @@ a.cta.end {
 .state-timer {
   opacity: 0.75;
 }
+
+.state-dropdown .Dropdown-placeholder {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 220px;
+  white-space: nowrap;
+}
