@@ -550,7 +550,12 @@ function handleDialogUpdated(dialog) {
   console.log("Updated call:", call)
   rerender(Finesse.agent);
 
-  if(!call.alreadyPopped && call.direction === "inbound" && window.openFrameAPI) {
+  let shouldPop = !call.alreadyPopped && call.direction === "inbound" && window.openFrameAPI
+  if(Finesse.agent.calls.length > 1 && !Finesse.agent.shouldPopConcurrently) {
+    shouldPop = false
+  }
+
+  if(shouldPop) {
     console.log("Screen-popping form", window.entityTemplate, query, call);
     window.openFrameAPI.openServiceNowForm({entity: window.entityTemplate, query: query });
     call.alreadyPopped = true;

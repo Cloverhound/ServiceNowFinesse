@@ -49,6 +49,7 @@
   margin: auto;
   padding: 10px 20px;
   height: calc(100% - 35px);
+  padding-bottom: 13px;
   /*bottom: calc(-15%);*/
 }
 

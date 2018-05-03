@@ -110,7 +110,8 @@ function emptyAgent() {
     signOutReasonCodes: [],
     previousLoginFailed: false,
     loggingOut: false,
-    loggingIn: false
+    loggingIn: false,
+    shouldPopConcurrently: false
   };
 }
 

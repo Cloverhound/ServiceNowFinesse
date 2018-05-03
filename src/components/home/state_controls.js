@@ -107,7 +107,6 @@ class StateControls extends Component {
 
     let timerStyle = {
       display: "inline-block",
-      marginBottom: "20px",
       float: "right",
       marginRight: "30px",
       marginTop: "9px",
