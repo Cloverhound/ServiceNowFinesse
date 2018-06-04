@@ -741,6 +741,33 @@ class App extends Component {
       return (
           <div id="main">
               <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={agent.previousLoginFailed} loading={agent.loggingIn}/>
+              <div style={{
+                  marginTop: '50px',
+                  padding: '20px',
+                  width: '100%',
+                  position: 'absolute',
+                  bottom: '-25px'
+                }}>
+                <a href="https://cloverhound.com/" target="_blank" class="logo" style={{display: 'inline-block', float: 'left'}}>
+                  <img border="0" alt="Cloverhound, Inc." src="logo.jpg" 
+                    style={{
+                      width: '120px',
+                      marginBottom: '10px'
+                    }} />
+                </a>
+
+                <a href="https://cloverhound.com/" target="_blank" className="copyright" 
+                    style={{
+                      marginTop: '15px',
+                      float: 'right',
+                      fontSize: '0.6em',
+                      textDecoration: 'none',
+                      color: '#777',
+                      fontWeight: 'bold'
+                    }}>
+                  © 2018 Cloverhound Inc.
+                </a>
+              </div>
           </div>
       );
     } else {

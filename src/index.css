@@ -5,7 +5,7 @@ html {
   	/* font-family: Helvetica, Arial, sans-serif; */
 }
 
-body {
+/* body {
 	font-family: -apple-system, 
 				 BlinkMacSystemFont, 
 				 "Segoe UI", 
@@ -15,7 +15,12 @@ body {
 				 Cantarell, 
 				 "Helvetica Neue", 
 				 sans-serif;
- }
+ } */
+
+ /* System Fonts as used by GitHub */
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  }
 
 *, *:before, *:after {
   	box-sizing: inherit;

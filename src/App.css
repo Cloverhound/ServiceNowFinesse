@@ -1,8 +1,8 @@
+
 #root {
   margin: 0px;
   padding: 0px;
 }
-
 
 .App {
   text-align: center;
@@ -111,7 +111,7 @@
   width: 250px;
   margin: auto;
   padding: 10px;
-  bottom: calc(-15%);
+  bottom: calc(-10%);
 }
 
 .login-form input {

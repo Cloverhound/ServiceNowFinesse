@@ -51,6 +51,8 @@ class LoginDialog extends Component {
 
     return (
       <div id="login-section" className="login-section">
+        
+
         <form id="login-form" className="login-form" onSubmit={this.handleLogin.bind(this)}>
           <input placeholder="username" type="text" name="username"></input>
           <input placeholder="password" type="password" name="password"></input>
@@ -69,6 +71,8 @@ class LoginDialog extends Component {
           </div>
 
           <input type="submit" value="Login" style={submitButtonStyle}></input>
+
+         
         </form>
       </div>
     );
