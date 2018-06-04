@@ -65,8 +65,10 @@ window.OpenFrame = {
 
   init() {
     if (window.openFrameAPI) {
+      console.log("OpenFrame API detected, initializing.");
       window.openFrameAPI.init({ height: 350, width: 350 }, this.initSuccess, this.initFailure);
     } else {
+      console.log("Not running in OpenFrame.");
       Finesse.setupUrl({});
     }
   },
@@ -86,12 +88,6 @@ window.OpenFrame = {
       window.openFrameAPI.show();
     }
   }
-}
-
-if (window.openFrameAPI) {
-  window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
-} else {
-  setupFinesseUrl({});
 }
 
 function handleCommunicationEvent(context) {
@@ -691,6 +687,17 @@ function rerender(agent) {
 }
 window.rerender = rerender;
 
+function initialize() {
+  if (window.openFrameAPI) {
+    console.log("OpenFrame API detected, initializing.");
+    window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
+  } else {
+    console.log("Not running in OpenFrame, delaying.");
+    setTimeout(initialize, 1000);
+    //setupFinesseUrl({});
+  }
+}
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -701,6 +708,10 @@ class App extends Component {
     };
 
     window.MainApp = this;
+  }
+
+  componentWillMount() {
+    initialize();
   }
 
   updateAgent(agent) {
