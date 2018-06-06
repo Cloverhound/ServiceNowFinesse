@@ -129,6 +129,18 @@ function getSforceConfig(){
   };
   window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
+function SforceScreenPop(){
+  var callback = function(response) {
+    if (response.success) {
+      console.log('API method call executed successfully! returnValue:',
+      response.returnValue);
+    } else {
+      console.error('Something went wrong! Errors:', response.errors);
+    }
+  };
+//Invokes API method
+  sforce.opencti.searchAndScreenPop({ searchParams : 'Chad',queryParams : '', callType : sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
+}
 function openFrameInitSuccess(snConfig) {
   window.openFrameConfig = snConfig;
   console.log("openframe configuration", snConfig);
@@ -586,6 +598,9 @@ function handleDialogUpdated(dialog) {
 
   if(call.direction === "inbound" && call.state === "ALERTING" && window.openFrameAPI) {
     window.openFrameAPI.show();
+  }
+  if (window.sforce){
+    SforceScreenPop();
   }
 }
 
