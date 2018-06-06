@@ -92,7 +92,7 @@ window.OpenFrame = {
 }
 
 if (window.ClientType === "SFORCE"){
-
+  getSforceConfig();
   setupFinesseUrl({});
 } else {
 if (window.openFrameAPI) {
