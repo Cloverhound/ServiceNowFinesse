@@ -127,7 +127,7 @@ function getSforceConfig(){
       console.error('Something went wrong! Errors:', response.errors);
     }
   };
-  sforce.opencti.getCallCenterSettings({callback: SFGScallback});
+  window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
 function openFrameInitSuccess(snConfig) {
   window.openFrameConfig = snConfig;
