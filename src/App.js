@@ -24,6 +24,7 @@ let maxRecentCalls = 100;
 
 window.moment = moment;
 window.Finesse = Finesse;
+window.ClientType = "SFORCE";
 
 let env = getQueryParameter("ENV");
 let logRocketApp = "cloverhound/snow-finesse";
@@ -58,6 +59,7 @@ window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
 
 window.$ = $;
 
+if (window.ClientType != "SFORCE"){
 window.OpenFrame = {
   available: false,
 
@@ -87,11 +89,17 @@ window.OpenFrame = {
     }
   }
 }
+}
 
+if (window.ClientType == "SFORCE"){
+
+  setupFinesseUrl({});
+} else {
 if (window.openFrameAPI) {
   window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
 } else {
   setupFinesseUrl({});
+}
 }
 
 function handleCommunicationEvent(context) {
@@ -108,6 +116,18 @@ function handleCommunicationEvent(context) {
 }
 function handleOpenFrameShownEvent(context) {
   rerender(Finesse.agent);
+}
+function getSforceConfig(){
+  var SFGScallback = function(response) {
+    if (response.success) {
+      window.sforceConfig = response.returnValue;
+      console.log('API method call executed successfully! returnValue:',
+        window.sforceConfig);
+    } else {
+      console.error('Something went wrong! Errors:', response.errors);
+    }
+  };
+  sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
 function openFrameInitSuccess(snConfig) {
   window.openFrameConfig = snConfig;
@@ -227,7 +247,7 @@ function login() {
         handleLoginFailed("There was an error reaching Finesse, contact support.");
         return;
       }
-      
+
       console.warn("Error testing agent credentials:", status, err);
       handleLoginFailed("Invalid Credentials");
     },
@@ -332,7 +352,7 @@ function receiveMessage(event)
   if (eventCode === "0") {
     if (FinesseTunnelApi.state !== "connected") {
       console.log("Tunnel not connected, ignoring data update.");
-      return; 
+      return;
     }
 
     var dataString = event.data.split('|')[1];
@@ -521,7 +541,7 @@ function handleDialogUpdated(dialog) {
 
     query = query.replace("{{" + name + "}}", value);
     entity = entity.replace("{{" + name + "}}", value);
-      
+
     call.callVariables[name] = value;
   }
 
@@ -582,11 +602,11 @@ function getParticipantState(dialog) {
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
   let recentCalls = Finesse.agent.recentCalls;
-  
+
   if(recentCalls.length === maxRecentCalls) {
     recentCalls = Finesse.agent.recentCalls.splice(0, 1);
   }
-  
+
   recentCalls.push(call);
   Finesse.saveRecentCalls();
 
