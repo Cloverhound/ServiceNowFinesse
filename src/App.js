@@ -59,7 +59,7 @@ window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
 
 window.$ = $;
 
-if (window.ClientType != "SFORCE"){
+if (window.ClientType !== "SFORCE"){
 window.OpenFrame = {
   available: false,
 
@@ -91,7 +91,7 @@ window.OpenFrame = {
 }
 }
 
-if (window.ClientType == "SFORCE"){
+if (window.ClientType === "SFORCE"){
 
   setupFinesseUrl({});
 } else {
