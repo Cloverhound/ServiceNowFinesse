@@ -15,14 +15,7 @@ const FinessePhoneApi = {
 }
 
 function call(agent, number) {
-  console.log("Preparing call request to:", "'" + number + "'");
-
-  if (number.length === 10) {
-    number = "91" + number;
-  } else if (number.length === 11) {
-    number = "9" + number;
-  }
-  console.log("Calling:", number);
+  console.log("Calling:", "'" + number + "'");
 
   var xml = '<Dialog>' +
             ' <requestedAction>MAKE_CALL</requestedAction>' +
@@ -34,14 +27,8 @@ function call(agent, number) {
 }
 
 function consult(agent, number) {
-  console.log("Preparing consult request to:", "'" + number + "'");
+  console.log("Consulting to:", "'" + number + "'");
 
-  if (number.length === 10) {
-    number = "91" + number;
-  } else if (number.length === 11) {
-    number = "9" + number;
-  }
-  console.log("Consulting:", number);
   let call = getCallByLine(agent.calls, 1);
 
   var xml = '<Dialog>' +

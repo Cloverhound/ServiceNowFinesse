@@ -17,10 +17,12 @@ import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 import "./polyfills";
 import getQueryParameter from "./query_params";
+import { parseNumber } from 'libphonenumber-js'
 
 import LogRocket from 'logrocket';
 
 let maxRecentCalls = 100;
+let dialPrefix = "91";
 
 window.moment = moment;
 window.Finesse = Finesse;
@@ -90,11 +92,25 @@ window.OpenFrame = {
   }
 }
 
+function formatNumber(number) {
+  let parsed = parseNumber(number);
+  if (parsed.ext) {
+    return parsed.ext;
+  }
+
+  return dialPrefix + parsed.phone;
+}
+
 function handleCommunicationEvent(context) {
   console.log("Communication from Topframe", context);
+
   if(context.type === "OUTGOING_CALL" && context.phoneNumber) {
-    var phoneNumber = context.phoneNumber.replace(/[\(\)\s-]/g, "");
-    phoneNumber = phoneNumber.split('x')[0]
+    if (!Finesse.agent || !Finesse.agent.state || Finesse.agent.state === 'LOGOUT') {
+      console.warn("Not logged in, ignoring click to call.");
+      return;
+    }
+
+    var phoneNumber = formatNumber(context.phoneNumber);
 
     FinessePhoneApi.call(Finesse.agent, phoneNumber);
     window.openFrameAPI.show();
@@ -150,6 +166,10 @@ function openFrameInitSuccess(snConfig) {
     maxRecentCalls = Number(config.maxRecentCalls);
   }
 
+  if (config.dialPrefix && config.dialPrefix != "") {
+    dialPrefix = config.dialPrefix;
+  }
+
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
   handleCommunicationEvent);
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
@@ -159,8 +179,8 @@ function openFrameInitFailure(error) {
   console.log("Error: OpenFrame init failed:", error);
 
   //window.openFrameAPI = null;
-
-  setupFinesseUrl({});
+  setTimeout(initialize, 1000);
+  //setupFinesseUrl({});
 }
 
 function setupFinesseUrl(config) {
@@ -443,7 +463,16 @@ function handleApiErrors(apiErrors) {
   console.error("Received API error:", errorType,  errorMessage);
   window.reportError("Received API error: " + errorType + ", " + errorMessage);
 
+
+  if (shouldIgnoreError(errorType, errorMessage)) {
+    return;
+  }
+
   alert(errorMessage + " - " + errorType);
+}
+
+function shouldIgnoreError(type, message) {
+  return true;
 }
 
 function handleAllDialogsUpdated(dialogs) {
