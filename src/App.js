@@ -123,7 +123,7 @@ function getSforceConfig(){
       console.log('API method call executed successfully! returnValue:',
         window.sforceConfig["/reqGeneralInfo/finesseUrl"]);
         var conf = {}
-        conf.finessUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
+        conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
           setupFinesseUrl(conf);
     } else {
       console.error('Something went wrong! Errors:', response.errors);
