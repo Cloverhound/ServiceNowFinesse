@@ -252,6 +252,9 @@ function login() {
       handleLoginFailed("Invalid Credentials");
     },
     complete: function() {
+      if  (window.sforce){
+      rerender(Finesse.agent);
+    }
       return false;
      }
   });
