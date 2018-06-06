@@ -139,7 +139,7 @@ function SforceScreenPop(){
     }
   };
 //Invokes API method
-  window.sforce.opencti.searchAndScreenPop({ searchParams : 'Chad',queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, callback : callback });
+  window.sforce.opencti.searchAndScreenPop({ searchParams : 'Chad',queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
 }
 function openFrameInitSuccess(snConfig) {
   window.openFrameConfig = snConfig;
