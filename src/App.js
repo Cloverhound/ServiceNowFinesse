@@ -93,7 +93,6 @@ window.OpenFrame = {
 
 if (window.ClientType === "SFORCE"){
   getSforceConfig();
-  setupFinesseUrl({});
 } else {
 if (window.openFrameAPI) {
   window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
@@ -123,6 +122,7 @@ function getSforceConfig(){
       window.sforceConfig = response.returnValue;
       console.log('API method call executed successfully! returnValue:',
         window.sforceConfig);
+          setupFinesseUrl(response.returnValue);
     } else {
       console.error('Something went wrong! Errors:', response.errors);
     }
