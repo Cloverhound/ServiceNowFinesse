@@ -91,14 +91,12 @@ window.OpenFrame = {
 }
 }
 
-if (window.ClientType === "SFORCE"){
+if (window.sforce){
   getSforceConfig();
-} else {
-if (window.openFrameAPI) {
+} else if (window.openFrameAPI) {
   window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
 } else {
   setupFinesseUrl({});
-}
 }
 
 function handleCommunicationEvent(context) {
