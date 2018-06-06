@@ -599,7 +599,7 @@ function handleDialogUpdated(dialog) {
   if(call.direction === "inbound" && call.state === "ALERTING" && window.openFrameAPI) {
     window.openFrameAPI.show();
   }
-  if (window.sforce){
+  if (call.direction === "inbound" && call.state === "ALERTING" && window.sforce){
     SforceScreenPop();
   }
 }
