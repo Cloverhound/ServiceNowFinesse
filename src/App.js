@@ -27,15 +27,24 @@ var script = document.createElement('script');
 var scriptLoad = 0;
 if (clientType === "sforce"){
   scriptLoad = 1;
+  script.onload = function () {
+    realInit();
+};
   script.src = "https://c.na30.visual.force.com/support/api/42.0/lightning/opencti_min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else if (clientType === "snow"){
   scriptLoad = 1;
+  script.onload = function () {
+    realInit();
+};
   script.src = "https://ven01796.service-now.com/scripts/openframe/1.0.0/openFrameAPI.min.js";
 
   document.head.appendChild(script); //or something of the likes
+} else {
+  realInit();
 }
+function realInit(){
 window.moment = moment;
 window.Finesse = Finesse;
 window.ClientType = "SFORCE";
@@ -73,7 +82,7 @@ window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
 
 window.$ = $;
 
-if (window.ClientType !== "SFORCE"){
+if (clientType === "snow"){
 window.OpenFrame = {
   available: false,
 
@@ -111,6 +120,7 @@ if (window.sforce){
   window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
 } else {
   setupFinesseUrl({});
+}
 }
 
 function handleCommunicationEvent(context) {
