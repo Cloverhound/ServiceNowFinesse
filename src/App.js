@@ -22,7 +22,7 @@ import LogRocket from 'logrocket';
 
 let maxRecentCalls = 100;
 
-var clientType = decodeURIComponent(getQueryParameter("client");
+var clientType = decodeURIComponent(getQueryParameter("client"));
 var script = document.createElement('script');
 var scriptLoad = 0;
 if (clientType === "sforce"){
