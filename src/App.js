@@ -22,6 +22,20 @@ import LogRocket from 'logrocket';
 
 let maxRecentCalls = 100;
 
+var clientType = decodeURIComponent(getQueryParameter("client");
+var script = document.createElement('script');
+var scriptLoad = 0;
+if (clientType === "sforce"){
+  scriptLoad = 1;
+  script.src = "https://c.na30.visual.force.com/support/api/42.0/lightning/opencti_min.js";
+
+  document.head.appendChild(script); //or something of the likes
+} else if (clientType === "snow"){
+  scriptLoad = 1;
+  script.src = "https://ven01796.service-now.com/scripts/openframe/1.0.0/openFrameAPI.min.js";
+
+  document.head.appendChild(script); //or something of the likes
+}
 window.moment = moment;
 window.Finesse = Finesse;
 window.ClientType = "SFORCE";
