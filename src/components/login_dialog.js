@@ -9,9 +9,12 @@ class LoginDialog extends Component {
     this.state = { "loading": false};
   }
 
+
   handleLogin(event) {
     this.props.handleLogin(event);
   }
+
+
 
   render() {
     let errorTextStyle = {
@@ -20,7 +23,7 @@ class LoginDialog extends Component {
     };
 
     let submitButtonStyle = {
-        border: "none",  
+        border: "none",
       //border: "2px solid #333",
         borderRadius: "25px",
         backgroundColor: "#4b7fde",
@@ -69,6 +72,8 @@ class LoginDialog extends Component {
           </div>
 
           <input type="submit" value="Login" style={submitButtonStyle}></input>
+          <h1>or</h1>
+          <a type="button" value="Login with Webex Teams" href="/callback.html" style={submitButtonStyle}>Login with Webex Teams</a>
         </form>
       </div>
     );
