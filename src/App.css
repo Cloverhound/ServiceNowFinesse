@@ -29,28 +29,19 @@
   float: right;
   font-size: smaller;
   margin-top: 6px;
-  margin-right: 8px;
+  margin-right: 4px;
 }
 
-#header .Dropdown-arrow {
-  right: 6px;
-  top: 9px;
-}
 
-#header .Dropdown-control {
-  padding: 4px;
-  padding-right: 20px;
-  background-color: whitesmoke;
-}
 
 #desktop {
   position: relative;
   max-width: 500px;
   margin: auto;
-  padding: 10px 20px;
-  height: calc(100% - 35px);
-  padding-bottom: 13px;
-  /*bottom: calc(-15%);*/
+  padding: 10px;
+  height: calc(100% - 47px);
+  /*padding-bottom: 13px;
+  bottom: calc(-15%);*/
 }
 
 .recent-call-number:hover {
@@ -60,6 +51,7 @@
 
 #agent-state {
   position: relative;
+  height: 47px;
 }
 
 #agent-state .Dropdown-control {
@@ -67,16 +59,21 @@
   color: #FFF;
   background-blend-mode: multiply;
   background-color: rgba(255, 255, 255, 0.3);
-  font-size: 16px;
-  text-align: center;
-  border-radius: 5px;
+  /*font-size: 16px;
+  text-align: center;*/
+  border-radius: 0px;
   border: none;
   cursor: pointer;
   position: relative;
+  padding: 16px 0px 15px 35px;
+  font-weight: bold;
+  font-size: 0.8em;
+  height: 47px;
 }
 
 #agent-state .Dropdown-arrow {
   border-color: #fff transparent transparent;
+  margin-top: 7px;
 }
 
 #agent-state .is-open .Dropdown-arrow {
@@ -104,14 +101,15 @@
   width: 100%;
   height: 100%;
   position: absolute;
+  background-color: whitesmoke;
 }
 
 .login-section {
   position: relative;
-  width: 250px;
+  /*width: 250px;*/
   margin: auto;
-  padding: 10px;
-  bottom: calc(-10%);
+  padding: 32px 50px;
+  background-color: #FFF;
 }
 
 .login-form input {
@@ -140,14 +138,19 @@
 /** Call Panel **/
 
 .call-header {
-  margin-top: 10px;
-  background-color: #EEE;
+  background-color: #dee0e4;
   padding: 10px 2px 10px 10px;
   cursor: pointer;
   border: 1px solid #DDD;
   height: 40px;
+  border-top-right-radius: 4px;
+  border-top-left-radius: 4px;
 }
 
+.call-header.no-calls {
+  border-radius: 4px;
+}
+ 
 .call-controls {
   background-color: #EEE;
   border: 1px solid;
@@ -164,40 +167,41 @@
 }
 
 .call-content {
-  padding: 10px;
-  background-color: #F9F9F9;
+  padding: 8px 10px;
+  background-color: #FFF;
   transition: 0.2s;
   overflow: hidden;
-  border: 1px solid;
-  border-color: transparent #DDD #DDD #DDD;
+  border: 1px solid #e9ebee;
+  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-top: none;
+  font-size: 0.9em;
 }
 
 /** Dial Pad **/
 
 
 .make-call input {
-    display: inline-block;
-    position: relative;
-    clear: both;
-    float: none;
     width: calc(100% - 90px);
     background-color: #FFF;
-    border: 1px solid rgba(24,31,37,0.15);
+    border: none;
     border-radius: 4px;
     color: rgba(24,31,37,0.7);
-    font-size: 16px;
-    line-height: 140%;
-    padding: 6px 12px;
+    font-size: 15px;
+    padding: 10px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    height: 33px;
 }
 
 .make-call-clear {
-  margin-left: -29px;
-  margin-top: 3px;
-  height: 30px;
+  margin-left: -30px;
+  margin-top: 4px;
+  height: 25px;
   width: 26px;
   position: absolute;
-  padding-top: 5px;
-  padding-left: 2px;
+  padding-top: 3px;
+  padding-left: 1px;
   cursor: pointer;
   background-color: #EFEFEF;
   border-radius: 4px;
@@ -252,8 +256,15 @@
 }
 
 .make-call form a.cta {
-    background-color: #6aca54;
-    color: #fff;
+  background-color: #6aca54;
+  color: #fff;
+  margin-left: 0px;
+  /* border: 1px solid transparent; */
+  border-radius: 4px;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+  margin-bottom: 0px;
+  vertical-align: top;
 }
 
 .cta i {
@@ -302,28 +313,27 @@ a.cta.end {
 
 .dial-pad {
   margin: auto;
-  border-radius: 4px;
+  border-radius: 5px;
   margin-top: 2px;
   margin-bottom: 9px;
   width: 254px;
-  border: 1px solid #AAA;
   display: inline-block;
   margin-left: calc(50% - 126px);
+  background-color: #dee0e4;
       
 }
 .dial-pad a {
-        border-bottom: 1px solid #AAA;
-        border-left: 1px solid #AAA;
-        /* border-right: 1px solid grey; */
-        color: #666;
-        cursor: pointer;
-        float: left;
-        /* font-family: "Source-Sans-Pro-L"; */
-        font-size: 22px;
-        padding: 8px;
-        width: calc(100% / 3);
-        text-align: center;
-        transition: color 0.5s;
+  border-bottom: 2px solid whitesmoke;
+  border-left: 2px solid whitesmoke;
+  color: #666;
+  cursor: pointer;
+  float: left;
+  /* font-family: "Source-Sans-Pro-L"; */
+  font-size: 22px;
+  padding: 8px;
+  width: calc(100% / 3);
+  text-align: center;
+  transition: color 0.5s;
 }
 
 .dial-pad a:nth-child(1) {
@@ -384,6 +394,40 @@ a.cta.end {
 
 /** Dropdown **/
 
+#header .Dropdown-arrow {
+  right: 6px;
+  top: 9px;
+}
+
+#header .Dropdown-control {
+  padding: 5px 8px;
+  padding-right: 20px;
+  background-color: whitesmoke;
+}
+
+#header .is-open .Dropdown-control {
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+
+#header .Dropdown-menu {
+  background-color: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  border-top-right-radius: 0px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  margin-top: 0px;
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  top: 100%;
+  right: 0px;
+  width: 130px;
+  z-index: 1000;
+  -webkit-overflow-scrolling: touch;
+}
+
 .Dropdown-root {
   position: relative;
 }
@@ -392,14 +436,24 @@ a.cta.end {
   position: relative;
   overflow: hidden;
   background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 2px;
+  /* border: 1px solid #ccc; */
+  border-radius: 4px;
   box-sizing: border-box;
   color: #333;
   cursor: default;
   outline: none;
   padding: 8px 52px 8px 10px;
   transition: all 200ms ease;
+  height: 24px;
+}
+
+.Dropdown-control.Dropdown-disabled {
+  opacity: 0.7;
+  color: #AAA;
+}
+
+.Dropdown-control.Dropdown-disabled .Dropdown-arrow {
+  border-color: #AAA transparent transparent;
 }
 
 .Dropdown-control:hover {
@@ -477,15 +531,6 @@ a.cta.end {
   display: block;
   padding: 8px 10px;
 }
-
-
-
-
-.call-content {
-  float: left;
-  width: 100%;
-}
-
 
 /* buttons */
 .round-button {
@@ -628,7 +673,7 @@ a.cta.end {
 
 
 .call-tab {
-  height: 80px;
+  margin-bottom: 5px;
 }
 .call-controls {
   border: 0;
@@ -652,6 +697,6 @@ a.cta.end {
 .state-dropdown .Dropdown-placeholder {
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 220px;
+  width: 235px;
   white-space: nowrap;
 }

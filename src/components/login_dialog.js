@@ -33,9 +33,7 @@ class LoginDialog extends Component {
     };
 
     var loaderStyle = {
-      margin: "0px",
-      marginTop: "17px",
-      marginBottom: "5px"
+      margin: "17px 11px 5px 11px"
     };
 
     if(!this.props.loading) {
@@ -44,7 +42,7 @@ class LoginDialog extends Component {
 
     if(this.props.previousLoginFailed && !this.props.loading) {
       console.log("Previous login failed, setting margin top...");
-      submitButtonStyle.marginTop = "25px";
+      submitButtonStyle.marginTop = "22px";
       loaderStyle.display = "none";
     }
 

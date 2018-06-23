@@ -62,7 +62,8 @@ class CallPanel extends Component {
     }
     let noCallsTextStyle = {
       verticalAlign: 'middle',
-      float: 'left'
+      float: 'left',
+      borderRadius: '5px'
     }
 
 
@@ -73,8 +74,8 @@ class CallPanel extends Component {
     if(callIds.length === 0) {
 
       return (
-        <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
-          <div className="call-header" onClick={this.toggleContent.bind(this)}>
+        <div style={{height: '100%', position: 'relative'}}>
+          <div className="call-header no-calls" onClick={this.toggleContent.bind(this)}>
             <i style={iconStyle} className="fa fa-phone" aria-hidden="true"></i>
             <span style={noCallsTextStyle}>
               No Calls
@@ -112,7 +113,7 @@ class CallPanel extends Component {
             <div className="call-header">
               <i style={{display: "none"}} className="fa fa-phone header-phone-icon" aria-hidden="true"></i>
               <span className="header-other-party" style={headerTextStyle}>
-                {call.otherParty} ({formattedCallTime})
+                {call.otherParty || "Invalid"} ({formattedCallTime})
               </span>
               <AnswerButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
               <HangupButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
@@ -130,7 +131,7 @@ class CallPanel extends Component {
       }
 
       return (
-        <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
+        <div style={{height: '100%', position: 'relative'}}>
           {callTabs}
           {makeCallForm}
         </div>

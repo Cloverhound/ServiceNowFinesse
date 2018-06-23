@@ -98,7 +98,7 @@ class RecentCall extends Component {
       display: "inline-block",
       cursor: "pointer",
       verticalAlign: "top",
-      marginTop: "3px",
+      marginTop: "2px",
       color: "rgb(36, 83, 199)"
     }
 
@@ -111,7 +111,7 @@ class RecentCall extends Component {
       display: "inline-block",
       marginLeft: "10px",
       verticalAlign: "top",
-      marginTop: "3px",
+      marginTop: "2px",
       color: "rgb(120, 120, 120)"
     }
     let startedAtMoment = moment(this.props.call.startedAt)
@@ -126,7 +126,7 @@ class RecentCall extends Component {
       display: "inline-block",
       marginLeft: "10px",
       verticalAlign: "top",
-      marginTop: "3px",
+      marginTop: "2px",
       color: "rgb(120, 120, 120)"
     }
 
@@ -151,7 +151,8 @@ class RecentCall extends Component {
     let liStyle = {
       border: "0",
       borderBottom: "1px solid #cccccc",
-      padding: "4px 0px"
+      padding: "4px 0px",
+      backgroundColor: "#FFF"
     }
 
     return (

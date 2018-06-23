@@ -179,8 +179,11 @@ function openFrameInitFailure(error) {
   console.log("Error: OpenFrame init failed:", error);
 
   //window.openFrameAPI = null;
-  setTimeout(initialize, 1000);
-  //setupFinesseUrl({});
+  if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") != "") {
+    setupFinesseUrl({});
+  } else {
+    setTimeout(initialize, 500);
+  }
 }
 
 function setupFinesseUrl(config) {
@@ -532,6 +535,10 @@ function handleDialogUpdated(dialog) {
     call.direction = "inbound";
   }
 
+  if (call.otherParty === "null") {
+    call.otherParty = null;
+  }
+
   // sys_user
   // sysparm_view=screenpop&sysparm_query=phoneLIKE9803338415
   // sysparm_view=screenpop&sysparm_query=employee_number=1234567
@@ -576,8 +583,10 @@ function handleDialogUpdated(dialog) {
   rerender(Finesse.agent);
 
   let shouldPop = !call.alreadyPopped && call.direction === "inbound" && window.openFrameAPI
-  if(Finesse.agent.calls.length > 1 && !Finesse.agent.shouldPopConcurrently) {
-    shouldPop = false
+  if(Object.keys(calls).length > 1 && !Finesse.agent.shouldPopConcurrently) {
+    shouldPop = false;
+    // We don't want to ever pop this call
+    call.alreadyPopped = true;
   }
 
   if(shouldPop) {
@@ -717,12 +726,14 @@ function rerender(agent) {
 window.rerender = rerender;
 
 function initialize() {
-  if (window.openFrameAPI) {
+  if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") != "") {
+    setupFinesseUrl({});
+  } else if (window.openFrameAPI) {
     console.log("OpenFrame API detected, initializing.");
     window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
   } else {
     console.log("Not running in OpenFrame, delaying.");
-    setTimeout(initialize, 1000);
+    setTimeout(initialize, 500);
     //setupFinesseUrl({});
   }
 }
@@ -771,28 +782,31 @@ class App extends Component {
           <div id="main">
               <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={agent.previousLoginFailed} loading={agent.loggingIn}/>
               <div style={{
-                  marginTop: '50px',
-                  padding: '20px',
+                  padding: '10px',
                   width: '100%',
-                  position: 'absolute',
-                  bottom: '-25px'
+                  position: 'absolute'
                 }}>
-                <a href="https://cloverhound.com/" target="_blank" class="logo" style={{display: 'inline-block', float: 'left'}}>
-                  <img border="0" alt="Cloverhound, Inc." src="logo.jpg" 
+                <a href="https://cloverhound.com/" target="_blank" className="logo" 
+                  style={{
+                    display: 'block',
+                    textAlign: 'center'
+                  }}>
+                  <img alt="Cloverhound, Inc." src="logo_with_name.png" 
                     style={{
                       width: '120px',
-                      marginBottom: '10px'
+                      marginRight: '6px'
                     }} />
                 </a>
 
                 <a href="https://cloverhound.com/" target="_blank" className="copyright" 
                     style={{
-                      marginTop: '15px',
-                      float: 'right',
-                      fontSize: '0.6em',
+                      marginTop: '4px',
+                      fontSize: '0.5em',
                       textDecoration: 'none',
-                      color: '#777',
-                      fontWeight: 'bold'
+                      color: '#8a8a8a',
+                      fontWeight: 'bold',
+                      textAlign: 'center',
+                      display: 'block'
                     }}>
                   © 2018 Cloverhound Inc.
                 </a>

@@ -52,7 +52,7 @@ class MakeCallForm extends Component {
             display: 'block',
             position: 'absolute',
             width: '100%',
-            bottom: '5px'
+            bottom: '0px'
           }}
         >
           <form className="make-call-form">

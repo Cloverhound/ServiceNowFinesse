@@ -109,7 +109,7 @@ class StateControls extends Component {
       display: "inline-block",
       float: "right",
       marginRight: "30px",
-      marginTop: "9px",
+      marginTop: "16px",
       color: "white",
       position: "relative",
       zIndex: 10,
