@@ -1,0 +1,18 @@
+<callCenter>
+   <section sortOrder="0" name="reqGeneralInfo" label="General Information">
+    <item sortOrder="0" name="reqInternalName" label="InternalName">CallCenter</item>
+    <item sortOrder="1" name="reqDisplayName" label="Display Name">CallCenter</item>
+    <item sortOrder="2" name="reqAdapterUrl" label="CTI Adapter URL">https://snow-sforce.herokuapp.com</item>
+    <item sortOrder="3" name="finesseUrl" label="Primary Finesse URL">https://uccx1.cloverhound.com:8445</item>
+    <item sortOrder="4" name="backupFinesseUrl" label="Backup Finesse URL">https://uccx2.cloverhound.com:8445</item>
+    <item sortOrder="5" name="reqUseApi" label="Use CTI API">true</item>
+    <item sortOrder="6" name="reqSoftphoneHeight" label="Softphone Height">300</item>
+    <item sortOrder="7" name="reqSoftphoneWidth" label="Softphone Width">500</item>
+    <item sortOrder="8" name="reqSalesforceCompatibilityMode" label="Salesforce Compatibility Mode">Lightning</item>
+   </section>
+   <section sortOrder="1" name="reqDialingOptions" label="Dialing Options">
+    <item sortOrder="0" name="reqOutsidePrefix" label="Outside Prefix">9</item>
+    <item sortOrder="1" name="reqLongDistPrefix" label="Long Distance Prefix">1</item>
+    <item sortOrder="2" name="reqInternationalPrefix" label="International Prefix">01</item>
+   </section>
+</callCenter>

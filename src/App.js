@@ -24,8 +24,32 @@ import LogRocket from 'logrocket';
 let maxRecentCalls = 100;
 let dialPrefix = "91";
 
+var clientType = decodeURIComponent(getQueryParameter("client"));
+var script = document.createElement('script');
+var scriptLoad = 0;
+if (clientType === "sforce"){
+  scriptLoad = 1;
+  script.onload = function () {
+    realInit();
+};
+  script.src = "https://c.na30.visual.force.com/support/api/42.0/lightning/opencti_min.js";
+
+  document.head.appendChild(script); //or something of the likes
+} else if (clientType === "snow"){
+  scriptLoad = 1;
+  script.onload = function () {
+    realInit();
+};
+  script.src = "https://ven01796.service-now.com/scripts/openframe/1.0.0/openFrameAPI.min.js";
+
+  document.head.appendChild(script); //or something of the likes
+} else {
+  realInit();
+}
+function realInit(){
 window.moment = moment;
 window.Finesse = Finesse;
+window.ClientType = clientType || "snow";
 
 let env = getQueryParameter("ENV");
 let logRocketApp = "cloverhound/snow-finesse";
@@ -60,6 +84,7 @@ window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
 
 window.$ = $;
 
+if (clientType === "snow"){
 window.OpenFrame = {
   available: false,
 
@@ -91,6 +116,8 @@ window.OpenFrame = {
     }
   }
 }
+  
+}
 
 function formatNumber(number) {
   let parsed = parseNumber(number);
@@ -120,6 +147,33 @@ function handleCommunicationEvent(context) {
 }
 function handleOpenFrameShownEvent(context) {
   rerender(Finesse.agent);
+}
+function getSforceConfig(){
+  var SFGScallback = function(response) {
+    if (response.success) {
+      window.sforceConfig = response.returnValue;
+      console.log('API method call executed successfully! returnValue:',
+        window.sforceConfig["/reqGeneralInfo/finesseUrl"]);
+        var conf = {}
+        conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
+          setupFinesseUrl(conf);
+    } else {
+      console.error('Something went wrong! Errors:', response.errors);
+    }
+  };
+  window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
+}
+function SforceScreenPop(){
+  var callback = function(response) {
+    if (response.success) {
+      console.log('API method call executed successfully! returnValue:',
+      response.returnValue);
+    } else {
+      console.error('Something went wrong! Errors:', response.errors);
+    }
+  };
+//Invokes API method
+  window.sforce.opencti.searchAndScreenPop({ searchParams : 'Chad',queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
 }
 function openFrameInitSuccess(snConfig) {
   window.openFrameConfig = snConfig;
@@ -251,6 +305,9 @@ function login() {
       handleLoginFailed("Invalid Credentials");
     },
     complete: function() {
+      if  (window.sforce){
+      rerender(Finesse.agent);
+    }
       return false;
      }
   });
@@ -598,6 +655,9 @@ function handleDialogUpdated(dialog) {
   if(call.direction === "inbound" && call.state === "ALERTING" && window.openFrameAPI) {
     window.openFrameAPI.show();
   }
+  if (call.direction === "inbound" && call.state === "ALERTING" && window.sforce){
+    SforceScreenPop();
+  }
 }
 
 function getParticipantState(dialog) {
@@ -731,6 +791,9 @@ function initialize() {
   } else if (window.openFrameAPI) {
     console.log("OpenFrame API detected, initializing.");
     window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
+  } else if (window.sforce){
+    console.log("Salesforce API detected, initializing.");
+    getSforceConfig();
   } else {
     console.log("Not running in OpenFrame, delaying.");
     setTimeout(initialize, 500);
