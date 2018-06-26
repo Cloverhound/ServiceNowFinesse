@@ -24,98 +24,98 @@ import LogRocket from 'logrocket';
 let maxRecentCalls = 100;
 let dialPrefix = "91";
 
-var clientType = decodeURIComponent(getQueryParameter("client"));
+var clientType = decodeURIComponent(getQueryParameter("client") || "snow");
 var script = document.createElement('script');
 var scriptLoad = 0;
-if (clientType === "sforce"){
+if (clientType === "sforce") {
   scriptLoad = 1;
-  script.onload = function () {
-    realInit();
-};
+  script.onload = function() {
+    loadPlugin();
+  };
   script.src = "https://c.na30.visual.force.com/support/api/42.0/lightning/opencti_min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else if (clientType === "snow"){
   scriptLoad = 1;
   script.onload = function () {
-    realInit();
-};
+    loadPlugin();
+  };
   script.src = "https://ven01796.service-now.com/scripts/openframe/1.0.0/openFrameAPI.min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else {
-  realInit();
+  loadPlugin();
 }
-function realInit(){
-window.moment = moment;
-window.Finesse = Finesse;
-window.ClientType = clientType || "snow";
 
-let env = getQueryParameter("ENV");
-let logRocketApp = "cloverhound/snow-finesse";
-if (env) {
-  logRocketApp += "-" + env;
-}
-LogRocket.init(logRocketApp,  {
-  // Scrub Auth header from all logged requests.
-  network: {
-    requestSanitizer: function (request) {
-      request.headers['Authorization'] = "**HIDDEN**";
-      return request;
+function loadPlugin() {
+  window.moment = moment;
+  window.Finesse = Finesse;
+  window.ClientType = clientType || "snow";
+
+  let env = getQueryParameter("ENV");
+  let logRocketApp = "cloverhound/snow-finesse";
+  if (env) {
+    logRocketApp += "-" + env;
+  }
+  LogRocket.init(logRocketApp,  {
+    // Scrub Auth header from all logged requests.
+    network: {
+      requestSanitizer: function (request) {
+        request.headers['Authorization'] = "**HIDDEN**";
+        return request;
+      },
     },
-  },
-});
+  });
 
-window.reportError = function(message) {
-  if (!LogRocket && !LogRocket.captureMessage) {
-    return;
-  }
-
-  LogRocket.captureMessage(message);
-}
-//LogRocket.startNewSession();
-
-window.finesseUrl = "";
-window.finesseUrlWithoutPort = "";
-window.tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};  // I forsee dialpad and contacts in the future
-Finesse.resetAgent();
-window.entityTemplate = "incident";
-window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
-
-window.$ = $;
-
-if (clientType === "snow"){
-window.OpenFrame = {
-  available: false,
-
-  config: {},
-
-  init() {
-    if (window.openFrameAPI) {
-      console.log("OpenFrame API detected, initializing.");
-      window.openFrameAPI.init({ height: 350, width: 350 }, this.initSuccess, this.initFailure);
-    } else {
-      console.log("Not running in OpenFrame.");
-      Finesse.setupUrl({});
+  window.reportError = function(message) {
+    if (!LogRocket && !LogRocket.captureMessage) {
+      return;
     }
-  },
 
-  initSuccess() {
+    LogRocket.captureMessage(message);
+  }
+  //LogRocket.startNewSession();
 
-  },
+  window.finesseUrl = "";
+  window.finesseUrlWithoutPort = "";
+  window.tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};  // I forsee dialpad and contacts in the future
+  Finesse.resetAgent();
+  window.entityTemplate = "incident";
+  window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
 
-  initFailure() {
+  window.$ = $;
 
-  },
+  window.OpenFrame = {
+    available: false,
 
-  handleCommunicationEvent(context) {
-    console.log("Communication from Topframe", context);
-    if(context["phone_number"]) {
-      FinessePhoneApi.call(Finesse.agent, context["phone_number"].replace(/[-]/g, ""));
-      window.openFrameAPI.show();
+    config: {},
+
+    init() {
+      if (window.openFrameAPI) {
+        console.log("OpenFrame API detected, initializing.");
+        window.openFrameAPI.init({ height: 350, width: 350 }, this.initSuccess, this.initFailure);
+      } else {
+        console.log("Not running in OpenFrame.");
+        Finesse.setupUrl({});
+      }
+    },
+
+    initSuccess() {
+
+    },
+
+    initFailure() {
+
+    },
+
+    handleCommunicationEvent(context) {
+      console.log("Communication from Topframe", context);
+      if(context["phone_number"]) {
+        FinessePhoneApi.call(Finesse.agent, context["phone_number"].replace(/[-]/g, ""));
+        window.openFrameAPI.show();
+      }
     }
   }
-}
   
 }
 
@@ -147,6 +147,13 @@ function handleCommunicationEvent(context) {
 }
 function handleOpenFrameShownEvent(context) {
   rerender(Finesse.agent);
+}
+function handleOpenFrameHeaderIconClick(context) {
+  console.log("Icon clicked:", context);
+
+  if (context.id === 101 && window.toggleLogoutMenu) {
+    window.toggleLogoutMenu()
+  }
 }
 function getSforceConfig(){
   var SFGScallback = function(response) {
@@ -225,9 +232,11 @@ function openFrameInitSuccess(snConfig) {
   }
 
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
-  handleCommunicationEvent);
+    handleCommunicationEvent);
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
-  handleOpenFrameShownEvent);
+    handleOpenFrameShownEvent);
+  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.HEADER_ICON_CLICKED,
+    handleOpenFrameHeaderIconClick);
 }
 function openFrameInitFailure(error) {
   console.log("Error: OpenFrame init failed:", error);
@@ -791,6 +800,7 @@ function initialize() {
   } else if (window.openFrameAPI) {
     console.log("OpenFrame API detected, initializing.");
     window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
+    window.openFrameAPI.setIcons([ {imageURL: "https://fin-dev-ed.ngrok.io/logout-xxl.png", imageTitle: "logout", id: 101} ])
   } else if (window.sforce){
     console.log("Salesforce API detected, initializing.");
     getSforceConfig();
@@ -879,10 +889,10 @@ class App extends Component {
     } else {
       return (
           <div id="main">
-              <AgentHeader agent={agent} stateApi={FinesseStateApi}/>
-              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi}/>
-              <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi}/>
-              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames}/>
+              <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.ClientType}/>
+              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} type={window.ClientType}/>
+              <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.ClientType}/>
+              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.ClientType}/>
               <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames}/>
           </div>
       );

@@ -428,8 +428,17 @@ a.cta.end {
   -webkit-overflow-scrolling: touch;
 }
 
+#header .snow-header .Dropdown-menu {
+  top: -7px;
+  right: 30px;
+}
+
 .Dropdown-root {
   position: relative;
+}
+
+#header .snow-header .Dropdown-control {
+  display: none;
 }
 
 .Dropdown-control {

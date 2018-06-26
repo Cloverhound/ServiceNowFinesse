@@ -1,7 +1,15 @@
 import React, { Component } from 'react';
-import Dropdown from 'react-dropdown';
+import Dropdown from './dropdown';
 
 class AgentHeader extends Component {
+
+  constructor(props) {
+    super(props);
+
+    window.toggleLogoutMenu = () => {
+      this.child.toggle();
+    };
+  }
 
   onLogoutClick() {
     this.props.stateApi.logout(this.props.agent)
@@ -37,6 +45,13 @@ class AgentHeader extends Component {
       height: "35px"
     }
 
+    let headerClass = "signout-dropdown";
+    if (this.props.type == "snow") {
+      headerStyle.height = "0px";
+      //headerStyle.overflowY = "hidden";
+      headerClass += " snow-header";
+    }
+
     let logoutStyle = {
       float: 'right',
       color: '#FFF',
@@ -57,7 +72,7 @@ class AgentHeader extends Component {
                           onChange={this.onSelect.bind(this)}
                           options={options}
                           value="Sign Out"
-                          className="signout-dropdown"
+                          className={headerClass}
                           disabled
                         />
     }
@@ -67,13 +82,16 @@ class AgentHeader extends Component {
                           onChange={this.onSelect.bind(this)}
                           options={options}
                           value="Sign Out"
-                          className="signout-dropdown"
+                          className={headerClass}
+                          onRef={ref => (this.child = ref)}
                         />
     }
 
     return (
       <div id="header" style={headerStyle}>
-        <div className="agent-name" style={nameStyle}>{agent.firstName} {agent.lastName} ({agent.extension})</div>
+        {this.props.type === "snow" ? null :
+          <div className="agent-name" style={nameStyle}>{agent.firstName} {agent.lastName} ({agent.extension})</div>
+        }
         {logoutElement}
       </div>
     );

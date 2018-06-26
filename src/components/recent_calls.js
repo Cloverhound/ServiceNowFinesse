@@ -9,7 +9,7 @@ class RecentCallsView extends Component {
       }
 
       return (
-        <RecentCalls agent={this.props.agent} phoneApi={this.props.phoneApi} tabNames={this.props.tabNames}/>
+        <RecentCalls {...this.props}/>
       )
   }
 }
@@ -45,11 +45,20 @@ class RecentCalls extends Component {
       color: "darkslategray"
     };
 
+    let containerStyle = {
+      height: 'calc(100% - 63px)',
+      overflowY: 'scroll',
+      float: 'left',
+      width: '100%'
+    }
+
+    if (this.props.type == "snow") {
+      containerStyle.height = 'calc(100% - 28px)';
+      containerStyle.marginTop = '-6px';
+    }
+
     return (
-      <div id="recent_calls" style={{
-        overflowY: 'scroll',
-        height: 'calc(100% - 63px)'
-      }}>
+      <div id="recent_calls" style={containerStyle}>
         {
           recentCallComponents.length > 0 ? (
             <ul style={ulStyle}>

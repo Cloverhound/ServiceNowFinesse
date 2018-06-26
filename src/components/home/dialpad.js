@@ -24,16 +24,25 @@ class DialpadView extends Component {
       let calls = this.props.agent.calls;
       let callsActive = (Object.keys(calls).length > 0);
 
-      return (
-        <div style={{
+      let containerStyle = {
           maxWidth: '500px',
           position: 'relative',
           height: 'calc(100% - 63px)',
           margin: 'auto',
-          padding: '10px',
-        }}>
+          padding: '10px'
+      }
+
+      let dialPadStyle = {};
+
+      if (this.props.type == "snow") {
+        containerStyle.height = 'calc(100% - 28px)';
+        dialPadStyle.marginTop = '22px';
+      }
+
+      return (
+        <div style={containerStyle}>
           <div style={{height: '100%', position: 'relative'}}>
-            <div className="dial-pad">
+            <div className="dial-pad" style={dialPadStyle}>
               <a onClick={this.addDigit.bind(this, '1')}>
                 <span>1</span>
                 <span style={{display: 'block', visibility: 'hidden', fontSize: '0.5rem'}}>

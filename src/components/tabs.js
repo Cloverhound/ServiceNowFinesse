@@ -54,6 +54,7 @@ class Tabs extends Component {
     var tabStyle = {
       display: "inline-block",
       borderTop: "2px solid rgb(230, 230, 230)",
+      borderColor: "rgb(230, 230, 230)",
       width: "33.3333%",
       fill: "rgb(200, 200, 200)",
       color: "rgb(200, 200, 200)",
@@ -65,6 +66,7 @@ class Tabs extends Component {
     var dialpadTabStyle = {
       display: "inline-block",
       borderTop: "2px solid rgb(230, 230, 230)",
+      borderColor: "rgb(230, 230, 230)",
       width: "33.3333%",
       fill: "rgb(200, 200, 200)",
       color: "rgb(200, 200, 200)",
