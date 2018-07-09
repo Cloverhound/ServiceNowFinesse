@@ -72,8 +72,7 @@ class LoginDialog extends Component {
           </div>
 
           <input type="submit" value="Login" style={submitButtonStyle}></input>
-          <h1>or</h1>
-          <a type="button" value="Login with Webex Teams" href="/callback.html" style={submitButtonStyle}>Login with Webex Teams</a>
+
         </form>
       </div>
     );
