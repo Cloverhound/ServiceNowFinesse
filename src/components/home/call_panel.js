@@ -6,6 +6,7 @@ import ResumeButton from './call_controls/resume_button'
 import HangupButton from './call_controls/hangup_button'
 import TransferButton from './call_controls/transfer_button'
 import ConferenceButton from './call_controls/conference_button'
+import ScreenPopButton from './call_controls/screenpop_button'
 import moment from "moment";
 import "moment-duration-format";
 
@@ -112,6 +113,7 @@ class CallPanel extends Component {
           <div className="call-tab" key={call.id}>
             <div className="call-header">
               <i style={{display: "none"}} className="fa fa-phone header-phone-icon" aria-hidden="true"></i>
+              <ScreenPopButton call={call} agent={agent} snowApi={this.props.snowApi}/>
               <span className="header-other-party" style={headerTextStyle}>
                 {call.otherParty || "Invalid"} ({formattedCallTime})
               </span>

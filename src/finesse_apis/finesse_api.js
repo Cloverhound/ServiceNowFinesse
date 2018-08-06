@@ -111,7 +111,8 @@ function emptyAgent() {
     previousLoginFailed: false,
     loggingOut: false,
     loggingIn: false,
-    shouldPopConcurrently: false
+    shouldPopConcurrently: false,
+    enableManualScreenPop: false
   };
 }
 
