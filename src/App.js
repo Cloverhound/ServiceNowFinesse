@@ -26,6 +26,7 @@ let dialPrefix = "91";
 
 window.moment = moment;
 window.Finesse = Finesse;
+import SnowApi from './snow_api';
 
 let env = getQueryParameter("ENV");
 let logRocketApp = "cloverhound/snow-finesse";
@@ -150,6 +151,12 @@ function openFrameInitSuccess(snConfig) {
 
     config[key] = value;
   }
+
+  if(config.enableManualScreenPop) {
+    config.enableManualScreenPop = (config.enableManualScreenPop.toLowerCase() === 'true')
+  }
+  
+  window.OpenFrame.config = config;
 
   if (config.query) {
     window.queryTemplate = config.query;
@@ -817,7 +824,7 @@ class App extends Component {
       return (
           <div id="main">
               <AgentHeader agent={agent} stateApi={FinesseStateApi}/>
-              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi}/>
+              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} snowApi={SnowApi}/>
               <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi}/>
               <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames}/>
               <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames}/>
