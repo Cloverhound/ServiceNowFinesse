@@ -23,7 +23,7 @@ class HomeView extends Component {
           <StateControls agent={agent} stateApi={this.props.stateApi}/>
           <div id="homeView" style={{height: "100%"}}>
             <div id="desktop">
-              <CallPanel agent={agent} digits={this.props.digits} phoneApi={this.props.phoneApi}/>
+              <CallPanel agent={agent} digits={this.props.digits} phoneApi={this.props.phoneApi} snowApi={this.props.snowApi}/>
             </div>
           </div>
         </div>

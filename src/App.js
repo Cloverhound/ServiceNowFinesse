@@ -17,7 +17,8 @@ import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 import "./polyfills";
 import getQueryParameter from "./query_params";
-import { parseNumber } from 'libphonenumber-js'
+import { parseNumber } from 'libphonenumber-js';
+import SnowApi from './snow_api';
 
 import LogRocket from 'logrocket';
 
@@ -63,8 +64,8 @@ function loadPlugin() {
       requestSanitizer: function (request) {
         request.headers['Authorization'] = "**HIDDEN**";
         return request;
-      },
-    },
+      }
+    }
   });
 
   window.reportError = function(message) {
@@ -211,6 +212,12 @@ function openFrameInitSuccess(snConfig) {
 
     config[key] = value;
   }
+
+  if(config.enableManualScreenPop) {
+    config.enableManualScreenPop = (config.enableManualScreenPop.toLowerCase() === 'true')
+  }
+  
+  window.OpenFrame.config = config;
 
   if (config.query) {
     window.queryTemplate = config.query;
@@ -890,7 +897,7 @@ class App extends Component {
       return (
           <div id="main">
               <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.ClientType}/>
-              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} type={window.ClientType}/>
+              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} snowApi={SnowApi} type={window.ClientType}/>
               <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.ClientType}/>
               <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.ClientType}/>
               <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames}/>
