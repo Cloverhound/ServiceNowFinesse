@@ -85,39 +85,6 @@ function loadPlugin() {
   window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
 
   window.$ = $;
-
-  window.OpenFrame = {
-    available: false,
-
-    config: {},
-
-    init() {
-      if (window.openFrameAPI) {
-        console.log("OpenFrame API detected, initializing.");
-        window.openFrameAPI.init({ height: 350, width: 350 }, this.initSuccess, this.initFailure);
-      } else {
-        console.log("Not running in OpenFrame.");
-        Finesse.setupUrl({});
-      }
-    },
-
-    initSuccess() {
-
-    },
-
-    initFailure() {
-
-    },
-
-    handleCommunicationEvent(context) {
-      console.log("Communication from Topframe", context);
-      if(context["phone_number"]) {
-        FinessePhoneApi.call(Finesse.agent, context["phone_number"].replace(/[-]/g, ""));
-        window.openFrameAPI.show();
-      }
-    }
-  }
-  
 }
 
 function formatNumber(number) {
@@ -216,8 +183,6 @@ function openFrameInitSuccess(snConfig) {
   if(config.enableManualScreenPop) {
     config.enableManualScreenPop = (config.enableManualScreenPop.toLowerCase() === 'true')
   }
-  
-  window.OpenFrame.config = config;
 
   if (config.query) {
     window.queryTemplate = config.query;
@@ -236,6 +201,38 @@ function openFrameInitSuccess(snConfig) {
 
   if (config.dialPrefix && config.dialPrefix != "") {
     dialPrefix = config.dialPrefix;
+  }
+
+  window.OpenFrame = {
+    available: false,
+
+    config: config,
+
+    init() {
+      if (window.openFrameAPI) {
+        console.log("OpenFrame API detected, initializing.");
+        window.openFrameAPI.init({ height: 350, width: 350 }, this.initSuccess, this.initFailure);
+      } else {
+        console.log("Not running in OpenFrame.");
+        Finesse.setupUrl({});
+      }
+    },
+
+    initSuccess() {
+
+    },
+
+    initFailure() {
+
+    },
+
+    handleCommunicationEvent(context) {
+      console.log("Communication from Topframe", context);
+      if(context["phone_number"]) {
+        FinessePhoneApi.call(Finesse.agent, context["phone_number"].replace(/[-]/g, ""));
+        window.openFrameAPI.show();
+      }
+    }
   }
 
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
