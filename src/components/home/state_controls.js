@@ -107,6 +107,12 @@ class StateControls extends Component {
     formattedCallTime = moment.duration(elapsedTime);
     formattedCallTime = formattedCallTime.format('mm:ss', { trim: false });
 
+    let containerStyle = {
+      maxWidth: "500px",
+      margin: "auto",
+      padding: "10px 10px 1px 10px"
+    }
+
     let timerStyle = {
       display: "inline-block",
       position: "absolute",
@@ -118,7 +124,7 @@ class StateControls extends Component {
     }
 
     return (
-      <div>
+      <div style={containerStyle}>
         <div id="agent-state" className={agent.state}>
           <Dropdown
             onChange={this.onSelect.bind(this)}
