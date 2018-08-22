@@ -17,15 +17,13 @@ import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 import "./polyfills";
 import getQueryParameter from "./query_params";
-import { parseNumber } from 'libphonenumber-js';
 import SnowApi from './snow_api';
 
 import LogRocket from 'logrocket';
 
 let maxRecentCalls = 100;
-let dialPrefix = "91";
 
-var clientType = decodeURIComponent(getQueryParameter("client") || "snow");
+var clientType = decodeURIComponent(getQueryParameter("client") || "default");
 var script = document.createElement('script');
 var scriptLoad = 0;
 if (clientType === "sforce") {
@@ -87,15 +85,6 @@ function loadPlugin() {
   window.$ = $;
 }
 
-function formatNumber(number) {
-  let parsed = parseNumber(number);
-  if (parsed.ext) {
-    return parsed.ext;
-  }
-
-  return dialPrefix + parsed.phone;
-}
-
 function handleCommunicationEvent(context) {
   console.log("Communication from Topframe", context);
 
@@ -105,9 +94,7 @@ function handleCommunicationEvent(context) {
       return;
     }
 
-    var phoneNumber = formatNumber(context.phoneNumber);
-
-    FinessePhoneApi.call(Finesse.agent, phoneNumber);
+    FinessePhoneApi.call(Finesse.agent, context.phoneNumber);
     window.openFrameAPI.show();
   } else {
     console.log("Unknown communication type.");
@@ -200,7 +187,7 @@ function openFrameInitSuccess(snConfig) {
   }
 
   if (config.dialPrefix && config.dialPrefix != "") {
-    dialPrefix = config.dialPrefix;
+    FinessePhoneApi.dialPrefix = config.dialPrefix;
   }
 
   window.OpenFrame = {
@@ -804,7 +791,6 @@ function initialize() {
   } else if (window.openFrameAPI) {
     console.log("OpenFrame API detected, initializing.");
     window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
-    window.openFrameAPI.setIcons([ {imageURL: "https://fin-dev-ed.ngrok.io/logout-xxl.png", imageTitle: "logout", id: 101} ])
   } else if (window.sforce){
     console.log("Salesforce API detected, initializing.");
     getSforceConfig();

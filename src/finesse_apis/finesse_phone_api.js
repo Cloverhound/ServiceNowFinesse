@@ -1,5 +1,6 @@
 import $ from "jquery";
 import Finesse from './finesse_api';
+import { parseNumber } from 'libphonenumber-js';
 
 const FinessePhoneApi = {
   call: call,
@@ -11,10 +12,12 @@ const FinessePhoneApi = {
   answer: answer,
   transfer: transfer,
   sendDtmf: sendDtmf,
-  getActiveCall: getActiveCall
+  getActiveCall: getActiveCall,
+  dialPrefix: "91"
 }
 
 function call(agent, number) {
+  number = formatNumber(number);
   console.log("Calling:", "'" + number + "'");
 
   var xml = '<Dialog>' +
@@ -24,6 +27,18 @@ function call(agent, number) {
             '</Dialog>';
 
   sendPhoneCommand(agent, xml);
+}
+
+function formatNumber(number) {
+  let parsed = parseNumber(number, "US", { extended: true });
+  if (parsed.ext) {
+    return parsed.ext;
+  }
+  if (!parsed.possible || !parsed.phone) {
+    return number;
+  }
+
+  return FinessePhoneApi.dialPrefix + parsed.phone;
 }
 
 function consult(agent, number) {
