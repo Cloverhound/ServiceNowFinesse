@@ -32,7 +32,7 @@ function screenPop(call) {
     console.log('Opening Service Now Form')
     console.log('entity', window.entityTemplate)
     console.log('query', query)
-    if(window.OpenFrame.config.manualScreenPopInNewWindow) {
+    if(window.OpenFrame.config.manualScreenPopInNewWindow == "true") {
         let topDomain = getParameterByName("topDomain");
         console.log('TOP DOMAIN', topDomain);
         window.open(topDomain + '/nav_to.do?uri=/' + window.entityTemplate + '.do?' + query);
