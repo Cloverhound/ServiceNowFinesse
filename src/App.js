@@ -26,6 +26,9 @@ let maxRecentCalls = 100;
 var clientType = decodeURIComponent(getQueryParameter("client") || "default");
 var script = document.createElement('script');
 var zaf_client = null;
+var zaf_uccx_1 = null;
+var zaf_uccx_2 = null;
+var zaf_config = null;
 if (clientType === "sforce") {
   script.onload = function() {
     loadPlugin();
@@ -39,7 +42,9 @@ if (clientType === "sforce") {
     zaf_client = window.ZAFClient.init();
     zaf_client.invoke('resize', { width: '300px', height: '350px' });
     zaf_client.metadata().then(function(metadata) {
-      console.log(metadata.settings);
+      zaf_uccx_1 = metadata.settings.finesse_host_primary;
+      zaf_uccx_2 = metadata.settings.finesse_host_backup;
+      zaf_config = metadata.settings.finesse_screenpop_config;
     });
   };
   script.src = "https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js";
@@ -129,7 +134,9 @@ function getSforceConfig(){
   window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
 function getZenConfig(){
-
+   var conf = {}
+   conf.finesseUrl = zaf_uccx_1
+    setupFinesseUrl(conf);
 }
 function SforceScreenPop(){
   var callback = function(response) {
