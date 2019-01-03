@@ -41,7 +41,7 @@
         console.log("OpenFrame API loaded");
       }
       let client = getParameterByName("client");
-      if (client != "sforce" || client != "zen") {
+      if (client != "sforce" && client != "zen") {
       let openFrameVersion = getParameterByName("openFrameVersion") || "1.0.2";
       let topDomain = getParameterByName("topDomain");
       let openFrameBaseUrl = topDomain ? topDomain + "/scripts/openframe/" : "%PUBLIC_URL%/openFrame/";
