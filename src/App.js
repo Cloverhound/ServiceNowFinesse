@@ -26,6 +26,7 @@ let maxRecentCalls = 100;
 var clientType = decodeURIComponent(getQueryParameter("client") || "default");
 var script = document.createElement('script');
 var scriptLoad = 0;
+var zaf_client = null;
 if (clientType === "sforce") {
   scriptLoad = 1;
   script.onload = function() {
@@ -34,12 +35,14 @@ if (clientType === "sforce") {
   script.src = "https://c.na30.visual.force.com/support/api/42.0/lightning/opencti_min.js";
 
   document.head.appendChild(script); //or something of the likes
-} else if (clientType === "snow"){
+} else if (clientType === "zen"){
   scriptLoad = 1;
   script.onload = function () {
     loadPlugin();
+    zafClient = ZAFClient.init();
+    zafClient.invoke('resize', { width: '300px', height: '500px' });
   };
-  script.src = "https://ven01796.service-now.com/scripts/openframe/1.0.0/openFrameAPI.min.js";
+  script.src = "https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else {
@@ -300,7 +303,7 @@ function login() {
         handleLoginFailed("There was an error reaching Finesse, contact support.");
         return;
       }
-      
+
       console.warn("Error testing agent credentials:", status, err);
       handleLoginFailed("Invalid Credentials");
     },
@@ -408,7 +411,7 @@ function receiveMessage(event)
   if (eventCode === "0") {
     if (FinesseTunnelApi.state !== "connected") {
       console.log("Tunnel not connected, ignoring data update.");
-      return; 
+      return;
     }
 
     var dataString = event.data.split('|')[1];
@@ -610,7 +613,7 @@ function handleDialogUpdated(dialog) {
 
     query = query.replace("{{" + name + "}}", value);
     entity = entity.replace("{{" + name + "}}", value);
-      
+
     call.callVariables[name] = value;
   }
 
@@ -676,11 +679,11 @@ function getParticipantState(dialog) {
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
   let recentCalls = Finesse.agent.recentCalls;
-  
+
   if(recentCalls.length === maxRecentCalls) {
     recentCalls = Finesse.agent.recentCalls.splice(0, 1);
   }
-  
+
   recentCalls.push(call);
   Finesse.saveRecentCalls();
 
@@ -849,19 +852,19 @@ class App extends Component {
                   width: '100%',
                   position: 'absolute'
                 }}>
-                <a href="https://cloverhound.com/" target="_blank" className="logo" 
+                <a href="https://cloverhound.com/" target="_blank" className="logo"
                   style={{
                     display: 'block',
                     textAlign: 'center'
                   }}>
-                  <img alt="Cloverhound, Inc." src="logo_with_name.png" 
+                  <img alt="Cloverhound, Inc." src="logo_with_name.png"
                     style={{
                       width: '120px',
                       marginRight: '6px'
                     }} />
                 </a>
 
-                <a href="https://cloverhound.com/" target="_blank" className="copyright" 
+                <a href="https://cloverhound.com/" target="_blank" className="copyright"
                     style={{
                       marginTop: '4px',
                       fontSize: '0.5em',
