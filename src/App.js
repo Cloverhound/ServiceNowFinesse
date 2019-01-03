@@ -42,6 +42,9 @@ if (clientType === "sforce") {
     zaf_client = window.ZAFClient.init();
     zaf_client.invoke('resize', { width: '300px', height: '400px' });
     zaf_client.metadata().then(function(metadata) {
+      console.log(metadata.settings);
+      console.log(metadata.settings.finesse_host_primary);
+      console.log(metadata.settings["finesse_host_primary"]);
       zaf_uccx_1 = metadata.settings["finesse_host_primary"];
       zaf_uccx_2 = metadata.settings["finesse_host_backup"];
       zaf_config = metadata.settings["finesse_screenpop_config"];
@@ -134,8 +137,8 @@ function getSforceConfig(){
   window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
 function getZenConfig(){
-   var conf = {}
-   conf.finesseUrl = zaf_uccx_1
+   var conf = {};
+   conf.finesseUrl = zaf_uccx_1;
     setupFinesseUrl(conf);
 }
 function SforceScreenPop(){
