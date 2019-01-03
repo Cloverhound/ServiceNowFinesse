@@ -40,7 +40,7 @@ if (clientType === "sforce") {
   script.onload = function () {
     loadPlugin();
     zaf_client = window.ZAFClient.init();
-    zaf_client.invoke('resize', { width: '300px', height: '350px' });
+    zaf_client.invoke('resize', { width: '300px', height: '400px' });
     zaf_client.metadata().then(function(metadata) {
       zaf_uccx_1 = metadata.settings.finesse_host_primary;
       zaf_uccx_2 = metadata.settings.finesse_host_backup;
