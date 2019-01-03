@@ -9,7 +9,7 @@
     "walk": "^2.3.9"
   },
   "engines": {
-    "node": "10.3.0"
+    "node": "9.11.2"
   },
   "dependencies": {
     "classnames": "^2.2.6",
