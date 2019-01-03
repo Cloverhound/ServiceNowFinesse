@@ -804,17 +804,18 @@ window.rerender = rerender;
 function initialize() {
   if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") !== "") {
     setupFinesseUrl({});
-  }
-  if (window.openFrameAPI) {
+  } else if (window.openFrameAPI) {
     console.log("OpenFrame API detected, initializing.");
     window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
-  }
-  if (window.sforce){
+  } else if (window.sforce){
     console.log("Salesforce API detected, initializing.");
     getSforceConfig();
-  }
-  if (window.ZAFClient){
+  } else if (window.ZAFClient){
     console.log("Zendesk API detected, initializing.");
+  } else {
+    console.log("Not running in OpenFrame, delaying.");
+    setTimeout(initialize, 500);
+    //setupFinesseUrl({});
   }
 }
 
