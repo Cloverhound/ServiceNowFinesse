@@ -808,10 +808,6 @@ function initialize() {
   if (window.openFrameAPI) {
     console.log("OpenFrame API detected, initializing.");
     window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
-  } else {
-      console.log("Not running in OpenFrame, delaying.");
-      setTimeout(initialize, 500);
-      //setupFinesseUrl({});
   }
   if (window.sforce){
     console.log("Salesforce API detected, initializing.");
