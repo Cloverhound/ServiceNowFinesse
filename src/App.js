@@ -47,7 +47,7 @@ if (clientType === "sforce") {
       zaf_uccx_1 = metadata.settings.finesse_host_primary;
       zaf_uccx_2 = metadata.settings.finesse_host_backup;
       zaf_config = metadata.settings.finesse_screenpop_config;
-          getZenConfig();
+      getZenConfig();
     });
   };
   script.src = "https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js";
@@ -804,18 +804,21 @@ window.rerender = rerender;
 function initialize() {
   if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") !== "") {
     setupFinesseUrl({});
-  } else if (window.openFrameAPI) {
+  }
+  if (window.openFrameAPI) {
     console.log("OpenFrame API detected, initializing.");
     window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
-  } else if (window.sforce){
+  } else {
+      console.log("Not running in OpenFrame, delaying.");
+      setTimeout(initialize, 500);
+      //setupFinesseUrl({});
+  }
+  if (window.sforce){
     console.log("Salesforce API detected, initializing.");
     getSforceConfig();
-  } else if (window.ZAFClient){
+  }
+  if (window.ZAFClient){
     console.log("Zendesk API detected, initializing.");
-  } else {
-    console.log("Not running in OpenFrame, delaying.");
-    setTimeout(initialize, 500);
-    //setupFinesseUrl({});
   }
 }
 
