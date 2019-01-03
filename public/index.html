@@ -40,12 +40,14 @@
       function loadedCallback() {
         console.log("OpenFrame API loaded");
       }
-
+      let client = getParameterByName("client")
+      if (client ==="sforce") {
       let openFrameVersion = getParameterByName("openFrameVersion") || "1.0.2";
       let topDomain = getParameterByName("topDomain");
       let openFrameBaseUrl = topDomain ? topDomain + "/scripts/openframe/" : "%PUBLIC_URL%/openFrame/";
       dynamicallyLoadScript(openFrameBaseUrl + openFrameVersion + "/openFrameAPI.min.js");
-    </script>
+    }
+  </script>
   </head>
   <body>
       <svg style="display:none">
