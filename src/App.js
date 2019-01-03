@@ -126,8 +126,7 @@ function getSforceConfig(){
         window.sforceConfig["/reqGeneralInfo/finesseUrl"]);
         var conf = {}
         conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
-
-          Url(conf);
+          setupFinesseUrl(conf);
     } else {
       console.error('Something went wrong! Errors:', response.errors);
     }
@@ -135,8 +134,8 @@ function getSforceConfig(){
   window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
 function getZenConfig(){
-   var conf = {};
-   conf.finesseUrl = zaf_uccx_1;
+   var conf = {}
+   conf.finesseUrl = zaf_uccx_1
     setupFinesseUrl(conf);
 }
 function SforceScreenPop(){
