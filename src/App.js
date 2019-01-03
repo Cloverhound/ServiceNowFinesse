@@ -37,7 +37,10 @@ if (clientType === "sforce") {
   script.onload = function () {
     loadPlugin();
     zaf_client = window.ZAFClient.init();
-    zaf_client.invoke('resize', { width: '300px', height: '400px' });
+    zaf_client.invoke('resize', { width: '300px', height: '350px' });
+    zaf_client.metadata().then(function(metadata) {
+      console.log(metadata.settings);
+    });
   };
   script.src = "https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js";
 
