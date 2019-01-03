@@ -42,9 +42,9 @@ if (clientType === "sforce") {
     zaf_client = window.ZAFClient.init();
     zaf_client.invoke('resize', { width: '300px', height: '400px' });
     zaf_client.metadata().then(function(metadata) {
-      zaf_uccx_1 = metadata.settings.finesse_host_primary;
-      zaf_uccx_2 = metadata.settings.finesse_host_backup;
-      zaf_config = metadata.settings.finesse_screenpop_config;
+      zaf_uccx_1 = metadata.settings["finesse_host_primary"];
+      zaf_uccx_2 = metadata.settings["finesse_host_backup"];
+      zaf_config = metadata.settings["finesse_screenpop_config"];
     });
   };
   script.src = "https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js";
@@ -126,7 +126,8 @@ function getSforceConfig(){
         window.sforceConfig["/reqGeneralInfo/finesseUrl"]);
         var conf = {}
         conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
-          setupFinesseUrl(conf);
+
+          Url(conf);
     } else {
       console.error('Something went wrong! Errors:', response.errors);
     }
@@ -134,8 +135,8 @@ function getSforceConfig(){
   window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
 function getZenConfig(){
-   var conf = {}
-   conf.finesseUrl = zaf_uccx_1
+   var conf = {};
+   conf.finesseUrl = zaf_uccx_1;
     setupFinesseUrl(conf);
 }
 function SforceScreenPop(){
