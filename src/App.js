@@ -17,119 +17,84 @@ import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 import "./polyfills";
 import getQueryParameter from "./query_params";
+import SnowApi from './snow_api';
 
 import LogRocket from 'logrocket';
 
 let maxRecentCalls = 100;
 
-var clientType = decodeURIComponent(getQueryParameter("client"));
+var clientType = decodeURIComponent(getQueryParameter("client") || "default");
 var script = document.createElement('script');
 var scriptLoad = 0;
-if (clientType === "sforce"){
+if (clientType === "sforce") {
   scriptLoad = 1;
-  script.onload = function () {
-    realInit();
-};
+  script.onload = function() {
+    loadPlugin();
+  };
   script.src = "https://c.na30.visual.force.com/support/api/42.0/lightning/opencti_min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else if (clientType === "snow"){
   scriptLoad = 1;
   script.onload = function () {
-    realInit();
-};
+    loadPlugin();
+  };
   script.src = "https://ven01796.service-now.com/scripts/openframe/1.0.0/openFrameAPI.min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else {
-  realInit();
+  loadPlugin();
 }
-function realInit(){
-window.moment = moment;
-window.Finesse = Finesse;
-window.ClientType = "SFORCE";
 
-let env = getQueryParameter("ENV");
-let logRocketApp = "cloverhound/snow-finesse";
-if (env) {
-  logRocketApp += "-" + env;
-}
-LogRocket.init(logRocketApp,  {
-  // Scrub Auth header from all logged requests.
-  network: {
-    requestSanitizer: function (request) {
-      request.headers['Authorization'] = "**HIDDEN**";
-      return request;
-    },
-  },
-});
+function loadPlugin() {
+  window.moment = moment;
+  window.Finesse = Finesse;
+  window.ClientType = clientType || "snow";
 
-window.reportError = function(message) {
-  if (!LogRocket && !LogRocket.captureMessage) {
-    return;
+  let env = getQueryParameter("ENV");
+  let logRocketApp = "cloverhound/snow-finesse";
+  if (env) {
+    logRocketApp += "-" + env;
   }
-
-  LogRocket.captureMessage(message);
-}
-//LogRocket.startNewSession();
-
-window.finesseUrl = "";
-window.finesseUrlWithoutPort = "";
-window.tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};  // I forsee dialpad and contacts in the future
-Finesse.resetAgent();
-window.entityTemplate = "incident";
-window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
-
-window.$ = $;
-
-if (clientType === "snow"){
-window.OpenFrame = {
-  available: false,
-
-  config: {},
-
-  init() {
-    if (window.openFrameAPI) {
-      window.openFrameAPI.init({ height: 350, width: 350 }, this.initSuccess, this.initFailure);
-    } else {
-      Finesse.setupUrl({});
+  LogRocket.init(logRocketApp,  {
+    // Scrub Auth header from all logged requests.
+    network: {
+      requestSanitizer: function (request) {
+        request.headers['Authorization'] = "**HIDDEN**";
+        return request;
+      }
     }
-  },
+  });
 
-  initSuccess() {
-
-  },
-
-  initFailure() {
-
-  },
-
-  handleCommunicationEvent(context) {
-    console.log("Communication from Topframe", context);
-    if(context["phone_number"]) {
-      FinessePhoneApi.call(Finesse.agent, context["phone_number"].replace(/[-]/g, ""));
-      window.openFrameAPI.show();
+  window.reportError = function(message) {
+    if (!LogRocket && !LogRocket.captureMessage) {
+      return;
     }
+
+    LogRocket.captureMessage(message);
   }
-}
-}
+  //LogRocket.startNewSession();
 
-if (window.sforce){
-  getSforceConfig();
-} else if (window.openFrameAPI) {
-  window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
-} else {
-  setupFinesseUrl({});
-}
+  window.finesseUrl = "";
+  window.finesseUrlWithoutPort = "";
+  window.tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};  // I forsee dialpad and contacts in the future
+  Finesse.resetAgent();
+  window.entityTemplate = "incident";
+  window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
+
+  window.$ = $;
 }
 
 function handleCommunicationEvent(context) {
   console.log("Communication from Topframe", context);
-  if(context.type === "OUTGOING_CALL" && context.phoneNumber) {
-    var phoneNumber = context.phoneNumber.replace(/[\(\)\s-]/g, "");
-    phoneNumber = phoneNumber.split('x')[0]
 
-    FinessePhoneApi.call(Finesse.agent, phoneNumber);
+  if(context.type === "OUTGOING_CALL" && context.phoneNumber) {
+    if (!Finesse.agent || !Finesse.agent.state || Finesse.agent.state === 'LOGOUT') {
+      console.warn("Not logged in, ignoring click to call.");
+      return;
+    }
+
+    FinessePhoneApi.call(Finesse.agent, context.phoneNumber);
     window.openFrameAPI.show();
   } else {
     console.log("Unknown communication type.");
@@ -137,6 +102,13 @@ function handleCommunicationEvent(context) {
 }
 function handleOpenFrameShownEvent(context) {
   rerender(Finesse.agent);
+}
+function handleOpenFrameHeaderIconClick(context) {
+  console.log("Icon clicked:", context);
+
+  if (context.id === 101 && window.toggleLogoutMenu) {
+    window.toggleLogoutMenu()
+  }
 }
 function getSforceConfig(){
   var SFGScallback = function(response) {
@@ -195,6 +167,10 @@ function openFrameInitSuccess(snConfig) {
     config[key] = value;
   }
 
+  if(config.enableManualScreenPop) {
+    config.enableManualScreenPop = (config.enableManualScreenPop.toLowerCase() === 'true')
+  }
+
   if (config.query) {
     window.queryTemplate = config.query;
   }
@@ -210,17 +186,58 @@ function openFrameInitSuccess(snConfig) {
     maxRecentCalls = Number(config.maxRecentCalls);
   }
 
+  if (config.dialPrefix && config.dialPrefix != "") {
+    FinessePhoneApi.dialPrefix = config.dialPrefix;
+  }
+
+  window.OpenFrame = {
+    available: false,
+
+    config: config,
+
+    init() {
+      if (window.openFrameAPI) {
+        console.log("OpenFrame API detected, initializing.");
+        window.openFrameAPI.init({ height: 350, width: 350 }, this.initSuccess, this.initFailure);
+      } else {
+        console.log("Not running in OpenFrame.");
+        Finesse.setupUrl({});
+      }
+    },
+
+    initSuccess() {
+
+    },
+
+    initFailure() {
+
+    },
+
+    handleCommunicationEvent(context) {
+      console.log("Communication from Topframe", context);
+      if(context["phone_number"]) {
+        FinessePhoneApi.call(Finesse.agent, context["phone_number"].replace(/[-]/g, ""));
+        window.openFrameAPI.show();
+      }
+    }
+  }
+
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
-  handleCommunicationEvent);
+    handleCommunicationEvent);
   window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
-  handleOpenFrameShownEvent);
+    handleOpenFrameShownEvent);
+  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.HEADER_ICON_CLICKED,
+    handleOpenFrameHeaderIconClick);
 }
 function openFrameInitFailure(error) {
   console.log("Error: OpenFrame init failed:", error);
 
   //window.openFrameAPI = null;
-
-  setupFinesseUrl({});
+  if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") != "") {
+    setupFinesseUrl({});
+  } else {
+    setTimeout(initialize, 500);
+  }
 }
 
 function setupFinesseUrl(config) {
@@ -283,7 +300,7 @@ function login() {
         handleLoginFailed("There was an error reaching Finesse, contact support.");
         return;
       }
-
+      
       console.warn("Error testing agent credentials:", status, err);
       handleLoginFailed("Invalid Credentials");
     },
@@ -391,7 +408,7 @@ function receiveMessage(event)
   if (eventCode === "0") {
     if (FinesseTunnelApi.state !== "connected") {
       console.log("Tunnel not connected, ignoring data update.");
-      return;
+      return; 
     }
 
     var dataString = event.data.split('|')[1];
@@ -506,7 +523,16 @@ function handleApiErrors(apiErrors) {
   console.error("Received API error:", errorType,  errorMessage);
   window.reportError("Received API error: " + errorType + ", " + errorMessage);
 
+
+  if (shouldIgnoreError(errorType, errorMessage)) {
+    return;
+  }
+
   alert(errorMessage + " - " + errorType);
+}
+
+function shouldIgnoreError(type, message) {
+  return true;
 }
 
 function handleAllDialogsUpdated(dialogs) {
@@ -566,6 +592,10 @@ function handleDialogUpdated(dialog) {
     call.direction = "inbound";
   }
 
+  if (call.otherParty === "null") {
+    call.otherParty = null;
+  }
+
   // sys_user
   // sysparm_view=screenpop&sysparm_query=phoneLIKE9803338415
   // sysparm_view=screenpop&sysparm_query=employee_number=1234567
@@ -580,7 +610,7 @@ function handleDialogUpdated(dialog) {
 
     query = query.replace("{{" + name + "}}", value);
     entity = entity.replace("{{" + name + "}}", value);
-
+      
     call.callVariables[name] = value;
   }
 
@@ -610,8 +640,10 @@ function handleDialogUpdated(dialog) {
   rerender(Finesse.agent);
 
   let shouldPop = !call.alreadyPopped && call.direction === "inbound" && window.openFrameAPI
-  if(Finesse.agent.calls.length > 1 && !Finesse.agent.shouldPopConcurrently) {
-    shouldPop = false
+  if(Object.keys(calls).length > 1 && !Finesse.agent.shouldPopConcurrently) {
+    shouldPop = false;
+    // We don't want to ever pop this call
+    call.alreadyPopped = true;
   }
 
   if(shouldPop) {
@@ -644,11 +676,11 @@ function getParticipantState(dialog) {
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
   let recentCalls = Finesse.agent.recentCalls;
-
+  
   if(recentCalls.length === maxRecentCalls) {
     recentCalls = Finesse.agent.recentCalls.splice(0, 1);
   }
-
+  
   recentCalls.push(call);
   Finesse.saveRecentCalls();
 
@@ -753,6 +785,22 @@ function rerender(agent) {
 }
 window.rerender = rerender;
 
+function initialize() {
+  if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") != "") {
+    setupFinesseUrl({});
+  } else if (window.openFrameAPI) {
+    console.log("OpenFrame API detected, initializing.");
+    window.openFrameAPI.init({ height: 350, width: 350 }, openFrameInitSuccess, openFrameInitFailure);
+  } else if (window.sforce){
+    console.log("Salesforce API detected, initializing.");
+    getSforceConfig();
+  } else {
+    console.log("Not running in OpenFrame, delaying.");
+    setTimeout(initialize, 500);
+    //setupFinesseUrl({});
+  }
+}
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -763,6 +811,10 @@ class App extends Component {
     };
 
     window.MainApp = this;
+  }
+
+  componentWillMount() {
+    initialize();
   }
 
   updateAgent(agent) {
@@ -792,15 +844,45 @@ class App extends Component {
       return (
           <div id="main">
               <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={agent.previousLoginFailed} loading={agent.loggingIn}/>
+              <div style={{
+                  padding: '10px',
+                  width: '100%',
+                  position: 'absolute'
+                }}>
+                <a href="https://cloverhound.com/" target="_blank" className="logo" 
+                  style={{
+                    display: 'block',
+                    textAlign: 'center'
+                  }}>
+                  <img alt="Cloverhound, Inc." src="logo_with_name.png" 
+                    style={{
+                      width: '120px',
+                      marginRight: '6px'
+                    }} />
+                </a>
+
+                <a href="https://cloverhound.com/" target="_blank" className="copyright" 
+                    style={{
+                      marginTop: '4px',
+                      fontSize: '0.5em',
+                      textDecoration: 'none',
+                      color: '#8a8a8a',
+                      fontWeight: 'bold',
+                      textAlign: 'center',
+                      display: 'block'
+                    }}>
+                  © 2018 Cloverhound Inc.
+                </a>
+              </div>
           </div>
       );
     } else {
       return (
           <div id="main">
-              <AgentHeader agent={agent} stateApi={FinesseStateApi}/>
-              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi}/>
-              <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi}/>
-              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames}/>
+              <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.ClientType}/>
+              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} snowApi={SnowApi} type={window.ClientType}/>
+              <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.ClientType}/>
+              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.ClientType}/>
               <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames}/>
           </div>
       );

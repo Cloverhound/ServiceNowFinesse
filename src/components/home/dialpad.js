@@ -24,95 +24,105 @@ class DialpadView extends Component {
       let calls = this.props.agent.calls;
       let callsActive = (Object.keys(calls).length > 0);
 
-      return (
-        <div style={{
+      let containerStyle = {
           maxWidth: '500px',
           position: 'relative',
-          height: 'calc(100% - 71px)',
+          height: 'calc(100% - 63px)',
           margin: 'auto',
-          padding: '10px 20px',
-        }}>
-        <div className="dial-pad">
-                          <a onClick={this.addDigit.bind(this, '1')}>
-                            <span>1</span>
-                            <span style={{display: 'block', visibility: 'hidden', fontSize: '0.5rem'}}>
-                                X X X
-                            </span>
-                          </a>
-                          <a onClick={this.addDigit.bind(this, '2')}>
-                            <span>2</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                                A B C
-                            </span>
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '3')}>
-                            <span>3</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                                D E F
-                            </span>
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '4')}>
-                            <span>4</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                              G H I
-                            </span>
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '5')}>
-                            <span>5</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                              J K L
-                            </span>
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '6')}>
-                            <span>6</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                              M N O
-                            </span>
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '7')}>
-                            <span>7</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                              P Q R S
-                            </span>
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '8')}>
-                            <span>8</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                              T U V
-                            </span>
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '9')}>
-                            <span>9</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                               W X Y Z
-                            </span>
-                        </a>
-                        <a onClick={this.addDigit.bind(this, '*')} style={{
-                          paddingTop: "12px",
-                          paddingBottom: "6px",
-                          fontSize: "1.8rem"
-                        }}>
-                            <span>*</span>
-                       
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '0')}>
-                            <span>0</span>
-                            <span style={{display: 'block', fontSize: '0.5rem'}}>
-                              +
-                            </span>
-                        </a>
-                          <a onClick={this.addDigit.bind(this, '#')} style={{
-                            paddingTop: "12px",
-                            paddingBottom: "14px"
-                          }}>
-                            <span>#</span>
-                            
-                        </a>
-                        </div>
-<div id="myDiv" style={{position: 'relative', height: 'calc(100% - 217px'}}>
-   <MakeCallForm agent={this.props.agent} digits={this.props.digits} phoneApi={this.props.phoneApi}/>
-</div>
-</div>
+          padding: '10px'
+      }
+
+      let dialPadStyle = {};
+
+      if (this.props.type == "snow") {
+        containerStyle.height = 'calc(100% - 28px)';
+        dialPadStyle.marginTop = '22px';
+      }
+
+      return (
+        <div style={containerStyle}>
+          <div style={{height: '100%', position: 'relative'}}>
+            <div className="dial-pad" style={dialPadStyle}>
+              <a onClick={this.addDigit.bind(this, '1')}>
+                <span>1</span>
+                <span style={{display: 'block', visibility: 'hidden', fontSize: '0.5rem'}}>
+                    X X X
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '2')}>
+                <span>2</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                    A B C
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '3')}>
+                <span>3</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                    D E F
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '4')}>
+                <span>4</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                  G H I
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '5')}>
+                <span>5</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                  J K L
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '6')}>
+                <span>6</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                  M N O
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '7')}>
+                <span>7</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                  P Q R S
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '8')}>
+                <span>8</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                  T U V
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '9')}>
+                <span>9</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                    W X Y Z
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '*')} style={{
+                paddingTop: "12px",
+                paddingBottom: "6px",
+                fontSize: "1.8rem"
+              }}>
+                  <span>*</span>
+              
+              </a>
+              <a onClick={this.addDigit.bind(this, '0')}>
+                <span>0</span>
+                <span style={{display: 'block', fontSize: '0.5rem'}}>
+                  +
+                </span>
+              </a>
+              <a onClick={this.addDigit.bind(this, '#')} style={{
+                paddingTop: "12px",
+                paddingBottom: "14px"
+              }}>
+                <span>#</span>
+                
+            </a>
+          </div>
+
+          <MakeCallForm agent={this.props.agent} digits={this.props.digits} phoneApi={this.props.phoneApi}/>
+        </div>
+      </div>
       )
   }
 }

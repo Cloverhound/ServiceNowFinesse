@@ -10,11 +10,21 @@ class HomeView extends Component {
         return null;
       }
 
+      let containerStyle = {
+        height: 'calc(100% - 63px)',
+      }
+
+      if (this.props.type == "snow") {
+        containerStyle.height = 'calc(100% - 28px)';
+      }
+
       return (
-        <div id="homeView" style={{height: "calc(100% - 35px)"}}>
-          <div id="desktop">
-            <StateControls agent={agent} stateApi={this.props.stateApi}/>
-            <CallPanel agent={agent} digits={this.props.digits} phoneApi={this.props.phoneApi}/>
+        <div style={containerStyle}>
+          <StateControls agent={agent} stateApi={this.props.stateApi}/>
+          <div id="homeView" style={{height: "100%"}}>
+            <div id="desktop">
+              <CallPanel agent={agent} digits={this.props.digits} phoneApi={this.props.phoneApi} snowApi={this.props.snowApi}/>
+            </div>
           </div>
         </div>
       )

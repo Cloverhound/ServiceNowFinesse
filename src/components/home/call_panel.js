@@ -6,6 +6,7 @@ import ResumeButton from './call_controls/resume_button'
 import HangupButton from './call_controls/hangup_button'
 import TransferButton from './call_controls/transfer_button'
 import ConferenceButton from './call_controls/conference_button'
+import ScreenPopButton from './call_controls/screenpop_button'
 import moment from "moment";
 import "moment-duration-format";
 
@@ -62,7 +63,8 @@ class CallPanel extends Component {
     }
     let noCallsTextStyle = {
       verticalAlign: 'middle',
-      float: 'left'
+      float: 'left',
+      borderRadius: '5px'
     }
 
 
@@ -73,8 +75,8 @@ class CallPanel extends Component {
     if(callIds.length === 0) {
 
       return (
-        <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
-          <div className="call-header" onClick={this.toggleContent.bind(this)}>
+        <div style={{height: '100%', position: 'relative'}}>
+          <div className="call-header no-calls" onClick={this.toggleContent.bind(this)}>
             <i style={iconStyle} className="fa fa-phone" aria-hidden="true"></i>
             <span style={noCallsTextStyle}>
               No Calls
@@ -111,8 +113,9 @@ class CallPanel extends Component {
           <div className="call-tab" key={call.id}>
             <div className="call-header">
               <i style={{display: "none"}} className="fa fa-phone header-phone-icon" aria-hidden="true"></i>
+              <ScreenPopButton call={call} agent={agent} snowApi={this.props.snowApi}/>
               <span className="header-other-party" style={headerTextStyle}>
-                {call.otherParty} ({formattedCallTime})
+                {call.otherParty || "Invalid"} ({formattedCallTime})
               </span>
               <AnswerButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
               <HangupButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
@@ -130,7 +133,7 @@ class CallPanel extends Component {
       }
 
       return (
-        <div style={{height: 'calc(100% - 35px)', position: 'relative'}}>
+        <div style={{height: '100%', position: 'relative'}}>
           {callTabs}
           {makeCallForm}
         </div>

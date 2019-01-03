@@ -35,22 +35,22 @@ const Finesse = {
   setupUrl(config) {
     console.log('Setting up finesse url...')
     this.url.full = (config.finesseUrl || decodeURIComponent(getQueryParameter("finesseUrl"))) || ""
-
+  
     var el = document.createElement('a');
     el.href = this.url.full;
     this.url.withoutPort = el.protocol + "//" + el.hostname;
     this.url.port = el.port;
     this.url.protocol = el.protocol;
     this.url.hostname = el.hostname;
-
+  
     // var urlParts = window.finesseUrl.split(":");
     // if (urlParts.length > 2) {
     //   window.finesseUrlWithoutPort = urlParts[0] + ":" + urlParts[1];
     // }
-
+  
     console.log('Finesse URL: ' + this.url.full);
     console.log('Finesse URL without Port: ' + this.url.withoutPort);
-
+  
     document.getElementById('tunnel-frame').src = this.url.withoutPort + ":7443/tunnel"
   },
 
@@ -60,34 +60,34 @@ const Finesse = {
 
   reloadRecentCalls() {
     let recents = [];
-
+  
     let rs = localStorage[this.agent.loginId + ".recentCalls"];
-    if (!rs) {
+    if (!rs) { 
       return recents
     };
-
+  
     let loadedRecents = JSON.parse(rs);
     for(let i = 0; i < loadedRecents.length; i++) {
       let call = loadedRecents[i];
-
+      
       call.startedAt = moment(call.startedAt);
       call.endedAt = moment(call.endedAt);
-
+  
       let startDay = call.startedAt.clone().startOf('day');
       let today = moment().startOf('day');
-
+  
       // Ignore calls older than today.
       if (startDay.isBefore(today)) {
         continue;
       }
-
+  
       recents.push(call);
     }
-
+  
     this.agent.recentCalls = recents;
     this.saveRecentCalls();
     window.rerender(this.agent);
-
+    
     return recents;
   },
 
@@ -111,7 +111,8 @@ function emptyAgent() {
     previousLoginFailed: false,
     loggingOut: false,
     loggingIn: false,
-    shouldPopConcurrently: false
+    shouldPopConcurrently: false,
+    enableManualScreenPop: false
   };
 }
 

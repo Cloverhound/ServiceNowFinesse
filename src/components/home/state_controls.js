@@ -81,7 +81,9 @@ class StateControls extends Component {
     if (option.value === STATE_TEXT['READY']) {
       stateApi.ready(agent);
     } else if (option.value.includes(STATE_TEXT['NOT_READY']) && option.value.includes("-")) {
-      stateApi.notReady(agent, option.value.split("-")[1].substring(1));
+      let firstDashIndex = option.value.indexOf("-");
+      let reason = option.value.substring(firstDashIndex + 1).trim();
+      stateApi.notReady(agent, reason);
     } else {
       stateApi.notReady(agent);
     }
@@ -105,21 +107,24 @@ class StateControls extends Component {
     formattedCallTime = moment.duration(elapsedTime);
     formattedCallTime = formattedCallTime.format('mm:ss', { trim: false });
 
+    let containerStyle = {
+      maxWidth: "500px",
+      margin: "auto",
+      padding: "10px 10px 1px 10px"
+    }
+
     let timerStyle = {
       display: "inline-block",
-      float: "right",
-      marginRight: "30px",
-      marginTop: "9px",
+      position: "absolute",
+      top: "16px",
+      right: "30px",
       color: "white",
-      position: "relative",
-      zIndex: 10,
       fontSize: "12px",
-      backgroundImage: "linear-gradient(white-lightgray)",
       pointerEvents: "none"
     }
 
     return (
-      <div>
+      <div style={containerStyle}>
         <div id="agent-state" className={agent.state}>
           <Dropdown
             onChange={this.onSelect.bind(this)}

@@ -1,5 +1,6 @@
 import $ from "jquery";
 import Finesse from './finesse_api';
+import { parseNumber } from 'libphonenumber-js';
 
 const FinessePhoneApi = {
   call: call,
@@ -11,18 +12,13 @@ const FinessePhoneApi = {
   answer: answer,
   transfer: transfer,
   sendDtmf: sendDtmf,
-  getActiveCall: getActiveCall
+  getActiveCall: getActiveCall,
+  dialPrefix: "91"
 }
 
 function call(agent, number) {
-  console.log("Preparing call request to:", "'" + number + "'");
-
-  if (number.length === 10) {
-    number = "91" + number;
-  } else if (number.length === 11) {
-    number = "9" + number;
-  }
-  console.log("Calling:", number);
+  number = formatNumber(number);
+  console.log("Calling:", "'" + number + "'");
 
   var xml = '<Dialog>' +
             ' <requestedAction>MAKE_CALL</requestedAction>' +
@@ -33,15 +29,21 @@ function call(agent, number) {
   sendPhoneCommand(agent, xml);
 }
 
-function consult(agent, number) {
-  console.log("Preparing consult request to:", "'" + number + "'");
-
-  if (number.length === 10) {
-    number = "91" + number;
-  } else if (number.length === 11) {
-    number = "9" + number;
+function formatNumber(number) {
+  let parsed = parseNumber(number, "US", { extended: true });
+  if (parsed.ext) {
+    return parsed.ext;
   }
-  console.log("Consulting:", number);
+  if (!parsed.possible || !parsed.phone) {
+    return number;
+  }
+
+  return FinessePhoneApi.dialPrefix + parsed.phone;
+}
+
+function consult(agent, number) {
+  console.log("Consulting to:", "'" + number + "'");
+
   let call = getCallByLine(agent.calls, 1);
 
   var xml = '<Dialog>' +
