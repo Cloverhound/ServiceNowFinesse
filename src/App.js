@@ -25,10 +25,8 @@ let maxRecentCalls = 100;
 
 var clientType = decodeURIComponent(getQueryParameter("client") || "default");
 var script = document.createElement('script');
-var scriptLoad = 0;
 var zaf_client = null;
 if (clientType === "sforce") {
-  scriptLoad = 1;
   script.onload = function() {
     loadPlugin();
   };
@@ -36,11 +34,10 @@ if (clientType === "sforce") {
 
   document.head.appendChild(script); //or something of the likes
 } else if (clientType === "zen"){
-  scriptLoad = 1;
   script.onload = function () {
     loadPlugin();
-    zafClient = ZAFClient.init();
-    zafClient.invoke('resize', { width: '300px', height: '500px' });
+    zaf_client = window.ZAFClient.init();
+    zaf_client.invoke('resize', { width: '300px', height: '500px' });
   };
   script.src = "https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js";
 
@@ -189,7 +186,7 @@ function openFrameInitSuccess(snConfig) {
     maxRecentCalls = Number(config.maxRecentCalls);
   }
 
-  if (config.dialPrefix && config.dialPrefix != "") {
+  if (config.dialPrefix && config.dialPrefix !== "") {
     FinessePhoneApi.dialPrefix = config.dialPrefix;
   }
 
@@ -236,7 +233,7 @@ function openFrameInitFailure(error) {
   console.log("Error: OpenFrame init failed:", error);
 
   //window.openFrameAPI = null;
-  if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") != "") {
+  if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") !== "") {
     setupFinesseUrl({});
   } else {
     setTimeout(initialize, 500);
@@ -485,7 +482,7 @@ function getRecentCallById(id) {
 
   for(let i = 0; i < Finesse.agent.recentCalls.length; i++) {
     let recentCall = Finesse.agent.recentCalls[i];
-    if(recentCall.id == id) {
+    if(recentCall.id === id) {
       return recentCall;
     }
   }
@@ -731,7 +728,7 @@ function setAgentFieldFromUserUpdate(fieldName, userObject, type) {
     value = String(value);
   }
 
-  if(fieldName == "stateChangeTime" && Finesse.agent[fieldName] != value) {
+  if(fieldName === "stateChangeTime" && Finesse.agent[fieldName] !== value) {
     window.Finesse.agent.localStateChangeTime = new Date();
   }
 
@@ -765,7 +762,7 @@ function setAgentReasonCodeFromUserUpdate(userObject) {
 
 
 $("#dial_num").on('keyup', function (e) {
-    if (e.keyCode == 13) {
+    if (e.keyCode === 13) {
 //TODO do something here?
     }
 });
@@ -789,7 +786,7 @@ function rerender(agent) {
 window.rerender = rerender;
 
 function initialize() {
-  if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") != "") {
+  if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") !== "") {
     setupFinesseUrl({});
   } else if (window.openFrameAPI) {
     console.log("OpenFrame API detected, initializing.");
