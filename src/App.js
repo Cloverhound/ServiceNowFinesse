@@ -44,10 +44,10 @@ if (clientType === "sforce") {
     zaf_client.metadata().then(function(metadata) {
       console.log(metadata.settings);
       console.log(metadata.settings.finesse_host_primary);
-      console.log(metadata.settings["finesse_host_primary"]);
-      zaf_uccx_1 = metadata.settings["finesse_host_primary"];
-      zaf_uccx_2 = metadata.settings["finesse_host_backup"];
-      zaf_config = metadata.settings["finesse_screenpop_config"];
+      zaf_uccx_1 = metadata.settings.finesse_host_primary;
+      zaf_uccx_2 = metadata.settings.finesse_host_backup;
+      zaf_config = metadata.settings.finesse_screenpop_config;
+          getZenConfig();
     });
   };
   script.src = "https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js";
@@ -139,7 +139,7 @@ function getSforceConfig(){
 function getZenConfig(){
    var conf = {};
    conf.finesseUrl = zaf_uccx_1;
-    setupFinesseUrl(conf);
+   setupFinesseUrl(conf);
 }
 function SforceScreenPop(){
   var callback = function(response) {
@@ -812,7 +812,6 @@ function initialize() {
     getSforceConfig();
   } else if (window.ZAFClient){
     console.log("Zendesk API detected, initializing.");
-    getZenConfig();
   } else {
     console.log("Not running in OpenFrame, delaying.");
     setTimeout(initialize, 500);
