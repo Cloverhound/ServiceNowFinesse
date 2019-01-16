@@ -384,8 +384,11 @@ function receiveMessage(event)
       FinesseTunnelApi.connect(Finesse.agent);
       return;
     }
-
-    window.rerender(null);
+  
+    if(!Finesse.agent.previousLoginFailed) {
+      window.rerender(null);
+    } 
+    
   }
 
   if (!event.data || !event.data.split) {
