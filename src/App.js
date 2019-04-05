@@ -874,7 +874,7 @@ class App extends Component {
                       textAlign: 'center',
                       display: 'block'
                     }}>
-                  © 2018 Cloverhound Inc.
+                  {"© " + (new Date()).getFullYear() + " Cloverhound Inc."}
                 </a>
               </div>
           </div>
