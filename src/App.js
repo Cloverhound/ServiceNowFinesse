@@ -416,7 +416,7 @@ function receiveMessage(event)
 
     var dataString = event.data.split('|')[1];
     dataString = dataString.replace(/^[^<]+/, '')
-    var data = xmlToJSON.parseString(dataString, { childrenAsArray: false });
+    var data = xmlToJSON.parseString(dataString, { childrenAsArray: false, grokText: false });
     console.log(data);
 
 
