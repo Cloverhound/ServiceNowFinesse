@@ -7,7 +7,7 @@ class HangupButton extends Component {
   render() {
     let agent = this.props.agent;
     let call = this.props.call;
-    if ( (call.direction === "outbound" || call.state === "ACTIVE") && (!call.held) ) {
+    if (call && (call.direction === "outbound" || call.state === "ACTIVE") && !call.held && !agent.state.startsWith('WORK')) {
       return <CallControlButton  type="hangup" function={this.props.phoneApi.hangup.bind(null, agent, call)} icon="end"/>
     }
     return null;

@@ -25,11 +25,14 @@ class ResumeButton extends Component {
     let agent = this.props.agent;
     let icon = <i className="fa fa-play button-icon resume" aria-hidden="true"></i>;
     let call = this.props.call;
+    if (!call) {
+      return null;
+    }
     var otherCall = this.getOtherCall(call);
     if(otherCall && otherCall.state !== "ACTIVE") {
       return null;
     }
-    if (call.state === "ACTIVE" && call.held) {
+    if (call.state === "ACTIVE" && call.held && !agent.state.startsWith('WORK')) {
       return <CallControlButton type="resume" function={this.props.phoneApi.resume.bind(null, agent, call)} icon={icon} dontUseSvg={true}/>
     }
     return null;
