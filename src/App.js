@@ -7,6 +7,7 @@ import xmlToJSON from "./vendor/xmlToJSON";
 import AgentHeader from './components/agent_header';
 import LoginDialog from './components/login_dialog';
 import HomeView from './components/home/home_view';
+import CallerView from './components/caller_view';
 import Tabs from './components/tabs';
 import DialpadView from './components/home/dialpad';
 import RecentCallsView from './components/recent_calls';
@@ -17,7 +18,7 @@ import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 import "./polyfills";
 import getQueryParameter from "./query_params";
-import SnowApi from './snow_api';
+import PluginApi from './plugin_api';
 
 import LogRocket from 'logrocket';
 
@@ -50,6 +51,12 @@ function loadPlugin() {
   window.moment = moment;
   window.Finesse = Finesse;
   window.ClientType = clientType || "snow";
+  window.FinessePlugin = {
+    type: clientType || "snow",
+    initialized: false,
+    config: {},
+    screenPop: PluginApi.screenPop
+  }
 
   let env = getQueryParameter("ENV");
   let logRocketApp = "cloverhound/snow-finesse";
@@ -77,7 +84,7 @@ function loadPlugin() {
 
   window.finesseUrl = "";
   window.finesseUrlWithoutPort = "";
-  window.tabNames = {HOME: 1, RECENTS: 2, DIALPAD: 3, CONTACTS: 4};  // I forsee dialpad and contacts in the future
+  window.tabNames = { HOME: 1, CALLER: 2, RECENTS: 3, DIALPAD: 4, CONTACTS: 5 };  // contacts for future use
   Finesse.resetAgent();
   window.entityTemplate = "incident";
   window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
@@ -85,22 +92,22 @@ function loadPlugin() {
   window.$ = $;
 }
 
-function handleCommunicationEvent(context) {
-  console.log("Communication from Topframe", context);
+function handleClickToCallEvent(event) {
+  console.log("Communication from Topframe", event);
 
-  if(context.type === "OUTGOING_CALL" && context.phoneNumber) {
+  if(event.phoneNumber) {
     if (!Finesse.agent || !Finesse.agent.state || Finesse.agent.state === 'LOGOUT') {
       console.warn("Not logged in, ignoring click to call.");
       return;
     }
 
-    FinessePhoneApi.call(Finesse.agent, context.phoneNumber);
+    FinessePhoneApi.call(Finesse.agent, event.phoneNumber);
     window.openFrameAPI.show();
   } else {
-    console.log("Unknown communication type.");
+    console.log("Missing phone number in click-to-call event.");
   }
 }
-function handleOpenFrameShownEvent(context) {
+function handleFrameShownEvent() {
   rerender(Finesse.agent);
 }
 function handleOpenFrameHeaderIconClick(context) {
@@ -110,6 +117,7 @@ function handleOpenFrameHeaderIconClick(context) {
     window.toggleLogoutMenu()
   }
 }
+
 function getSforceConfig(){
   var SFGScallback = function(response) {
     if (response.success) {
@@ -222,12 +230,12 @@ function openFrameInitSuccess(snConfig) {
     }
   }
 
-  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
-    handleCommunicationEvent);
-  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
-    handleOpenFrameShownEvent);
-  window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.HEADER_ICON_CLICKED,
-    handleOpenFrameHeaderIconClick);
+  // window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
+  //   handleCommunicationEvent);
+  // window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
+  //   handleOpenFrameShownEvent);
+  // window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.HEADER_ICON_CLICKED,
+  //   handleOpenFrameHeaderIconClick);
 }
 function openFrameInitFailure(error) {
   console.log("Error: OpenFrame init failed:", error);
@@ -246,19 +254,27 @@ function setupFinesseUrl(config) {
 }
 
 function login() {
+  var form = document.getElementById("login-form");
+  var username = form.elements["username"].value;
+  var password = form.elements["password"].value;
+  var extension = String(form.elements["extension"].value);
+
+  loginAgent(username, password, extension);
+}
+
+function loginAgent(username, password, extension) {
   console.log("Logging in...");
 
   Finesse.resetAgent();
   Finesse.agent.loggingIn = true;
   rerender(Finesse.agent);
 
-  var form = document.getElementById("login-form");
-  Finesse.agent.username = form.elements["username"].value;
-  Finesse.password = form.elements["password"].value;
-  Finesse.agent.extension = String(form.elements["extension"].value);
+  Finesse.agent.username = username;
+  Finesse.password = password;
+  Finesse.agent.extension = extension;
   //FinesseTunnelApi.connect(Finesse.agent);
 
-  console.log(Finesse.agent.username, Finesse.agent.extension);
+  console.log("Logging in:", Finesse.agent.username, Finesse.agent.extension);
 
   LogRocket.identify(Finesse.agent.username, {
     extension: Finesse.agent.extension,
@@ -313,12 +329,9 @@ function login() {
   });
 }
 
-window.addEventListener("message", receiveMessage, false);
 
 function pushLoginToFinesse(username, password, extension) {
   console.log("Pushing login to finesse with username: " + username);
-
-
 
   FinesseStateApi.updateAgentState(function () {
     if (Finesse.agent.state !== "LOGOUT") {
@@ -362,9 +375,82 @@ function handleLoginFailed(reason)
   rerender(Finesse.agent);
 }
 
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  console.log("Received message:", event);
+  if (event.data.type) {
+    handleParentWindowMessage(event);
+  } else {
+    handleFinesseTunnelMessage(event);
+  }
+}
 
-function receiveMessage(event)
-{
+console.log("Ready for frame events");
+parent.window.postMessage({
+  type: 'readyForConfig'
+}, '*');
+
+function handleParentWindowMessage(event) {
+  switch (event.data.type) {
+    case "config":
+      window.FinessePlugin.origin = event.data.origin;
+      handleFrameConfigEvent(event.data.config);
+      break;
+    case "callerInfo":
+      handleCallerInfoEvent(event.data.info);
+      break;
+    case "clickToCall":
+      handleClickToCallEvent(event.data);
+      break;
+    case "frameShown":
+      handleFrameShownEvent();
+      break;
+  }
+}
+
+function handleFrameConfigEvent(config) {
+  console.log("Frame configuration", config);
+
+  if(config.enableManualScreenPop) {
+    config.enableManualScreenPop = (config.enableManualScreenPop.toLowerCase() === 'true')
+  }
+
+  if (config.query) {
+    window.queryTemplate = config.query;
+  }
+  if (config.entity) {
+    window.entityTemplate = config.entity;
+  }
+
+  console.log("Loaded config from Frame:", config);
+
+  setupFinesseUrl(config)
+
+  if (config.maxRecentCalls && !isNaN(Number(config.maxRecentCalls))) {
+    maxRecentCalls = Number(config.maxRecentCalls);
+  }
+
+  if (config.dialPrefix && config.dialPrefix != "") {
+    FinessePhoneApi.dialPrefix = config.dialPrefix;
+  }
+
+  window.FinessePlugin.config = config;
+  window.FinessePlugin.initialized = true;
+
+  // window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
+  //   handleCommunicationEvent);
+  // window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.OPENFRAME_SHOWN,
+  //   handleOpenFrameShownEvent);
+  // window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.HEADER_ICON_CLICKED,
+  //   handleOpenFrameHeaderIconClick);
+}
+
+function handleCallerInfoEvent(info) {
+  Finesse.agent.callerInfo = info;
+  window.rerender(Finesse.agent);
+}
+
+function handleFinesseTunnelMessage(event) {
   console.log("Received from tunnel:", event.data);
 
   if (event.data === "4|connected") {
@@ -465,7 +551,6 @@ function receiveMessage(event)
     }
   }
 }
-
 
 function deleteCall(id) {
   console.log("Deleting call with id: " + id + " from calls: ", Finesse.agent.calls);
@@ -605,32 +690,32 @@ function handleDialogUpdated(dialog) {
 
   call.callVariables = call.callVariables || {};
   var callVariables = dialog.mediaProperties.callvariables.CallVariable;
-  var query = window.queryTemplate;
-  var entity = window.entityTemplate;
+  // var query = window.queryTemplate;
+  // var entity = window.entityTemplate;
   for(var i = 0; i < callVariables.length; i++) {
     var value = callVariables[i].value._text;
     var name = callVariables[i].name._text;
 
-    query = query.replace("{{" + name + "}}", value);
-    entity = entity.replace("{{" + name + "}}", value);
+    // query = query.replace("{{" + name + "}}", value);
+    // entity = entity.replace("{{" + name + "}}", value);
       
     call.callVariables[name] = value;
   }
 
-  query = query.replace("{{from}}", call.from);
-  entity = entity.replace("{{from}}", call.from);
+  // query = query.replace("{{from}}", call.from);
+  // entity = entity.replace("{{from}}", call.from);
 
-  query = query.replace("{{to}}", call.to);
-  entity = entity.replace("{{to}}", call.to);
+  // query = query.replace("{{to}}", call.to);
+  // entity = entity.replace("{{to}}", call.to);
 
-  query = query.replace("{{direction}}", call.direction);
-  entity = entity.replace("{{direction}}", call.direction);
+  // query = query.replace("{{direction}}", call.direction);
+  // entity = entity.replace("{{direction}}", call.direction);
 
-  query = query.replace("{{username}}", Finesse.agent.username);
-  entity = entity.replace("{{username}}", Finesse.agent.username);
+  // query = query.replace("{{username}}", Finesse.agent.username);
+  // entity = entity.replace("{{username}}", Finesse.agent.username);
 
-  query = query.replace("{{extension}}", Finesse.agent.extension);
-  entity = entity.replace("{{extension}}", Finesse.agent.extension);
+  // query = query.replace("{{extension}}", Finesse.agent.extension);
+  // entity = entity.replace("{{extension}}", Finesse.agent.extension);
 
   if(call.to && !recentCallExists(call)) {
     addCallToRecentsList(call);
@@ -642,21 +727,21 @@ function handleDialogUpdated(dialog) {
   console.log("Updated call:", call)
   rerender(Finesse.agent);
 
-  let shouldPop = !call.alreadyPopped && call.direction === "inbound" && window.openFrameAPI
+  let shouldPop = !call.alreadyPopped && call.direction === "inbound"
   if(Object.keys(calls).length > 1 && !Finesse.agent.shouldPopConcurrently) {
     shouldPop = false;
     // We don't want to ever pop this call
     call.alreadyPopped = true;
   }
 
-  if(shouldPop) {
-    console.log("Screen-popping form", window.entityTemplate, query, call);
-    window.openFrameAPI.openServiceNowForm({entity: window.entityTemplate, query: query });
-    call.alreadyPopped = true;
+  if(shouldPop && !window.sforce) {
+    window.FinessePlugin.screenPop(call, true);
   }
 
-  if(call.direction === "inbound" && call.state === "ALERTING" && window.openFrameAPI) {
-    window.openFrameAPI.show();
+  if(call.direction === "inbound" && call.state === "ALERTING" && !window.sforce) {
+    parent.window.postMessage({
+      type: 'show'
+    }, '*');
   }
   if (call.direction === "inbound" && call.state === "ALERTING" && window.sforce){
     SforceScreenPop();
@@ -789,6 +874,11 @@ function rerender(agent) {
 window.rerender = rerender;
 
 function initialize() {
+  if (window.FinessePlugin && window.FinessePlugin.initialized) {
+    console.log("Plugin already initialized.");
+    return;
+  }
+
   if (getQueryParameter("finesseUrl") && getQueryParameter("finesseUrl") != "") {
     setupFinesseUrl({});
   } else if (window.openFrameAPI) {
@@ -882,10 +972,11 @@ class App extends Component {
     } else {
       return (
           <div id="main">
-              <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.ClientType}/>
-              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} snowApi={SnowApi} type={window.ClientType}/>
-              <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.ClientType}/>
-              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.ClientType}/>
+              <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.FinessePlugin.type}/>
+              <CallerView agent={agent} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type}/>
+              <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type}/>
+              <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.FinessePlugin.type}/>
+              <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.FinessePlugin.type}/>
               <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames}/>
           </div>
       );

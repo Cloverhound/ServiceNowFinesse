@@ -5,7 +5,7 @@ class ScreenPopButton extends Component {
 
   render() {
     var call = this.props.call;
-    var enableManualScreenPop = window.OpenFrame.config.enableManualScreenPop
+    var enableManualScreenPop = window.FinessePlugin.config.enableManualScreenPop
 
     let style = {
       transform: 'rotate(180deg)',
@@ -15,7 +15,7 @@ class ScreenPopButton extends Component {
     }
 
     if(call.state !== "ALERTING" && enableManualScreenPop) {
-      return <a style={{float: 'left'}} onClick={this.props.snowApi.screenPop.bind(null, call)}>
+      return <a style={{float: 'left'}} onClick={this.props.pluginApi.screenPop.bind(null, call)}>
               <span style={style} className="material-icons">
                 exit_to_app
               </span>

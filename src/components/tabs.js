@@ -16,6 +16,14 @@ class DialpadIcon extends Component {
 
 class Tabs extends Component {
 
+  onCallerClick() {
+    let agent = this.props.agent;
+    let tabNames = this.props.tabNames;
+    console.log("User clicked Caller tab.");
+    agent.currentTab = tabNames.CALLER;
+    this.props.rerender(agent);
+  }
+
   onHomeClick() {
     let agent = this.props.agent;
     let tabNames = this.props.tabNames;
@@ -55,7 +63,7 @@ class Tabs extends Component {
       display: "inline-block",
       borderTop: "2px solid rgb(230, 230, 230)",
       borderColor: "rgb(230, 230, 230)",
-      width: "33.3333%",
+      width: "25%",
       fill: "rgb(200, 200, 200)",
       color: "rgb(200, 200, 200)",
       textAlign: "center",
@@ -67,7 +75,7 @@ class Tabs extends Component {
       display: "inline-block",
       borderTop: "2px solid rgb(230, 230, 230)",
       borderColor: "rgb(230, 230, 230)",
-      width: "33.3333%",
+      width: "25%",
       fill: "rgb(200, 200, 200)",
       color: "rgb(200, 200, 200)",
       textAlign: "center",
@@ -86,17 +94,24 @@ class Tabs extends Component {
       height: "15px"
     }
 
+    var callerIconStyle = {
+      fontSize: "15px"
+    }
+
     var tabTextStyle = {
       fontSize: "8px",
       display: "none"
     }
 
+    var callerStyle = $.extend(true, {}, tabStyle);
     var homeStyle = $.extend(true, {}, tabStyle);
     var recentsStyle = $.extend(true, {}, tabStyle);
 
     //homeStyle.borderRight = "1px solid gray";
 
-    if(this.props.agent.currentTab === tabNames.HOME) {
+    if(this.props.agent.currentTab === tabNames.CALLER) {
+      callerStyle = $.extend(true, callerStyle, selectedTabStyle);
+    } else if (this.props.agent.currentTab === tabNames.HOME) {
       homeStyle.color = "rgb(54, 125, 236)";
       homeStyle.borderColor = "rgb(99, 149, 226)";
       //recentsStyle.background = "linear-gradient(rgb(249, 249, 249), rgb(250, 250, 250) 40%, white 95%)"
@@ -113,6 +128,10 @@ class Tabs extends Component {
         <div style={homeStyle} className="tab home" onClick={this.onHomeClick.bind(this)}>
           <FontAwesome name='home' size="lg"/>
           <div style={tabTextStyle} className="tab-text">Home</div>
+        </div>
+        <div style={callerStyle} className="tab home" onClick={this.onCallerClick.bind(this)}>
+          <FontAwesome name='user' style={callerIconStyle}/>
+          <div style={tabTextStyle} className="tab-text">Caller</div>
         </div>
         <div style={dialpadTabStyle} className="tab dialpad" onClick={this.onDialpadClick.bind(this)}>
         <DialpadIcon style={dialpadIconStyle} alt="dialpad" />

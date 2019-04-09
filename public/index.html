@@ -38,13 +38,9 @@
       }
 
       function loadedCallback() {
-        console.log("OpenFrame API loaded");
+        console.log("Script loaded");
       }
-
-      let openFrameVersion = getParameterByName("openFrameVersion") || "1.0.2";
-      let topDomain = getParameterByName("topDomain");
-      let openFrameBaseUrl = topDomain ? topDomain + "/scripts/openframe/" : "%PUBLIC_URL%/openFrame/";
-      dynamicallyLoadScript(openFrameBaseUrl + openFrameVersion + "/openFrameAPI.min.js");
+      
     </script>
   </head>
   <body>

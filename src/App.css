@@ -709,3 +709,7 @@ a.cta.end {
   width: 235px;
   white-space: nowrap;
 }
+
+.clickable {
+  cursor: pointer;
+}

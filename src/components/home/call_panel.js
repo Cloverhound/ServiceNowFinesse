@@ -113,7 +113,7 @@ class CallPanel extends Component {
           <div className="call-tab" key={call.id}>
             <div className="call-header">
               <i style={{display: "none"}} className="fa fa-phone header-phone-icon" aria-hidden="true"></i>
-              <ScreenPopButton call={call} agent={agent} snowApi={this.props.snowApi}/>
+              <ScreenPopButton call={call} agent={agent} pluginApi={this.props.pluginApi}/>
               <span className="header-other-party" style={headerTextStyle}>
                 {call.otherParty || "Invalid"} ({formattedCallTime})
               </span>
