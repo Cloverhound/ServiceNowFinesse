@@ -153,7 +153,7 @@ class CallerView extends Component {
       for (let i = 0; i < agent.callerInfo.user.incidents.length; i++) {
         let incident = agent.callerInfo.user.incidents[i];
         incidentRows.push(
-          <div key={i} style={{marginTop: "1px", padding: "10px", backgroundColor: "#FFF"}} 
+          <div key={i} style={{marginTop: "1px", padding: "9px 10px", backgroundColor: "#FFF"}} 
               className="clickable"
               onClick={this.handleIncidentClick.bind(this, incident)}>
             <div style={{width: "100%", verticalAlign: "top"}} >
@@ -171,7 +171,7 @@ class CallerView extends Component {
                 {incident.opened_at.substring(0, incident.opened_at.length - 3) }
               </div>
             </div>
-            <div style={{width: "100%", marginTop: "2px"}}>
+            <div style={{width: "100%", marginTop: "4px"}}>
               <div style={{overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
                 {incident.short_description}
               </div>

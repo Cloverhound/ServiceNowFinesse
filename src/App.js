@@ -684,38 +684,13 @@ function handleDialogUpdated(dialog) {
     call.otherParty = null;
   }
 
-  // sys_user
-  // sysparm_view=screenpop&sysparm_query=phoneLIKE9803338415
-  // sysparm_view=screenpop&sysparm_query=employee_number=1234567
-
   call.callVariables = call.callVariables || {};
   var callVariables = dialog.mediaProperties.callvariables.CallVariable;
-  // var query = window.queryTemplate;
-  // var entity = window.entityTemplate;
   for(var i = 0; i < callVariables.length; i++) {
     var value = callVariables[i].value._text;
     var name = callVariables[i].name._text;
-
-    // query = query.replace("{{" + name + "}}", value);
-    // entity = entity.replace("{{" + name + "}}", value);
-      
     call.callVariables[name] = value;
   }
-
-  // query = query.replace("{{from}}", call.from);
-  // entity = entity.replace("{{from}}", call.from);
-
-  // query = query.replace("{{to}}", call.to);
-  // entity = entity.replace("{{to}}", call.to);
-
-  // query = query.replace("{{direction}}", call.direction);
-  // entity = entity.replace("{{direction}}", call.direction);
-
-  // query = query.replace("{{username}}", Finesse.agent.username);
-  // entity = entity.replace("{{username}}", Finesse.agent.username);
-
-  // query = query.replace("{{extension}}", Finesse.agent.extension);
-  // entity = entity.replace("{{extension}}", Finesse.agent.extension);
 
   if(call.to && !recentCallExists(call)) {
     addCallToRecentsList(call);
@@ -735,6 +710,7 @@ function handleDialogUpdated(dialog) {
   }
 
   if(shouldPop && !window.sforce) {
+    delete window.Finesse.agent.callerInfo;
     window.FinessePlugin.screenPop(call, true);
   }
 
