@@ -840,12 +840,6 @@ function make_base_auth(user, password) {
 function rerender(agent) {
   console.log("Rerendering with agent: ", agent);
   window.MainApp.updateAgent(agent);
-  // ReactDOM.render(
-  //   <App agent={agent} />,
-  //   document.getElementById('root')
-  // );
-
-
 }
 window.rerender = rerender;
 
@@ -866,7 +860,6 @@ function initialize() {
   } else {
     console.log("Not running in OpenFrame, delaying.");
     setTimeout(initialize, 500);
-    //setupFinesseUrl({});
   }
 }
 

@@ -15,9 +15,6 @@ function screenPop(call, auto) {
         
     if(!auto && window.FinesseConfig.config.manualScreenPopInNewWindow == "true") {
         popData.newWindow = true;
-        //let topDomain = getParameterByName("topDomain");
-        //console.log('TOP DOMAIN', topDomain);
-        //window.open(topDomain + '/nav_to.do?uri=/' + window.entityTemplate + '.do?' + query);
     }
 
     if (auto) {
