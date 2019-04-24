@@ -405,6 +405,11 @@ function handleParentWindowMessage(event) {
     case "frameShown":
       handleFrameShownEvent();
       break;
+    case "proxy":
+      // For use to receive events from the embedded caller info page and feed
+      // them onwards to the parent window
+      parent.window.postMessage(event.data.message, '*');
+      break;
   }
 }
 
@@ -942,7 +947,7 @@ class App extends Component {
       return (
           <div id="main">
               <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.FinessePlugin.type}/>
-              <CallerView agent={agent} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type}/>
+              <CallerView agent={agent} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type} origin={window.FinessePlugin.origin}/>
               <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type}/>
               <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.FinessePlugin.type}/>
               <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.FinessePlugin.type}/>

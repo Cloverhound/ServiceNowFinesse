@@ -13,7 +13,7 @@ function screenPop(call, auto) {
         manual: auto !== true
     }
         
-    if(!auto && window.FinesseConfig.config.manualScreenPopInNewWindow == "true") {
+    if(!auto && window.FinessePlugin.config.manualScreenPopInNewWindow == "true") {
         popData.newWindow = true;
     }
 
@@ -28,6 +28,11 @@ function screenPop(call, auto) {
     }, '*');
 
     call.alreadyPopped = true;
+
+    if (auto && window.FinessePlugin.config.showCallerInfoOnScreenPop == "true") {
+      window.Finesse.agent.currentTab = window.tabNames.CALLER;
+      window.rerender(window.Finesse.agent);
+    }
   }
 
   function popRecord(type, id) {

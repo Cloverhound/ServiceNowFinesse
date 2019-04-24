@@ -36,12 +36,12 @@ class CallerView extends Component {
 
   render(){
       let agent = this.props.agent;
-      if (agent.currentTab !== this.props.tabNames.CALLER) {
-        return null;
-      }
 
       let containerStyle = {
         height: 'calc(100% - 63px)',
+      }
+      if (agent.currentTab !== this.props.tabNames.CALLER) {
+        containerStyle.display = 'none';
       }
 
       let styles = {
@@ -52,6 +52,11 @@ class CallerView extends Component {
           backgroundColor: "#fafafa",
           margin: "5px 5px 0px 5px",
           fontSize: "12px"
+        },
+        iframe: {
+          border: 'none',
+          width: '100%',
+          height: '100%'
         },
         profileCard: {
           margin: "5px 10px"
@@ -125,7 +130,7 @@ class CallerView extends Component {
         containerStyle.height = 'calc(100% - 28px)';
       }
 
-      if (Object.keys(agent.calls).length == 0) {
+      if (Object.keys(agent.calls).length == 0 || !agent.lastPopped || !agent.calls[agent.lastPopped]) {
         return (
           <div style={containerStyle}>
             <div id="callerView" style={{height: "100%"}}>
@@ -137,6 +142,8 @@ class CallerView extends Component {
         )
       }
 
+      let call = agent.calls[agent.lastPopped];
+      
       if (!agent.callerInfo || agent.callerInfo.result != 'found') {
         return (
           <div style={containerStyle}>
@@ -148,39 +155,6 @@ class CallerView extends Component {
           </div>
         )
       }
-
-      let incidentRows = [];
-      for (let i = 0; i < agent.callerInfo.user.incidents.length; i++) {
-        let incident = agent.callerInfo.user.incidents[i];
-        incidentRows.push(
-          <div key={i} style={{marginTop: "1px", padding: "9px 10px", backgroundColor: "#FFF"}} 
-              className="clickable"
-              onClick={this.handleIncidentClick.bind(this, incident)}>
-            <div style={{width: "100%", verticalAlign: "top"}} >
-              <div style={{fontWeight: "bold", display: "inline-block", width: "100px"}}>
-                {incident.number}
-              </div>
-              <div style={{display: "inline-block", width: "70px"}}>
-                {incident.state}
-              </div>
-            
-              <div style={{color: "#666", display: "inline-block", fontSize: "10px", marginRight: "8px"}}>
-                Opened:
-              </div>
-              <div style={{color: "#666", display: "inline-block", fontSize: "10px"}}>
-                {incident.opened_at.substring(0, incident.opened_at.length - 3) }
-              </div>
-            </div>
-            <div style={{width: "100%", marginTop: "4px"}}>
-              <div style={{overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
-                {incident.short_description}
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      let call = agent.calls[agent.lastPopped];
 
       let formattedCallTime = ''
       if (call) {
@@ -204,47 +178,9 @@ class CallerView extends Component {
               <HoldButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
             </div>
 
-            <div style={styles.profileCard}>
-              <div style={styles.photo.container}>
-                <img style={styles.photo.image}
-                     src={ window.FinessePlugin.origin + "/" + agent.callerInfo.user.photo } 
-                     className="clickable"
-                     onClick={this.handleUserClick.bind(this, agent.callerInfo.user)}
-                />
-              </div>
-              <div style={styles.info.container}>
-                <div style={styles.info.name} 
-                    className="clickable"
-                    onClick={this.handleUserClick.bind(this, agent.callerInfo.user)}>
-                  { agent.callerInfo.user.name }
-                </div>
-                <div style={styles.info.title}>
-                  { agent.callerInfo.user.title } | { agent.callerInfo.user.department }
-                </div>
-                <div style={styles.info.field}>
-                  <span style={styles.info.label}>
-                    Business:
-                  </span>
-                  <span style={styles.info.value}>
-                    { agent.callerInfo.user.phone }
-                  </span>
-                </div>
-                <div style={styles.info.field}>
-                  <span style={styles.info.label}>
-                    Mobile:
-                  </span>
-                  <span style={styles.info.value}>
-                    { agent.callerInfo.user.mobile_phone }
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div style={styles.recents.container}>            
-              <span style={styles.recents.label}>Recent Incidents</span>
-              <div style={styles.recents.table}>
-                {incidentRows}
-              </div>
-            </div>
+            <iframe style={styles.iframe}
+              src={this.props.origin + "/finesse_profile_page.do?data=" + encodeURIComponent(encodeURIComponent(JSON.stringify(call)))}>
+            </iframe>
           
           </div>
         </div>
