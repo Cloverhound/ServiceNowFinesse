@@ -1,6 +1,22 @@
 const PluginApi = {
-    screenPop: screenPop,
-    popRecord: popRecord
+  hideWindow: hideWindow,
+  showWindow: showWindow,
+  screenPop: screenPop,
+  popRecord: popRecord
+}
+
+function showWindow() {
+  console.log("Showing Finesse window");
+  parent.window.postMessage({
+    type: 'show'
+  }, '*');
+}
+
+function hideWindow() {
+  console.log("Hiding Finesse window");
+  parent.window.postMessage({
+    type: 'hide'
+  }, '*');
 }
 
 function screenPop(call, auto) {

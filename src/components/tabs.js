@@ -51,6 +51,11 @@ class Tabs extends Component {
   render() {
     let tabNames = this.props.tabNames;
 
+    let tabWidth = "33.333%";
+    if (window.FinessePlugin.config.callerViewEnabled == "true") {
+      tabWidth = "25%";
+    }
+
     var tabBarStyle = {
       position: "absolute",
       bottom: "0px",
@@ -63,7 +68,7 @@ class Tabs extends Component {
       display: "inline-block",
       borderTop: "2px solid rgb(230, 230, 230)",
       borderColor: "rgb(230, 230, 230)",
-      width: "25%",
+      width: tabWidth,
       fill: "rgb(200, 200, 200)",
       color: "rgb(200, 200, 200)",
       textAlign: "center",
@@ -75,7 +80,7 @@ class Tabs extends Component {
       display: "inline-block",
       borderTop: "2px solid rgb(230, 230, 230)",
       borderColor: "rgb(230, 230, 230)",
-      width: "25%",
+      width: tabWidth,
       fill: "rgb(200, 200, 200)",
       color: "rgb(200, 200, 200)",
       textAlign: "center",
@@ -129,10 +134,14 @@ class Tabs extends Component {
           <FontAwesome name='home' size="lg"/>
           <div style={tabTextStyle} className="tab-text">Home</div>
         </div>
-        <div style={callerStyle} className="tab home" onClick={this.onCallerClick.bind(this)}>
-          <FontAwesome name='user' style={callerIconStyle}/>
-          <div style={tabTextStyle} className="tab-text">Caller</div>
-        </div>
+        {window.FinessePlugin.config.callerViewEnabled == "true" ?
+          <div style={callerStyle} className="tab home" onClick={this.onCallerClick.bind(this)}>
+            <FontAwesome name='user' style={callerIconStyle}/>
+            <div style={tabTextStyle} className="tab-text">Caller</div>
+          </div>
+        
+          : null
+        } 
         <div style={dialpadTabStyle} className="tab dialpad" onClick={this.onDialpadClick.bind(this)}>
         <DialpadIcon style={dialpadIconStyle} alt="dialpad" />
           <div style={tabTextStyle} className="tab-text">Dialpad</div>
