@@ -944,9 +944,14 @@ class App extends Component {
     let agent = this.state.agent || {};
     let loggedIn = agent.state && agent.state !== 'LOGOUT'
 
+    let mainHeight = '100%';
+    if (window.sforce) {
+      mainHeight = 'calc(100% - 49px)';
+    }
+
     if(!loggedIn) {
       return (
-          <div id="main">
+          <div id="main" style={{height: mainHeight}}>
               <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={agent.previousLoginFailed} loading={agent.loggingIn}/>
               <div style={{
                   padding: '10px',
@@ -982,7 +987,7 @@ class App extends Component {
       );
     } else { 
       return (
-          <div id="main">
+          <div id="main" style={{height: mainHeight}}>
               <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.FinessePlugin.type}/>
               {window.FinessePlugin.config.callerViewEnabled == "true" ?
                 <CallerView agent={agent} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type} origin={window.FinessePlugin.origin} config={window.FinessePlugin.config}/>
