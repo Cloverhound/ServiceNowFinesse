@@ -32,7 +32,7 @@ if (clientType === "sforce") {
   script.onload = function() {
     loadPlugin();
   };
-  script.src = "https://c.na30.visual.force.com/support/api/42.0/lightning/opencti_min.js";
+  script.src = "https://c.na30.visual.force.com/support/api/46.0/lightning/opencti_min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else if (clientType === "snow"){
@@ -133,7 +133,7 @@ function getSforceConfig(){
   };
   window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
-function SforceScreenPop(){
+function SforceScreenPop(call){
   var callback = function(response) {
     if (response.success) {
       console.log('API method call executed successfully! returnValue:',
@@ -143,7 +143,7 @@ function SforceScreenPop(){
     }
   };
 //Invokes API method
-  window.sforce.opencti.searchAndScreenPop({ searchParams : 'Chad',queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
+  window.sforce.opencti.searchAndScreenPop({ searchParams : call.otherParty ,queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
 }
 function openFrameInitSuccess(snConfig) {
   window.openFrameConfig = snConfig;
@@ -316,7 +316,7 @@ function loginAgent(username, password, extension) {
         handleLoginFailed("There was an error reaching Finesse, contact support.");
         return;
       }
-      
+
       console.warn("Error testing agent credentials:", status, err);
       handleLoginFailed("Invalid Credentials");
     },
@@ -355,6 +355,13 @@ function pushLoginToFinesse(username, password, extension) {
       success: function(data) {
         FinesseStateApi.updateAgentState();
         Finesse.reloadRecentCalls();
+        if (clientType === "sforce") {
+          enableClickToDial();
+          var ClickToCalllistener = function(payload) {
+            console.log('Clicked phone number: ' + payload.returnValue.number);
+          };
+          sforce.opencti.onClickToDial({listener: ClickToCalllistener});
+        }
         console.log("Successfully submitted login request:", data);
       },
       error: function(req, status, err) {
@@ -364,6 +371,29 @@ function pushLoginToFinesse(username, password, extension) {
       }
     });
   });
+}
+var ClickToCallback = function(response) {
+  if (response.success) {
+    console.log('API method call executed successfully! returnValue:', response.returnValue);
+  } else {
+    console.error('Something went wrong! Errors:', response.errors);
+  }
+};
+
+function enableClickToDial() {
+sforce.opencti.enableClickToDial({callback: ClickToCallback});
+}
+
+var DisableClickToCallback = function(response) {
+   if (response.success) {
+      console.log('API method call executed successfully! returnValue:', response.returnValue);
+   } else {
+      console.error('Something went wrong! Errors:', response.errors);
+   }
+};
+
+function disableClickToDial() {
+    sforce.opencti.disableClickToDial({callback: DisableClickToCallback});
 }
 
 function handleLoginFailed(reason)
@@ -475,11 +505,11 @@ function handleFinesseTunnelMessage(event) {
       FinesseTunnelApi.connect(Finesse.agent);
       return;
     }
-  
+
     if(!Finesse.agent.previousLoginFailed) {
       window.rerender(null);
-    } 
-    
+    }
+
   }
 
   if (!event.data || !event.data.split) {
@@ -502,7 +532,7 @@ function handleFinesseTunnelMessage(event) {
   if (eventCode === "0") {
     if (FinesseTunnelApi.state !== "connected") {
       console.log("Tunnel not connected, ignoring data update.");
-      return; 
+      return;
     }
 
     var dataString = event.data.split('|')[1];
@@ -725,7 +755,7 @@ function handleDialogUpdated(dialog) {
     }, '*');
   }
   if (call.direction === "inbound" && call.state === "ALERTING" && window.sforce){
-    SforceScreenPop();
+    SforceScreenPop(call);
   }
 }
 
@@ -745,11 +775,11 @@ function getParticipantState(dialog) {
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
   let recentCalls = Finesse.agent.recentCalls;
-  
+
   if(recentCalls.length === maxRecentCalls) {
     recentCalls = Finesse.agent.recentCalls.splice(0, 1);
   }
-  
+
   recentCalls.push(call);
   Finesse.saveRecentCalls();
 
@@ -916,19 +946,19 @@ class App extends Component {
                   width: '100%',
                   position: 'absolute'
                 }}>
-                <a href="https://cloverhound.com/" target="_blank" className="logo" 
+                <a href="https://cloverhound.com/" target="_blank" className="logo"
                   style={{
                     display: 'block',
                     textAlign: 'center'
                   }}>
-                  <img alt="Cloverhound, Inc." src="logo_with_name.png" 
+                  <img alt="Cloverhound, Inc." src="logo_with_name.png"
                     style={{
                       width: '120px',
                       marginRight: '6px'
                     }} />
                 </a>
 
-                <a href="https://cloverhound.com/" target="_blank" className="copyright" 
+                <a href="https://cloverhound.com/" target="_blank" className="copyright"
                     style={{
                       marginTop: '4px',
                       fontSize: '0.5em',
