@@ -338,6 +338,7 @@ function pushLoginToFinesse(username, password, extension) {
   FinesseStateApi.updateAgentState(function () {
     if (Finesse.agent.state !== "LOGOUT") {
       Finesse.reloadRecentCalls();
+      initializeClickToDial();
       return;
     }
 
@@ -357,13 +358,8 @@ function pushLoginToFinesse(username, password, extension) {
       success: function(data) {
         FinesseStateApi.updateAgentState();
         Finesse.reloadRecentCalls();
-        if (clientType === "sforce") {
-          enableClickToDial();
-          var ClickToCalllistener = function(payload) {
-            console.log('Clicked phone number: ' + payload.returnValue.number);
-          };
-          sforce.opencti.onClickToDial({listener: ClickToCalllistener});
-        }
+        initializeClickToDial();
+
         console.log("Successfully submitted login request:", data);
       },
       error: function(req, status, err) {
@@ -374,6 +370,30 @@ function pushLoginToFinesse(username, password, extension) {
     });
   });
 }
+
+function initializeClickToDial() {
+  if (window.sforce) {
+    enableClickToDial();
+    var ClickToCalllistener = function(payload) {
+      console.log('Received click-to-call event: ' + payload);
+
+      if (!payload.number) {
+        console.warn("Missing phone number in click-to-call event.");
+        return;
+      }
+
+      if (!Finesse.agent || !Finesse.agent.state || Finesse.agent.state === 'LOGOUT') {
+        console.warn("Not logged in, ignoring click to call.");
+        return;
+      }
+
+      FinessePhoneApi.call(Finesse.agent, payload.number);
+      window.FinessePlugin.showWindow();
+    };
+    window.sforce.opencti.onClickToDial({listener: ClickToCalllistener});
+  }
+}
+
 var ClickToCallback = function(response) {
   if (response.success) {
     console.log('API method call executed successfully! returnValue:', response.returnValue);
