@@ -32,7 +32,7 @@ if (clientType === "sforce") {
   script.onload = function() {
     loadPlugin();
   };
-  script.src = "https://c.na30.visual.force.com/support/api/46.0/lightning/opencti_min.js";
+  script.src = "https://c.na30.visual.force.com/support/api/45.0/lightning/opencti_min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else if (clientType === "snow"){
