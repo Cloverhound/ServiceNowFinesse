@@ -32,7 +32,7 @@ if (clientType === "sforce") {
   script.onload = function() {
     loadPlugin();
   };
-  script.src = "https://c.na30.visual.force.com/support/api/42.0/lightning/opencti_min.js";
+  script.src = "https://c.na30.visual.force.com/support/api/45.0/lightning/opencti_min.js";
 
   document.head.appendChild(script); //or something of the likes
 } else if (clientType === "snow"){
@@ -135,7 +135,7 @@ function getSforceConfig(){
   };
   window.sforce.opencti.getCallCenterSettings({callback: SFGScallback});
 }
-function SforceScreenPop(){
+function SforceScreenPop(call){
   var callback = function(response) {
     if (response.success) {
       console.log('API method call executed successfully! returnValue:',
@@ -145,7 +145,7 @@ function SforceScreenPop(){
     }
   };
 //Invokes API method
-  window.sforce.opencti.searchAndScreenPop({ searchParams : 'Chad',queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
+  window.sforce.opencti.searchAndScreenPop({ searchParams : call.otherParty ,queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
 }
 function openFrameInitSuccess(snConfig) {
   window.openFrameConfig = snConfig;
@@ -318,7 +318,7 @@ function loginAgent(username, password, extension) {
         handleLoginFailed("There was an error reaching Finesse, contact support.");
         return;
       }
-      
+
       console.warn("Error testing agent credentials:", status, err);
       handleLoginFailed("Invalid Credentials");
     },
@@ -338,6 +338,7 @@ function pushLoginToFinesse(username, password, extension) {
   FinesseStateApi.updateAgentState(function () {
     if (Finesse.agent.state !== "LOGOUT") {
       Finesse.reloadRecentCalls();
+      initializeClickToDial();
       return;
     }
 
@@ -357,6 +358,8 @@ function pushLoginToFinesse(username, password, extension) {
       success: function(data) {
         FinesseStateApi.updateAgentState();
         Finesse.reloadRecentCalls();
+        initializeClickToDial();
+
         console.log("Successfully submitted login request:", data);
       },
       error: function(req, status, err) {
@@ -366,6 +369,53 @@ function pushLoginToFinesse(username, password, extension) {
       }
     });
   });
+}
+
+function initializeClickToDial() {
+  if (window.sforce) {
+    enableClickToDial();
+    var ClickToCalllistener = function(payload) {
+      console.log('Received click-to-call event: ' + payload);
+
+      if (!payload.number) {
+        console.warn("Missing phone number in click-to-call event.");
+        return;
+      }
+
+      if (!Finesse.agent || !Finesse.agent.state || Finesse.agent.state === 'LOGOUT') {
+        console.warn("Not logged in, ignoring click to call.");
+        return;
+      }
+
+      FinessePhoneApi.call(Finesse.agent, payload.number);
+      window.FinessePlugin.showWindow();
+    };
+    window.sforce.opencti.onClickToDial({listener: ClickToCalllistener});
+  }
+}
+
+var ClickToCallback = function(response) {
+  if (response.success) {
+    console.log('API method call executed successfully! returnValue:', response.returnValue);
+  } else {
+    console.error('Something went wrong! Errors:', response.errors);
+  }
+};
+
+function enableClickToDial() {
+  window.sforce.opencti.enableClickToDial({callback: ClickToCallback});
+}
+
+var DisableClickToCallback = function(response) {
+   if (response.success) {
+      console.log('API method call executed successfully! returnValue:', response.returnValue);
+   } else {
+      console.error('Something went wrong! Errors:', response.errors);
+   }
+};
+
+function disableClickToDial() {
+  window.sforce.opencti.disableClickToDial({callback: DisableClickToCallback});
 }
 
 function handleLoginFailed(reason)
@@ -482,11 +532,11 @@ function handleFinesseTunnelMessage(event) {
       FinesseTunnelApi.connect(Finesse.agent);
       return;
     }
-  
+
     if(!Finesse.agent.previousLoginFailed) {
       window.rerender(null);
-    } 
-    
+    }
+
   }
 
   if (!event.data || !event.data.split) {
@@ -509,7 +559,7 @@ function handleFinesseTunnelMessage(event) {
   if (eventCode === "0") {
     if (FinesseTunnelApi.state !== "connected") {
       console.log("Tunnel not connected, ignoring data update.");
-      return; 
+      return;
     }
 
     var dataString = event.data.split('|')[1];
@@ -732,7 +782,7 @@ function handleDialogUpdated(dialog) {
     }, '*');
   }
   if (call.direction === "inbound" && call.state === "ALERTING" && window.sforce){
-    SforceScreenPop();
+    SforceScreenPop(call);
   }
 }
 
@@ -752,11 +802,11 @@ function getParticipantState(dialog) {
 function addCallToRecentsList(call) {
   console.log("Adding call to recents list", call);
   let recentCalls = Finesse.agent.recentCalls;
-  
+
   if(recentCalls.length === maxRecentCalls) {
     recentCalls = Finesse.agent.recentCalls.splice(0, 1);
   }
-  
+
   recentCalls.push(call);
   Finesse.saveRecentCalls();
 
@@ -914,28 +964,33 @@ class App extends Component {
     let agent = this.state.agent || {};
     let loggedIn = agent.state && agent.state !== 'LOGOUT'
 
+    let mainHeight = '100%';
+    if (window.sforce) {
+      mainHeight = 'calc(100% - 49px)';
+    }
+
     if(!loggedIn) {
       return (
-          <div id="main">
+          <div id="main" style={{height: mainHeight}}>
               <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={agent.previousLoginFailed} loading={agent.loggingIn}/>
               <div style={{
                   padding: '10px',
                   width: '100%',
                   position: 'absolute'
                 }}>
-                <a href="https://cloverhound.com/" target="_blank" className="logo" 
+                <a href="https://cloverhound.com/" target="_blank" className="logo"
                   style={{
                     display: 'block',
                     textAlign: 'center'
                   }}>
-                  <img alt="Cloverhound, Inc." src="logo_with_name.png" 
+                  <img alt="Cloverhound, Inc." src="logo_with_name.png"
                     style={{
                       width: '120px',
                       marginRight: '6px'
                     }} />
                 </a>
 
-                <a href="https://cloverhound.com/" target="_blank" className="copyright" 
+                <a href="https://cloverhound.com/" target="_blank" className="copyright"
                     style={{
                       marginTop: '4px',
                       fontSize: '0.5em',
@@ -952,7 +1007,7 @@ class App extends Component {
       );
     } else { 
       return (
-          <div id="main">
+          <div id="main" style={{height: mainHeight}}>
               <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.FinessePlugin.type}/>
               {window.FinessePlugin.config.callerViewEnabled == "true" ?
                 <CallerView agent={agent} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type} origin={window.FinessePlugin.origin} config={window.FinessePlugin.config}/>
