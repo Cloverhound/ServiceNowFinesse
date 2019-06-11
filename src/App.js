@@ -383,7 +383,7 @@ var ClickToCallback = function(response) {
 };
 
 function enableClickToDial() {
-sforce.opencti.enableClickToDial({callback: ClickToCallback});
+  window.sforce.opencti.enableClickToDial({callback: ClickToCallback});
 }
 
 var DisableClickToCallback = function(response) {
@@ -395,7 +395,7 @@ var DisableClickToCallback = function(response) {
 };
 
 function disableClickToDial() {
-    sforce.opencti.disableClickToDial({callback: DisableClickToCallback});
+  window.sforce.opencti.disableClickToDial({callback: DisableClickToCallback});
 }
 
 function handleLoginFailed(reason)
