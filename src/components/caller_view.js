@@ -166,6 +166,8 @@ class CallerView extends Component {
         formattedCallTime = '(' + formattedCallTime.format('mm:ss', { trim: false }) + ')';
       }
 
+      let viewUrl = this.props.config.callerInfoViewUrl || 'x_clove_finesse_finesse_caller_view.do'
+
       return (
         <div style={containerStyle}>
           <div id="callerView" style={{height: "100%"}}>
@@ -179,7 +181,7 @@ class CallerView extends Component {
             </div>
 
             <iframe style={styles.iframe}
-              src={this.props.origin + "/finesse_profile_page.do?data=" + encodeURIComponent(encodeURIComponent(JSON.stringify(call)))}>
+              src={this.props.origin + "/" + viewUrl + "?data=" + encodeURIComponent(encodeURIComponent(JSON.stringify(call)))}>
             </iframe>
           
           </div>

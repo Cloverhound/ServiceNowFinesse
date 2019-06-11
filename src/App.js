@@ -55,7 +55,9 @@ function loadPlugin() {
     type: clientType || "snow",
     initialized: false,
     config: {},
-    screenPop: PluginApi.screenPop
+    screenPop: PluginApi.screenPop,
+    showWindow: PluginApi.showWindow,
+    hideWindow: PluginApi.hideWindow
   }
 
   let env = getQueryParameter("ENV");
@@ -102,7 +104,7 @@ function handleClickToCallEvent(event) {
     }
 
     FinessePhoneApi.call(Finesse.agent, event.phoneNumber);
-    window.openFrameAPI.show();
+    window.FinessePlugin.showWindow();
   } else {
     console.log("Missing phone number in click-to-call event.");
   }
@@ -225,7 +227,7 @@ function openFrameInitSuccess(snConfig) {
       console.log("Communication from Topframe", context);
       if(context["phone_number"]) {
         FinessePhoneApi.call(Finesse.agent, context["phone_number"].replace(/[-]/g, ""));
-        window.openFrameAPI.show();
+        window.FinessePlugin.showWindow();
       }
     }
   }
@@ -500,6 +502,11 @@ function handleFinesseTunnelMessage(event) {
   if(event.data === "4|disconnected") {
     FinesseTunnelApi.state = "disconnected";
     console.log("Received disconnected event...");
+
+    if (window.FinessePlugin.config.showWindowOnLogout == "true") {
+      window.FinessePlugin.showWindow();
+    }
+
     if(Finesse.agent.state !== "LOGOUT" && !Finesse.agent.loggingOut) {
       console.log("Reconnecting because logged in and not logging out, so shouldnt have disconnected");
       FinesseTunnelApi.connect(Finesse.agent);
@@ -973,15 +980,18 @@ class App extends Component {
               </div>
           </div>
       );
-    } else {
+    } else { 
       return (
           <div id="main">
               <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.FinessePlugin.type}/>
-              <CallerView agent={agent} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type} origin={window.FinessePlugin.origin}/>
+              {window.FinessePlugin.config.callerViewEnabled == "true" ?
+                <CallerView agent={agent} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type} origin={window.FinessePlugin.origin} config={window.FinessePlugin.config}/>
+                : null
+              }
               <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type}/>
               <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.FinessePlugin.type}/>
               <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.FinessePlugin.type}/>
-              <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames}/>
+              <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames} config={window.FinessePlugin.config}/>
           </div>
       );
     }

@@ -125,7 +125,7 @@ function answer(agent, call) {
 
 
   sendDialogCommand(agent, call.id, xml);
-  window.openFrameAPI && window.openFrameAPI.hide();
+  window.FinessePlugin.hideWindow();
 }
 
 function conference(agent, call) {
