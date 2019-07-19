@@ -55,6 +55,8 @@ function loadPlugin() {
     type: clientType || "snow",
     initialized: false,
     config: {},
+    callStarted: PluginApi.callStarted,
+    callEnded: PluginApi.callEnded,
     screenPop: PluginApi.screenPop,
     showWindow: PluginApi.showWindow,
     hideWindow: PluginApi.hideWindow
@@ -623,6 +625,9 @@ function deleteCall(id) {
 
     Finesse.saveRecentCalls();
   }
+
+  window.FinessePlugin.callEnded(Finesse.agent.calls[id]);
+
   delete Finesse.agent.calls[id];
   console.log("Agent: ", Finesse.agent);
 }
@@ -702,10 +707,12 @@ function handleDialogUpdated(dialog) {
 
   var id = dialog.id._text;
 
+  var newCall = false;
   if(calls[id]) {
     console.log("Updating existing call:", calls[id]);
   } else {
     console.log("Creating new call");
+    newCall = true;
   }
 
   calls[id] = calls[id] || {};
@@ -774,6 +781,10 @@ function handleDialogUpdated(dialog) {
   if(shouldPop && !window.sforce) {
     delete window.Finesse.agent.callerInfo;
     window.FinessePlugin.screenPop(call, true);
+  }
+
+  if (newCall) {
+    window.FinessePlugin.callStarted(call);
   }
 
   if(call.direction === "inbound" && call.state === "ALERTING" && !window.sforce) {

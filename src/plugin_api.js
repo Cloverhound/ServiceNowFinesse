@@ -1,6 +1,8 @@
 const PluginApi = {
   hideWindow: hideWindow,
   showWindow: showWindow,
+  callStarted: callStarted,
+  callEnded: callEnded,
   screenPop: screenPop,
   popRecord: popRecord
 }
@@ -16,6 +18,22 @@ function hideWindow() {
   console.log("Hiding Finesse window");
   parent.window.postMessage({
     type: 'hide'
+  }, '*');
+}
+
+function callStarted(call) {
+  console.log("Sending call started event:", call);
+  parent.window.postMessage({
+    type: 'callStarted',
+    call: JSON.parse(JSON.stringify(call))
+  }, '*');
+}
+
+function callEnded(call) {
+  console.log("Sending call ended event:", call);
+  parent.window.postMessage({
+    type: 'callEnded',
+    call: JSON.parse(JSON.stringify(call))
   }, '*');
 }
 
