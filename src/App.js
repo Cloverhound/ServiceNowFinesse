@@ -18,6 +18,7 @@ import FinessePhoneApi from './finesse_apis/finesse_phone_api';
 import FinesseStateApi from './finesse_apis/finesse_state_api';
 import FinesseTunnelApi from './finesse_apis/finesse_tunnel_api';
 import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
+import Finesse_Phonebook from './finesse_apis/finesse_phonebookapi';
 import "./polyfills";
 import getQueryParameter from "./query_params";
 import PluginApi from './plugin_api';
@@ -516,10 +517,16 @@ function formatNumbers(contact_list){
 
   return returnlist;
 }
+
+
+
 function handleListContactsEvent(event) {
   let helper_cont = new Contacts_helper(Finesse.agent, FinessePhoneApi, window.tabNames);
   console.log(event);
   console.log(event.info.contact_list);
+  console.log("Testing finesse phonebook")
+  var finesse_phonebook = Finesse_Phonebook.get_finesse_phonebook(Finesse.agent);
+
   contacts_list_global = formatNumbers(event.info.contact_list);
   helper_cont.set_contact_list(contacts_list_global);
   helper_cont.populate_contact_list();

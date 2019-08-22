@@ -17,15 +17,15 @@ class Contacts_helper {
     this.tabnames = tabNames;
   }
 
-  callUser(number){
-    console.log(number);
+  callUser(){
+    var number = this.innerHTML;
 
     var numberMatch = /\d+/g;
     var matches = number.match(numberMatch);
     var completeNum = matches.join("");
-    FinessePhoneApi.call(this.agent, completeNum);
-    this.agent.currentTab = this.tabNames.HOME;
-    window.rerender(this.agent);
+    FinessePhoneApi.call(Finesse.agent, completeNum);
+    Finesse.agent.currentTab = window.tabNames.HOME;
+    window.rerender(Finesse.agent);
 
   }
 
@@ -70,7 +70,7 @@ class Contacts_helper {
     }
 
     $("#list_box").append(html);
-    $("#list_box").on("click", "#child" , this.callUser.bind(this,'2404468547'));
+    $("#list_box").on("click", "#child" , this.callUser);
 
   }
   populate_search(){
@@ -99,7 +99,7 @@ class Contacts_helper {
     $("#list_box").html("");
 
     $("#list_box").append(html);
-    $("#list_box").on('click', '#child' , this.callUser);
+    $("#list_box").on("click", "#child" , this.callUser);
   }
 
 }

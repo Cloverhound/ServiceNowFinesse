@@ -20,10 +20,7 @@ class ContactsView extends Component {
         return null;
       }
       document.addEventListener('keyup', (e) =>{
-        console.log("Button pressed");
-        console.log(e.code);
         if (e.code === "Enter"){
-          console.log("Entered");
           this.helper_cont.populate_search();
         }
       });
