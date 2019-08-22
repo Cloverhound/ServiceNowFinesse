@@ -16,6 +16,8 @@ class DialpadView extends Component {
   }
 
   render(){
+
+
       let tabNames = this.props.tabNames;
       if(this.props.agent.currentTab !== tabNames.DIALPAD) {
         return null;
@@ -103,7 +105,7 @@ class DialpadView extends Component {
                 fontSize: "1.8rem"
               }}>
                   <span>*</span>
-              
+
               </a>
               <a onClick={this.addDigit.bind(this, '0')}>
                 <span>0</span>
@@ -116,7 +118,7 @@ class DialpadView extends Component {
                 paddingBottom: "14px"
               }}>
                 <span>#</span>
-                
+
             </a>
           </div>
 

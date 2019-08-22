@@ -10,6 +10,8 @@ import HomeView from './components/home/home_view';
 import CallerView from './components/caller_view';
 import Tabs from './components/tabs';
 import DialpadView from './components/home/dialpad';
+import ContactsView from './components/home/contacts';
+import Contacts_helper from './components/home/Contacts_helper';
 import RecentCallsView from './components/recent_calls';
 import Finesse from './finesse_apis/finesse_api';
 import FinessePhoneApi from './finesse_apis/finesse_phone_api';
@@ -23,6 +25,8 @@ import PluginApi from './plugin_api';
 import LogRocket from 'logrocket';
 
 let maxRecentCalls = 100;
+var contacts_list_global = null;
+var contacts_loaded = false;
 
 var clientType = decodeURIComponent(getQueryParameter("client") || "default");
 var script = document.createElement('script');
@@ -459,12 +463,66 @@ function handleParentWindowMessage(event) {
     case "frameShown":
       handleFrameShownEvent();
       break;
+    case "listContacts":
+    console.log("LISTING CONTACTS");
+      handleListContactsEvent(event.data);
+      break;
     case "proxy":
       // For use to receive events from the embedded caller info page and feed
       // them onwards to the parent window
       parent.window.postMessage(event.data.message, '*');
       break;
   }
+}
+
+//send postMessage upon load of script
+//probably best to call this in contacts.js
+//add debugging in to figure out just how things are traveling
+//add finesse side of phonebook
+// finesse api? will have to figure out how user is created d
+function getContactsList(){
+  return contacts_list_global;
+}
+function formatNumbers(contact_list){
+  // starts with ( correct
+  // starts with number, remove first - and add ()
+  // starts with + add () and -
+  var returnlist = [];
+  var numberPattern = /\d+/g;
+  for(var i = 0; i < contact_list.length; i++){
+    var numbers = contact_list[i].number.match(numberPattern);
+    if(numbers == null){
+      // skip number
+    }
+    else if(numbers.length == 3){
+      if(numbers[0].length != 3 || numbers[1].length != 3 || numbers[2].length != 4){
+        // skip number
+        contact_list[i].number = "Invalid Number";
+      }else{
+        contact_list[i].number = "(" + numbers[0] + ") "  + numbers[1] + "-" + numbers[2];
+        returnlist.push(contact_list[i]);
+      }
+    }else if(numbers.length == 4){
+      if(numbers[1].length != 3 || numbers[2].length != 3 || numbers[3].length != 4){
+        contact_list[i].number = "Invalid Number";
+      }else{
+        contact_list[i].number = "+" + numbers[0] + " (" + numbers[1] + ") " + numbers[2] + "-" + numbers[3];
+        returnlist.push(contact_list[i]);
+      }
+
+    }
+  }
+
+
+  return returnlist;
+}
+function handleListContactsEvent(event) {
+  let helper_cont = new Contacts_helper(Finesse.agent, FinessePhoneApi, window.tabNames);
+  console.log(event);
+  console.log(event.info.contact_list);
+  contacts_list_global = formatNumbers(event.info.contact_list);
+  helper_cont.set_contact_list(contacts_list_global);
+  helper_cont.populate_contact_list();
 }
 
 function handleFrameConfigEvent(config) {
@@ -969,6 +1027,13 @@ class App extends Component {
     return login();
   }
 
+  getContactsLoaded() {
+    return contacts_loaded;
+  }
+  getContactsList() {
+    return contacts_list_global;
+  }
+
 
 
   render() {
@@ -1016,7 +1081,7 @@ class App extends Component {
               </div>
           </div>
       );
-    } else { 
+    } else {
       return (
           <div id="main" style={{height: mainHeight}}>
               <AgentHeader agent={agent} stateApi={FinesseStateApi} type={window.FinessePlugin.type}/>
@@ -1027,6 +1092,7 @@ class App extends Component {
               <HomeView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} stateApi={FinesseStateApi} pluginApi={PluginApi} type={window.FinessePlugin.type}/>
               <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.FinessePlugin.type}/>
               <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.FinessePlugin.type}/>
+              <ContactsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.FinessePlugin.type}/>
               <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames} config={window.FinessePlugin.config}/>
           </div>
       );
