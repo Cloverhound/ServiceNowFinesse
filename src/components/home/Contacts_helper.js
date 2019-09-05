@@ -51,8 +51,8 @@ class Contacts_helper {
       color: "rgb(120, 120, 120)"
     }
     //onClick={this.handleMakeCall.bind(this)}
-    let callNumber = `<div id="child" className={"recent-call-number"} style="display: inline-block; cursor: pointer; float: right; margin-top: 2px; color: rgb(36,83,199);" >${user.number}</div>`
-    var userdiv = `<div style="display: inline-block; margin-left: 10px; vertical-align: top; margin-top: 2px; color: rgb(120,120,120);">${user.firstName} ${user.lastName}</div>`;
+    let callNumber = `<div style="display:inline-block;"><div id="child" className={"recent-call-number"} style="display: inline-block; cursor: pointer; float: right; margin-right: 2px; margin-top: 2px; color: rgb(36,83,199);" >${user.number}</div></div>`
+    var userdiv = `<div style="width:45%; display: inline-block; margin-left: 10px; vertical-align: top; margin-top: 2px; color: rgb(120,120,120);">${user.firstName} ${user.lastName}</div>`;
 
     return `<li style="border-bottom: 1px solid #cccccc; background-color: #FFF; list-style-type: none; padding: 4px 0px;" id='${user.number}'>${userdiv} ${callNumber}</li>`
   }

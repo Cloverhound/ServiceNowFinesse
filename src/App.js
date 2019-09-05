@@ -526,6 +526,8 @@ function handleListContactsEvent(event) {
   console.log(event.info.contact_list);
   console.log("Testing finesse phonebook")
   var finesse_phonebook = Finesse_Phonebook.get_finesse_phonebook(Finesse.agent);
+  //var finesse_contacts = Finesse_Phonebook.get_contacts_from_phonebook(Finesse.agent, finesse_phonebook);
+  //var formatted_contacts = Finesse_Phonebook.format_contacts
 
   contacts_list_global = formatNumbers(event.info.contact_list);
   helper_cont.set_contact_list(contacts_list_global);
