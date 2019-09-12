@@ -20,7 +20,7 @@ class ContactsView extends Component {
         return null;
       }
       document.addEventListener('keyup', (e) =>{
-        if (e.code === "Enter"){
+        if (e.code === "Enter" && this.props.agent.currentTab == tabNames.CONTACTS){
           this.helper_cont.populate_search();
         }
       });

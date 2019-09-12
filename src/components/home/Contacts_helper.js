@@ -8,10 +8,6 @@ import ContactsView from './contacts'
 class Contacts_helper {
 
   constructor(agent, phoneApi, tabNames) {
-    console.log("TESTING AGENT SHIT");
-    console.log(JSON.stringify(agent));
-    console.log(JSON.stringify(phoneApi));
-    console.log(JSON.stringify(tabNames));
     this.agent = agent;
     this.phoneApi = phoneApi;
     this.tabnames = tabNames;

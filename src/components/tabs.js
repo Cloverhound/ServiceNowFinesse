@@ -51,7 +51,7 @@ class Tabs extends Component {
     parent.window.postMessage({
       type: 'listContacts'
     }, '*');
-    
+
     let agent = this.props.agent;
     let tabNames = this.props.tabNames;
     console.log("User clicked Contacts Tab.");
@@ -59,12 +59,24 @@ class Tabs extends Component {
 
     this.props.rerender(agent);
   }
+  onEmailClick(){
+    parent.window.postMessage({
+      type: 'listEmail'
+    }, '*');
+
+    let agent = this.props.agent;
+    let tabNames = this.props.tabNames;
+    agent.currentTab = tabNames.EMAIL;
+
+    this.props.rerender(agent);
+    
+  }
 
   render() {
     let tabNames = this.props.tabNames;
-    let tabWidth = "25%";
+    let tabWidth = "20%";
     if (window.FinessePlugin.config.callerViewEnabled == "true") {
-      tabWidth = "20%";
+      tabWidth = "15%";
     }
 
     var tabBarStyle = {
@@ -131,10 +143,23 @@ class Tabs extends Component {
       paddingTop: "5px"
     }
 
+    var emailIconStyle = {
+      display: "inline-block",
+      borderTop: "2px solid rgb(230, 230, 230)",
+      borderColor: "rgb(230, 230, 230)",
+      width: tabWidth,
+      fill: "rgb(200, 200, 200)",
+      color: "rgb(200, 200, 200)",
+      textAlign: "center",
+      fontSize: "smaller",
+      paddingTop: "5px"
+    }
+
     var callerStyle = $.extend(true, {}, tabStyle);
     var homeStyle = $.extend(true, {}, tabStyle);
     var recentsStyle = $.extend(true, {}, tabStyle);
     var contactsStyle = $.extend(true, {}, tabStyle);
+    var emailStyle = $.extend(true, {}, tabStyle);
 
     //homeStyle.borderRight = "1px solid gray";
 
@@ -148,6 +173,8 @@ class Tabs extends Component {
       dialpadTabStyle = $.extend(true, dialpadTabStyle, selectedTabStyle);
     } else if (this.props.agent.currentTab == tabNames.CONTACTS){
       contactsStyle = $.extend(true, contactsStyle, selectedTabStyle);
+    } else if (this.props.agent.currentTab == tabNames.EMAIL){
+      emailStyle = $.extend(true, emailStyle, selectedTabStyle);
     } else {
       recentsStyle.color = "rgb(54, 125, 236)";
       recentsStyle.borderColor = "rgb(99, 149, 226)";
@@ -179,6 +206,10 @@ class Tabs extends Component {
         <div style={contactsStyle} className="tab contacts" onClick={this.onContactsClick.bind(this)}>
           <FontAwesome name='address-book' size="lg"/>
           <div style={tabTextStyle} className="tab-text">Contacts</div>
+        </div>
+        <div style = {emailStyle} className="tab email" onClick={this.onEmailClick.bind(this)}>
+          <FontAwesome name='envelope' size="lg"/>
+          <div style={tabTextStyle} className="tab-text">Email</div>
         </div>
       </div>
     );

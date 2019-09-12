@@ -4,7 +4,7 @@ const PluginApi = {
   callStarted: callStarted,
   callEnded: callEnded,
   screenPop: screenPop,
-  popRecord: popRecord
+  popRecord: popRecord,
 }
 
 function showWindow() {
@@ -37,6 +37,10 @@ function callEnded(call) {
   }, '*');
 }
 
+
+
+
+
 function screenPop(call, auto) {
     var popData = {
         call: call,
@@ -46,7 +50,7 @@ function screenPop(call, auto) {
         },
         manual: auto !== true
     }
-        
+
     if(!auto && window.FinessePlugin.config.manualScreenPopInNewWindow == "true") {
         popData.newWindow = true;
     }

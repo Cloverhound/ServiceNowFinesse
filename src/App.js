@@ -13,6 +13,8 @@ import DialpadView from './components/home/dialpad';
 import ContactsView from './components/home/contacts';
 import Contacts_helper from './components/home/Contacts_helper';
 import RecentCallsView from './components/recent_calls';
+import EmailView from './components/home/email';
+import Email_helper from './components/home/Email_helper';
 import Finesse from './finesse_apis/finesse_api';
 import FinessePhoneApi from './finesse_apis/finesse_phone_api';
 import FinesseStateApi from './finesse_apis/finesse_state_api';
@@ -27,6 +29,7 @@ import LogRocket from 'logrocket';
 
 let maxRecentCalls = 100;
 var contacts_list_global = null;
+var email_list_global = null;
 var contacts_loaded = false;
 
 var clientType = decodeURIComponent(getQueryParameter("client") || "default");
@@ -93,7 +96,7 @@ function loadPlugin() {
 
   window.finesseUrl = "";
   window.finesseUrlWithoutPort = "";
-  window.tabNames = { HOME: 1, CALLER: 2, RECENTS: 3, DIALPAD: 4, CONTACTS: 5 };  // contacts for future use
+  window.tabNames = { HOME: 1, CALLER: 2, RECENTS: 3, DIALPAD: 4, CONTACTS: 5, EMAIL: 6 };  // contacts for future use
   Finesse.resetAgent();
   window.entityTemplate = "incident";
   window.queryTemplate = "sysparm_query=number=INC00{{callVariable1}}"
@@ -468,6 +471,11 @@ function handleParentWindowMessage(event) {
     console.log("LISTING CONTACTS");
       handleListContactsEvent(event.data);
       break;
+    case "listEmail":
+      console.log("LISTING EMAILS");
+      console.log(event.data);
+      handleListEmailEvent(event.data);
+      break;
     case "proxy":
       // For use to receive events from the embedded caller info page and feed
       // them onwards to the parent window
@@ -483,6 +491,9 @@ function handleParentWindowMessage(event) {
 // finesse api? will have to figure out how user is created d
 function getContactsList(){
   return contacts_list_global;
+}
+function getEmailList(){
+  return email_list_global;
 }
 function formatNumbers(contact_list){
   // starts with ( correct
@@ -517,15 +528,19 @@ function formatNumbers(contact_list){
 
   return returnlist;
 }
-
-
+function handleListEmailEvent(event) {
+  email_list_global = event.info.email_list;
+  let email_helper = new Email_helper(Finesse.agent, window.tabNames);
+  email_helper.set_email_list(email_list_global);
+  email_helper.populate_email_list(email_list_global);
+}
 
 function handleListContactsEvent(event) {
   let helper_cont = new Contacts_helper(Finesse.agent, FinessePhoneApi, window.tabNames);
-  console.log(event);
-  console.log(event.info.contact_list);
-  console.log("Testing finesse phonebook")
-  var finesse_phonebook = Finesse_Phonebook.get_finesse_phonebook(Finesse.agent);
+  //console.log(event);
+  //console.log(event.info.contact_list);
+  //console.log("Testing finesse phonebook")
+  //var finesse_phonebook = Finesse_Phonebook.get_finesse_phonebook(Finesse.agent);
   //var finesse_contacts = Finesse_Phonebook.get_contacts_from_phonebook(Finesse.agent, finesse_phonebook);
   //var formatted_contacts = Finesse_Phonebook.format_contacts
 
@@ -1102,6 +1117,7 @@ class App extends Component {
               <DialpadView agent={agent} digits={this.state.digits} tabNames={window.tabNames} phoneApi={FinessePhoneApi} type={window.FinessePlugin.type}/>
               <RecentCallsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.FinessePlugin.type}/>
               <ContactsView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.FinessePlugin.type}/>
+              <EmailView agent={agent} phoneApi={FinessePhoneApi} tabNames={window.tabNames} type={window.FinessePlugin.type}/>
               <Tabs agent={agent} rerender={rerender} tabNames={window.tabNames} config={window.FinessePlugin.config}/>
           </div>
       );
