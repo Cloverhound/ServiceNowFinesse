@@ -518,7 +518,13 @@ function formatNumbers(contact_list){
   return returnlist;
 }
 
-
+function sort_arr(contact_list) {
+    return contact_list.sort(function(a,b){
+      if(a.firstName < b.firstName) { return -1;}
+      if(a.firstName > b.firstName) { return 1;}
+      return 0;
+    });
+}
 
 function handleListContactsEvent(event) {
   let helper_cont = new Contacts_helper(Finesse.agent, FinessePhoneApi, window.tabNames);
@@ -527,9 +533,9 @@ function handleListContactsEvent(event) {
   console.log("Testing finesse phonebook")
   var finesse_phonebook = Finesse_Phonebook.get_finesse_phonebook(Finesse.agent);
   //var finesse_contacts = Finesse_Phonebook.get_contacts_from_phonebook(Finesse.agent, finesse_phonebook);
-  //var formatted_contacts = Finesse_Phonebook.format_contacts
-
-  contacts_list_global = formatNumbers(event.info.contact_list);
+  //var formatted_contacts = Finesse_Phonebook.format_contacts(finesse_contacts);
+  var sorted_list = sort_arr(event.info.contact_list)
+  contacts_list_global = formatNumbers(sorted_list);
   helper_cont.set_contact_list(contacts_list_global);
   helper_cont.populate_contact_list();
 }

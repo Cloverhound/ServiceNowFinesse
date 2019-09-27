@@ -20,15 +20,20 @@ function format_contacts(contacts){
 
 function get_finesse_phonebook(agent) {
   console.log("getting finesse phonebook");
+
   $.ajax({
+    //accept : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,objects=1-1500",
     url: Finesse.url.full + '/finesse/api/User/' + agent.username + '/PhoneBooks',
     type: 'GET',
-    dataType: "xml",
-    headers: { 'Authorization': make_base_auth(agent.username, Finesse.password), 'Range': 'objects=1-1500'},
     //beforeSend: function (xhr) {
-      //xhr.setRequestHeader('Authorization', make_base_auth(agent.username, Finesse.password));
-
+    //  xhr.setRequestHeader('Authorization', make_base_auth(agent.username, Finesse.password));
     //},
+    dataType: "xml",
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      'Authorization': make_base_auth(agent.username, Finesse.password),
+      'Range': 'objects=1-1500'
+    },
     success: function(phoneBooks){
       console.log(phoneBooks);
       return phoneBooks;
@@ -39,6 +44,13 @@ function get_finesse_phonebook(agent) {
     }
 
   });
+
+
+
+
+
+
+
 }
 
 export default Finesse_Phonebook;
