@@ -520,8 +520,8 @@ function formatNumbers(contact_list){
 
 function sort_arr(contact_list) {
     return contact_list.sort(function(a,b){
-      if(a.firstName < b.firstName) { return -1;}
-      if(a.firstName > b.firstName) { return 1;}
+      if(a.firstName < b.firstName) { return -1; }
+      if(a.firstName > b.firstName) { return 1; }
       return 0;
     });
 }

@@ -46,11 +46,6 @@ function get_finesse_phonebook(agent) {
   });
 
 
-
-
-
-
-
 }
 
 export default Finesse_Phonebook;
