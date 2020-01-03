@@ -20,9 +20,9 @@ class ContactsView extends Component {
         return null;
       }
       document.addEventListener('keyup', (e) =>{
-        if (e.code === "Enter"){
-          this.helper_cont.populate_search();
-        }
+
+        this.helper_cont.populate_search();
+
       });
       let calls = this.props.agent.calls;
       let callsActive = (Object.keys(calls).length > 0);
