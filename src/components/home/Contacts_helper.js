@@ -3,12 +3,12 @@ import $ from "jquery";
 import Finesse from '../../finesse_apis/finesse_api';
 import FinessePhoneApi from '../../finesse_apis/finesse_phone_api';
 import ContactsView from './contacts'
+import FontAwesome from 'react-fontawesome';
 
 
 class Contacts_helper {
 
   constructor(agent, phoneApi, tabNames) {
-    console.log("TESTING AGENT SHIT");
     console.log(JSON.stringify(agent));
     console.log(JSON.stringify(phoneApi));
     console.log(JSON.stringify(tabNames));
@@ -50,11 +50,11 @@ class Contacts_helper {
       marginTop: "2px",
       color: "rgb(120, 120, 120)"
     }
-    //onClick={this.handleMakeCall.bind(this)}
+
     let callNumber = `<div style="display:inline-block;"><div id="child" className={"recent-call-number"} style="display: inline-block; cursor: pointer; float: right; margin-right: 2px; margin-top: 2px; color: rgb(36,83,199);" >${user.number}</div></div>`
     var userdiv = `<div style="width:45%; display: inline-block; margin-left: 10px; vertical-align: top; margin-top: 2px; color: rgb(120,120,120);">${user.firstName} ${user.lastName}</div>`;
-
-    return `<li style="border-bottom: 1px solid #cccccc; background-color: #FFF; list-style-type: none; padding: 4px 0px;" id='${user.number}'>${userdiv} ${callNumber}</li>`
+    let number_type = `<div> <FontAwesome name='briefcase' size="lg"/> </div>`
+    return `<li style="border-bottom: 1px solid #cccccc; background-color: #FFF; list-style-type: none; padding: 4px 0px;" id='${user.number}'>${userdiv} ${callNumber} ${number_type}</li>`
   }
 
   set_contact_list(contact_list){

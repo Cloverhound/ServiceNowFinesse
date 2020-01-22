@@ -21,6 +21,8 @@ import FinesseReasonCodesApi from './finesse_apis/finesse_reason_codes_api';
 import Finesse_Phonebook from './finesse_apis/finesse_phonebookapi';
 import "./polyfills";
 import getQueryParameter from "./query_params";
+import { parseNumber } from 'libphonenumber-js';
+
 import PluginApi from './plugin_api';
 
 import LogRocket from 'logrocket';
@@ -465,7 +467,6 @@ function handleParentWindowMessage(event) {
       handleFrameShownEvent();
       break;
     case "listContacts":
-    console.log("LISTING CONTACTS");
       handleListContactsEvent(event.data);
       break;
     case "proxy":
@@ -490,30 +491,43 @@ function formatNumbers(contact_list){
   // starts with + add () and -
   var returnlist = [];
   var numberPattern = /\d+/g;
+  // for(var i = 0; i < contact_list.length; i++){
+  //   var numbers = contact_list[i].number.match(numberPattern);
+  //   if(numbers == null){
+  //     // skip number
+  //   }
+  //   else if(numbers.length == 3){
+  //     if(numbers[0].length != 3 || numbers[1].length != 3 || numbers[2].length != 4){
+  //       // skip number
+  //       contact_list[i].number = "Invalid Number";
+  //     }else{
+  //       contact_list[i].number = "(" + numbers[0] + ") "  + numbers[1] + "-" + numbers[2];
+  //       returnlist.push(contact_list[i]);
+  //     }
+  //   }else if(numbers.length == 4){
+  //     if(numbers[1].length != 3 || numbers[2].length != 3 || numbers[3].length != 4){
+  //       contact_list[i].number = "Invalid Number";
+  //     }else{
+  //       contact_list[i].number = "+" + numbers[0] + " (" + numbers[1] + ") " + numbers[2] + "-" + numbers[3];
+  //       returnlist.push(contact_list[i]);
+  //     }
+  //
+  //   }
+  // }
   for(var i = 0; i < contact_list.length; i++){
-    var numbers = contact_list[i].number.match(numberPattern);
-    if(numbers == null){
-      // skip number
-    }
-    else if(numbers.length == 3){
-      if(numbers[0].length != 3 || numbers[1].length != 3 || numbers[2].length != 4){
-        // skip number
-        contact_list[i].number = "Invalid Number";
-      }else{
-        contact_list[i].number = "(" + numbers[0] + ") "  + numbers[1] + "-" + numbers[2];
-        returnlist.push(contact_list[i]);
-      }
-    }else if(numbers.length == 4){
-      if(numbers[1].length != 3 || numbers[2].length != 3 || numbers[3].length != 4){
-        contact_list[i].number = "Invalid Number";
-      }else{
-        contact_list[i].number = "+" + numbers[0] + " (" + numbers[1] + ") " + numbers[2] + "-" + numbers[3];
-        returnlist.push(contact_list[i]);
-      }
+    console.log("Parsed number: ");
+    var parsed = parseNumber(contact_list[i].number, "US", { extended: true });
+    if(parsed.ext){
+      contact_list[i].number = parsed.ext;
+
+    }else if(!parsed.possible || !parsed.phone){
+      contact_list[i].number = contact_list[i].number;
+    }else{
+      contact_list[i].number = parsed.phone;
 
     }
+    returnlist.push(contact_list[i]);
   }
-
 
   return returnlist;
 }
@@ -527,17 +541,10 @@ function sort_arr(contact_list) {
 }
 
 function handleListContactsEvent(event) {
-  let helper_cont = new Contacts_helper(Finesse.agent, FinessePhoneApi, window.tabNames);
-  console.log(event);
-  console.log(event.info.contact_list);
-  console.log("Testing finesse phonebook")
   var finesse_phonebook = Finesse_Phonebook.get_finesse_phonebook(Finesse.agent);
-  //var finesse_contacts = Finesse_Phonebook.get_contacts_from_phonebook(Finesse.agent, finesse_phonebook);
-  //var formatted_contacts = Finesse_Phonebook.format_contacts(finesse_contacts);
   var sorted_list = sort_arr(event.info.contact_list)
-  contacts_list_global = formatNumbers(sorted_list);
-  helper_cont.set_contact_list(contacts_list_global);
-  helper_cont.populate_contact_list();
+  Finesse.agent.contacts = formatNumbers(sorted_list);
+  window.rerender(Finesse.agent);
 }
 
 function handleFrameConfigEvent(config) {
