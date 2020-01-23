@@ -3,12 +3,33 @@ import FontAwesome from 'react-fontawesome';
 import moment from "moment";
 import $ from "jquery";
 
-
 class ContactsView extends Component {
-  constructor(props) {
+  constructor(props){
     super(props);
+    this.state = { contacts_list: this.props.agent.contacts, current_search: ""};
+    this.handleChange = this.handleChange.bind(this);
   }
+
+  searchContacts(search_str){
+    var search_results = []
+    var contact_list = this.props.agent.contacts || [];
+    for(var i = 0; i < contact_list.length; i++){
+      if(contact_list[i].firstName.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 || contact_list[i].lastName.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 || contact_list[i].number.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 ){
+        if(search_results.length < 100){
+          search_results.push(contact_list[i]);
+        }
+      }
+
+    }
+    return search_results;
+  }
+
+  handleChange(event){
+    this.setState({ contacts_list: this.searchContacts(event.target.value), current_search: event.target.value});
+  }
+
   render(){
+
       let searchStyle = {
         display: 'block',
         width: '100%',
@@ -16,7 +37,7 @@ class ContactsView extends Component {
       }
       let containerStyle = {
         maxWidth: '500px',
-        height: 'calc(100% - 63px)',
+        height: 'calc(100% - 10px)',
         margin: 'auto',
         padding: '10px'
       }
@@ -34,14 +55,22 @@ class ContactsView extends Component {
       if(this.props.agent.currentTab !== tabNames.CONTACTS) {
         return null;
       }
+
+      let userStyle = {
+        marginTop: "2px",
+        color: "rgb(120, 120, 120)"
+      }
+      this.searchContacts(this.state.current_search);
+      this.props.agent.search_list = this.state.contacts_list;
+
       return (
         <div style={containerStyle} id='content'>
           <div className="search-container" style={searchStyle} tabIndex="0">
               <div style={testStyle}>
-                <input type="text" id="input_text" placeholder="Search.." name="search" style={barStyle}></input>
+                <input type="text" id="input_text" placeholder="Search.." name="search" style={barStyle} onChange={this.handleChange} value={this.state.current_search}></input>
               </div>
-            </div>
-            <Contacts {...this.props}/>
+          </div>
+          <Contacts {...this.props} contact_list={this.searchContacts(this.state.current_search)}/>
         </div>
       )
   }
@@ -49,9 +78,10 @@ class ContactsView extends Component {
 
 class Contacts extends Component {
 
+
   render() {
     let agent = this.props.agent;
-    let contacts_list = agent.contacts || [];
+    let contacts_list = this.props.contact_list || [];
 
     let ulStyle = {
       listStyleType: "none",
@@ -65,7 +95,7 @@ class Contacts extends Component {
     for(let i = 0; i < contacts_list.length; i++) {
       let contact = contacts_list[i];
       contactsComponents.push(
-        <Contact contact={contact} agent={this.props.agent} tabNames={this.props.tabNames} phoneApi={this.props.phoneApi}/>
+        <Contact key={i} contact={contact} agent={this.props.agent} tabNames={this.props.tabNames} phoneApi={this.props.phoneApi}/>
       );
     }
 
@@ -96,7 +126,7 @@ class Contacts extends Component {
             <ul style={ulStyle}>
               {contactsComponents}
             </ul>
-          ) : (<div style={noRecentsStyle}> No Contacts </div>)
+          ) : (<div style={noRecentsStyle}> </div>)
         }
       </div>
     )
