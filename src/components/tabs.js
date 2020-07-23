@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
 import $ from "jquery";
-
+import getSnowContacts from './home/contacts.js'
 import dialpad from "../ic_dialpad_48px.svg";
 
 class DialpadIcon extends Component {
@@ -47,13 +47,24 @@ class Tabs extends Component {
     agent.currentTab = tabNames.RECENTS;
     this.props.rerender(agent);
   }
+  onContactsClick(){
+    // parent.window.postMessage({
+    //   type: 'listContacts'
+    // }, '*');
+    
+    let agent = this.props.agent;
+    let tabNames = this.props.tabNames;
+    console.log("User clicked Contacts Tab.");
+    agent.currentTab = tabNames.CONTACTS;
+
+    this.props.rerender(agent);
+  }
 
   render() {
     let tabNames = this.props.tabNames;
-
-    let tabWidth = "33.333%";
+    let tabWidth = "25%";
     if (window.FinessePlugin.config.callerViewEnabled == "true") {
-      tabWidth = "25%";
+      tabWidth = "20%";
     }
 
     var tabBarStyle = {
@@ -108,9 +119,22 @@ class Tabs extends Component {
       display: "none"
     }
 
+    var contactsIconStyle = {
+      display: "inline-block",
+      borderTop: "2px solid rgb(230, 230, 230)",
+      borderColor: "rgb(230, 230, 230)",
+      width: tabWidth,
+      fill: "rgb(200, 200, 200)",
+      color: "rgb(200, 200, 200)",
+      textAlign: "center",
+      fontSize: "smaller",
+      paddingTop: "5px"
+    }
+
     var callerStyle = $.extend(true, {}, tabStyle);
     var homeStyle = $.extend(true, {}, tabStyle);
     var recentsStyle = $.extend(true, {}, tabStyle);
+    var contactsStyle = $.extend(true, {}, tabStyle);
 
     //homeStyle.borderRight = "1px solid gray";
 
@@ -122,6 +146,8 @@ class Tabs extends Component {
       //recentsStyle.background = "linear-gradient(rgb(249, 249, 249), rgb(250, 250, 250) 40%, white 95%)"
     } else if (this.props.agent.currentTab === tabNames.DIALPAD) {
       dialpadTabStyle = $.extend(true, dialpadTabStyle, selectedTabStyle);
+    } else if (this.props.agent.currentTab == tabNames.CONTACTS){
+      contactsStyle = $.extend(true, contactsStyle, selectedTabStyle);
     } else {
       recentsStyle.color = "rgb(54, 125, 236)";
       recentsStyle.borderColor = "rgb(99, 149, 226)";
@@ -139,9 +165,9 @@ class Tabs extends Component {
             <FontAwesome name='user' style={callerIconStyle}/>
             <div style={tabTextStyle} className="tab-text">Caller</div>
           </div>
-        
+
           : null
-        } 
+        }
         <div style={dialpadTabStyle} className="tab dialpad" onClick={this.onDialpadClick.bind(this)}>
         <DialpadIcon style={dialpadIconStyle} alt="dialpad" />
           <div style={tabTextStyle} className="tab-text">Dialpad</div>
@@ -149,6 +175,10 @@ class Tabs extends Component {
         <div style={recentsStyle} className="tab recents" onClick={this.onRecentsClick.bind(this)}>
           <FontAwesome name='clock-o' size="lg"/>
           <div style={tabTextStyle} className="tab-text">Recents</div>
+        </div>
+        <div style={contactsStyle} className="tab contacts" onClick={this.onContactsClick.bind(this)}>
+          <FontAwesome name='address-book' size="lg" style={{fontSize: '16px'}}/>
+          <div style={tabTextStyle} className="tab-text">Contacts</div>
         </div>
       </div>
     );

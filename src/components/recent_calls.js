@@ -161,7 +161,7 @@ class RecentCall extends Component {
       border: "0",
       borderBottom: "1px solid #cccccc",
       padding: "4px 0px",
-      backgroundColor: "#FFF"
+      backgroundColor: "#ffffff"
     }
 
     return (
