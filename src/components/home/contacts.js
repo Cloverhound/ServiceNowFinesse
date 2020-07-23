@@ -6,26 +6,41 @@ import $ from "jquery";
 class ContactsView extends Component {
   constructor(props){
     super(props);
-    this.state = { contacts_list: this.props.agent.contacts, current_search: ""};
+    this.state = { current_search: ""};
     this.handleChange = this.handleChange.bind(this);
   }
 
   searchContacts(search_str){
-    var search_results = []
-    var contact_list = this.props.agent.contacts || [];
-    for(var i = 0; i < contact_list.length; i++){
-      if(contact_list[i].firstName.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 || contact_list[i].lastName.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 || contact_list[i].number.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 ){
-        if(search_results.length < 100){
-          search_results.push(contact_list[i]);
-        }
-      }
+    parent.window.postMessage({
+      type: 'listContacts',
+      search: search_str
+    }, '*');
+    
 
-    }
-    return search_results;
+    // var search_results = []
+    // var contact_list = this.props.agent.contacts || [];
+    // for(var i = 0; i < contact_list.length; i++){
+    //   if(contact_list[i].firstName.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 || contact_list[i].lastName.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 || contact_list[i].number.toString().toLowerCase().search(search_str.toString().toLowerCase()) >= 0 ){
+    //     if(search_results.length < 100){
+    //       search_results.push(contact_list[i]);
+    //     }
+    //   }
+
+    // }
+    // return search_results;
   }
 
   handleChange(event){
-    this.setState({ contacts_list: this.searchContacts(event.target.value), current_search: event.target.value});
+    if (this.debounceTimeout) {
+      clearTimeout(this.debounceTimeout);
+    }
+
+    let search = event.target.value;
+    this.debounceTimeout = setTimeout(() => {
+      this.searchContacts(search);
+    }, 500);
+
+    this.setState({current_search: event.target.value});
   }
 
   render(){
@@ -46,7 +61,13 @@ class ContactsView extends Component {
         width: '25%'
       }
       let barStyle = {
-        width: '100%'
+        width: '100%',
+        borderRadius: '4px',
+        color: 'rgba(24,31,37,0.7)',
+        fontSize: '15px',
+        padding: '10px',
+        border: 'none',
+        marginBottom: '5px'
       }
       let testStyle = {
         overflow: 'hidden',
@@ -58,10 +79,11 @@ class ContactsView extends Component {
 
       let userStyle = {
         marginTop: "2px",
-        color: "rgb(120, 120, 120)"
+        color: "rgb(120, 120, 120)",
+        cursor: "pointer"
       }
-      this.searchContacts(this.state.current_search);
-      this.props.agent.search_list = this.state.contacts_list;
+      //this.searchContacts(this.state.current_search);
+      this.props.agent.search_list = this.props.agent.contacts;
 
       return (
         <div style={containerStyle} id='content'>
@@ -70,14 +92,13 @@ class ContactsView extends Component {
                 <input type="text" id="input_text" placeholder="Search.." name="search" style={barStyle} onChange={this.handleChange} value={this.state.current_search}></input>
               </div>
           </div>
-          <Contacts {...this.props} contact_list={this.searchContacts(this.state.current_search)}/>
+          <Contacts {...this.props} contact_list={this.props.agent.contacts} pluginApi={this.props.pluginApi}/>
         </div>
       )
   }
 }
 
 class Contacts extends Component {
-
 
   render() {
     let agent = this.props.agent;
@@ -95,7 +116,9 @@ class Contacts extends Component {
     for(let i = 0; i < contacts_list.length; i++) {
       let contact = contacts_list[i];
       contactsComponents.push(
-        <Contact key={i} contact={contact} agent={this.props.agent} tabNames={this.props.tabNames} phoneApi={this.props.phoneApi}/>
+        <Contact key={i} contact={contact} agent={this.props.agent} tabNames={this.props.tabNames} 
+          pluginApi={this.props.pluginApi}
+          phoneApi={this.props.phoneApi}/>
       );
     }
 
@@ -141,6 +164,11 @@ class Contact extends Component {
     window.rerender(this.props.agent);
   }
 
+  handleUserClick() {
+    console.log("Clicked user:", this.props.contact.sys_id);
+    this.props.pluginApi.popRecord('sys_user', this.props.contact.sys_id);
+  }
+
   render() {
 
     let internalExternalStyle = {
@@ -151,17 +179,15 @@ class Contact extends Component {
       color: "rgb(100, 100, 100)"
     }
     let internalExternalIcon = <i style={internalExternalStyle} className="material-icons">face</i>
-    if(this.props.contact.internal_external === "internal") {
+    if(this.props.contact.type === "internal") {
       internalExternalIcon = <i style={internalExternalStyle} className="material-icons">supervisor_account</i>
     }
 
     let numberTypeStyle = {
       display: "inline-block",
       marginLeft: "0",
-      float: "right",
       marginTop: "4px",
-      marginRight: "15px",
-      fontSize: "14px",
+      fontSize: "10px",
       color: "rgb(100, 100, 100)"
     }
     let numberIcon = <i style={numberTypeStyle}className="material-icons">smartphone</i>
@@ -174,28 +200,65 @@ class Contact extends Component {
 
     let callNumberStyle = {
       display: "inline-block",
-      marginLeft: "10px",
+      marginLeft: "5px",
       cursor: "pointer",
       verticalAlign: "top",
       marginTop: "2px",
+      fontSize: "12px",
       color: "rgb(36, 83, 199)"
     }
 
-    let callNumber = (
-      <div className={"recent-call-number"} style={callNumberStyle} onClick={this.handleMakeCall.bind(this)}>{this.props.contact.number}</div>
-    )
+    let numbers = [];
+    if (this.props.contact.businessPhone) {
+      numbers.push(
+        <div key="business">
+          <i style={numberTypeStyle} key="business-icon" className="material-icons">business_center</i>
+          <div className={"recent-call-number"} key="business-number"
+            style={callNumberStyle}
+            onClick={this.handleMakeCall.bind(this)}>{this.props.contact.businessPhone}</div>
+        </div>
+      );
+    }
+    if (this.props.contact.mobilePhone) {
+      numbers.push(
+        <div key="mobile">
+          <i style={numberTypeStyle} key="mobile-icon" className="material-icons">smartphone</i>
+          <div className={"recent-call-number"} key="mobile-number"
+            style={callNumberStyle}
+            onClick={this.handleMakeCall.bind(this)}>{this.props.contact.mobilePhone}</div>
+        </div>
+      );
+    }
 
+    // let callNumber = (
+    //   <div className={"recent-call-number"} 
+    //       style={callNumberStyle}
+    //       onClick={this.handleMakeCall.bind(this)}>{this.props.contact.number}</div>
+    // )
 
     let userStyle = {
       display: "inline-block",
       marginLeft: "10px",
-      width: "35%",
       verticalAlign: "top",
       marginTop: "2px",
-      color: "rgb(120, 120, 120)"
+      color: "rgb(120, 120, 120)",
+      cursor: "pointer"
     }
 
-    let user = <div style={userStyle}>{this.props.contact.firstName} {this.props.contact.lastName}</div>
+    let nameSectionStyle = {
+      display: "inline-block",
+      width: "65%",
+      verticalAlign: "top"
+    }
+
+    let numberSectionStyle = {
+      display: "inline-block",
+      width: "35%"
+    }
+
+    let user = <a className="recent-call-number" style={userStyle} onClick={this.handleUserClick.bind(this)}>
+      {this.props.contact.firstName} {this.props.contact.lastName}
+    </a>
 
     let liStyle = {
       border: "0",
@@ -206,7 +269,10 @@ class Contact extends Component {
 
     return (
 
-      <li style={liStyle}>{internalExternalIcon} {user} {callNumber} {numberIcon}</li>
+      <li style={liStyle}>
+        <div style={nameSectionStyle}>{internalExternalIcon} {user}</div>
+        <div style={numberSectionStyle}>{numbers}</div>
+      </li>
     )
   }
 }

@@ -48,9 +48,9 @@ class Tabs extends Component {
     this.props.rerender(agent);
   }
   onContactsClick(){
-    parent.window.postMessage({
-      type: 'listContacts'
-    }, '*');
+    // parent.window.postMessage({
+    //   type: 'listContacts'
+    // }, '*');
     
     let agent = this.props.agent;
     let tabNames = this.props.tabNames;
@@ -177,7 +177,7 @@ class Tabs extends Component {
           <div style={tabTextStyle} className="tab-text">Recents</div>
         </div>
         <div style={contactsStyle} className="tab contacts" onClick={this.onContactsClick.bind(this)}>
-          <FontAwesome name='address-book' size="lg"/>
+          <FontAwesome name='address-book' size="lg" style={{fontSize: '16px'}}/>
           <div style={tabTextStyle} className="tab-text">Contacts</div>
         </div>
       </div>

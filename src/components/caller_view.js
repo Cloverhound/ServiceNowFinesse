@@ -181,7 +181,7 @@ class CallerView extends Component {
             </div>
 
             <iframe style={styles.iframe}
-              src={this.props.origin + "/" + viewUrl + "?data=" + encodeURIComponent(encodeURIComponent(JSON.stringify(call)))}>
+              src={this.props.origin + "/" + viewUrl + "?sysparm_nostack=true&data=" + encodeURIComponent(encodeURIComponent(JSON.stringify(call)))}>
             </iframe>
           
           </div>
