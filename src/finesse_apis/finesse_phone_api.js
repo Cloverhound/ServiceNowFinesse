@@ -12,8 +12,14 @@ const FinessePhoneApi = {
   answer: answer,
   transfer: transfer,
   sendDtmf: sendDtmf,
+  updateCallVariables: updateCallVariables,
   getActiveCall: getActiveCall,
-  dialPrefix: "91"
+  getCallById: getCallById,
+  dialPrefix: {
+    default: "9{countryCode}"
+  },
+  defaultCountry: "US",
+  formatNumber: formatNumber
 }
 
 function call(agent, number) {
@@ -30,15 +36,45 @@ function call(agent, number) {
 }
 
 function formatNumber(number) {
-  let parsed = parseNumber(number, "US", { extended: true });
+  let parsed = parseNumber(number, { defaultCountry: FinessePhoneApi.defaultCountry, extended: true });
+  
+  console.log("Parsed number:", number, "as:", JSON.stringify(parsed));
+
   if (parsed.ext) {
     return parsed.ext;
   }
-  if (!parsed.possible || !parsed.phone) {
-    return number;
+
+  if (!parsed.possible || !parsed.phone || !parsed.valid) {
+    if (number.startsWith("+")) {
+      // Its an e164 number already, no idea why it isn't valid so just dial as is
+      return number;
+    }
+
+    // Retry as e164
+    parsed = parseNumber("+" + number, { extended: true });
+    console.log("Re-parsed number:", "+" + number, "as:", JSON.stringify(parsed));
+    if (!parsed.possible || !parsed.phone || !parsed.valid) {
+      // No idea why it isn't valid so just dial as is
+      return number;
+    }
   }
 
-  return FinessePhoneApi.dialPrefix + parsed.phone;
+  let countryCallingCode = parsed.countryCallingCode;
+  let country = parsed.country;
+
+  let prefix = FinessePhoneApi.dialPrefix.default;
+  if (countryCallingCode && FinessePhoneApi.dialPrefix[countryCallingCode]) {
+    prefix = FinessePhoneApi.dialPrefix[countryCallingCode];
+  } else if (country && FinessePhoneApi.dialPrefix[country]) {
+    prefix = FinessePhoneApi.dialPrefix[country];
+  }
+
+  prefix = prefix.replace(/{countryCode}/g, countryCallingCode);
+  console.log("Using prefix:", prefix, "for dial.");
+
+  let formatted = prefix + parsed.phone;
+  console.log("Returning formatted number to dial:", formatted);
+  return formatted;
 }
 
 function consult(agent, number) {
@@ -78,13 +114,23 @@ function getActiveCall(agent) {
   return null;
 }
 
+function getCallById(agent, id) {
+  var callIds = Object.keys(agent.calls);
+  for(var i = 0; i < callIds.length; i++) {
+    if (callIds[i] == id) {
+      return agent.calls[callIds[i]];
+    }
+  }
+  return null;
+}
+
 function hangup(agent, call) {
   console.log("Hanging up call:", call);
 
   var xml = '<Dialog>' +
               '<targetMediaAddress>' + agent.extension + '</targetMediaAddress>' +
               '<requestedAction>DROP</requestedAction>' +
-              '</Dialog>';
+            '</Dialog>';
 
 
   sendDialogCommand(agent, call.id, xml);
@@ -97,7 +143,7 @@ function hold(agent, call) {
   var xml = '<Dialog>' +
               '<targetMediaAddress>' + agent.extension + '</targetMediaAddress>' +
               '<requestedAction>HOLD</requestedAction>' +
-              '</Dialog>';
+            '</Dialog>';
 
 
   sendDialogCommand(agent, call.id, xml);
@@ -165,6 +211,44 @@ function sendDtmf(digit, agent, call) {
             '    </ActionParam>' +
             '  </actionParams>' +
             '</Dialog>';
+
+  sendDialogCommand(agent, call.id, xml);
+}
+
+// <Dialog>
+//    <requestedAction>UPDATE_CALL_DATA</requestedAction>
+//    <mediaProperties>
+//       <wrapUpReason>Happy customer!</wrapUpReason>
+//       <callvariables>
+//          <CallVariable>
+//             <name>callVariable1</name>
+//             <value>123456789</value>
+//          </CallVariable>
+//          <CallVariable>
+//          ... Other call variables to be modified ...
+//          </CallVariable>
+//       </callvariables>
+//       </callvariables>
+//    </mediaProperties>
+// </Dialog>
+function updateCallVariables(agent, call, variables) {
+  console.log("Updating call variables:", call, variables);
+
+  var xml = '<Dialog>' +
+            '  <requestedAction>UPDATE_CALL_DATA</requestedAction>' +
+            '  <mediaProperties>' +
+            '    <callvariables>';
+
+  for (const name in variables) {
+    xml +=  ' <CallVariable>' +
+            '   <name>' + name + '</name>' +
+            '   <value>' + variables[name] + '</value>' +
+            ' </CallVariable>';
+  }
+
+  xml +=  '    </callvariables>' +
+          '  </mediaProperties>' +
+          '</Dialog>'
 
   sendDialogCommand(agent, call.id, xml);
 }

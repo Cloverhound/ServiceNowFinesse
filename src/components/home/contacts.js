@@ -158,8 +158,8 @@ class Contacts extends Component {
 
 class Contact extends Component {
 
-  handleMakeCall() {
-    this.props.phoneApi.call(this.props.agent, this.props.contact.number);
+  handleMakeCall(number) {
+    this.props.phoneApi.call(this.props.agent, number || this.props.contact.number);
     this.props.agent.currentTab = this.props.tabNames.HOME;
     window.rerender(this.props.agent);
   }
@@ -215,7 +215,7 @@ class Contact extends Component {
           <i style={numberTypeStyle} key="business-icon" className="material-icons">business_center</i>
           <div className={"recent-call-number"} key="business-number"
             style={callNumberStyle}
-            onClick={this.handleMakeCall.bind(this)}>{this.props.contact.businessPhone}</div>
+            onClick={this.handleMakeCall.bind(this, this.props.contact.businessPhone)}>{this.props.contact.businessPhone}</div>
         </div>
       );
     }
@@ -225,7 +225,17 @@ class Contact extends Component {
           <i style={numberTypeStyle} key="mobile-icon" className="material-icons">smartphone</i>
           <div className={"recent-call-number"} key="mobile-number"
             style={callNumberStyle}
-            onClick={this.handleMakeCall.bind(this)}>{this.props.contact.mobilePhone}</div>
+            onClick={this.handleMakeCall.bind(this, this.props.contact.mobilePhone)}>{this.props.contact.mobilePhone}</div>
+        </div>
+      );
+    }
+    if (this.props.contact.homePhone) {
+      numbers.push(
+        <div key="home">
+          <i style={numberTypeStyle} key="home-icon" className="material-icons">home</i>
+          <div className={"recent-call-number"} key="home-number"
+            style={callNumberStyle}
+            onClick={this.handleMakeCall.bind(this, this.props.contact.homePhone)}>{this.props.contact.homePhone}</div>
         </div>
       );
     }

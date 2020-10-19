@@ -112,7 +112,7 @@
   background-color: #FFF;
 }
 
-.login-form input {
+.login-form input, .login-form select {
   display: block;
   width: 100%;
   padding: 8px;
