@@ -6,6 +6,7 @@ import $ from "jquery";
 import xmlToJSON from "./vendor/xmlToJSON";
 import AgentHeader from './components/agent_header';
 import LoginDialog from './components/login_dialog';
+import LoadingDialog from './components/loading_dialog';
 import HomeView from './components/home/home_view';
 import CallerView from './components/caller_view';
 import Tabs from './components/tabs';
@@ -42,17 +43,11 @@ if (clientType === "sforce") {
   script.src = "https://c.na30.visual.force.com/support/api/45.0/lightning/opencti_min.js";
 
   document.head.appendChild(script); //or something of the likes
-} else if (clientType === "snow"){
-  scriptLoad = 1;
-  script.onload = function () {
-    loadPlugin();
-  };
-  script.src = "https://ven01796.service-now.com/scripts/openframe/1.0.0/openFrameAPI.min.js";
-
-  document.head.appendChild(script); //or something of the likes
 } else {
   loadPlugin();
 }
+
+window.FinessePhoneApi = FinessePhoneApi;
 
 function loadPlugin() {
   window.moment = moment;
@@ -62,36 +57,43 @@ function loadPlugin() {
     type: clientType || "snow",
     initialized: false,
     config: {},
+    stateUpdated: PluginApi.stateUpdated,
     callStarted: PluginApi.callStarted,
+    callUpdated: PluginApi.callUpdated,
     callEnded: PluginApi.callEnded,
     screenPop: PluginApi.screenPop,
     showWindow: PluginApi.showWindow,
     hideWindow: PluginApi.hideWindow
   }
 
-  let env = getQueryParameter("ENV");
-  let logRocketApp = "cloverhound/snow-finesse";
-  if (env) {
-    logRocketApp += "-" + env;
-  }
-  LogRocket.init(logRocketApp,  {
-    // Scrub Auth header from all logged requests.
-    network: {
-      requestSanitizer: function (request) {
-        request.headers['Authorization'] = "**HIDDEN**";
-        return request;
+  let logRocketDisabled = getQueryParameter("logRocketDisabled");
+  if (!logRocketDisabled) {
+    console.log("Loading LogRocket ...")
+    let env = getQueryParameter("ENV");
+    let logRocketApp = "cloverhound/snow-finesse";
+    if (env) {
+      logRocketApp += "-" + env;
+    }
+    LogRocket.init(logRocketApp,  {
+      // Scrub Auth header from all logged requests.
+      network: {
+        requestSanitizer: function (request) {
+          request.headers['Authorization'] = "**HIDDEN**";
+          return request;
+        }
       }
-    }
-  });
+    });
 
-  window.reportError = function(message) {
-    if (!LogRocket && !LogRocket.captureMessage) {
-      return;
-    }
+    window.reportError = function(message) {
+      if (!LogRocket && !LogRocket.captureMessage) {
+        return;
+      }
 
-    LogRocket.captureMessage(message);
+      LogRocket.captureMessage(message);
+    }
+  } else {
+    console.log("LogRocket disabled")
   }
-  //LogRocket.startNewSession();
 
   window.finesseUrl = "";
   window.finesseUrlWithoutPort = "";
@@ -118,6 +120,32 @@ function handleClickToCallEvent(event) {
     console.log("Missing phone number in click-to-call event.");
   }
 }
+
+function handleUpdateCallDataEvent(event) {
+  console.log("Call data update event:", event);
+
+  if (!event.variables) {
+    console.warn("Missing variables in call data update event.");
+    return;
+  }
+
+  var call = FinessePhoneApi.getCallById(Finesse.agent, event.callId);
+  if (!call) {
+    console.warn("Call not found for call data update event:", event.callId);
+    return;
+  }
+
+  if (call.state === "ALERTING") {
+    Finesse.pendingCallUpdate = {
+      id: call.id,
+      variables: event.variables
+    }
+    return;
+  }
+
+  FinessePhoneApi.updateCallVariables(Finesse.agent, call, event.variables);
+}
+
 function handleFrameShownEvent() {
   rerender(Finesse.agent);
 }
@@ -206,7 +234,7 @@ function openFrameInitSuccess(snConfig) {
   }
 
   if (config.dialPrefix && config.dialPrefix != "") {
-    FinessePhoneApi.dialPrefix = config.dialPrefix;
+    FinessePhoneApi.dialPrefix.default = config.dialPrefix;
   }
 
   window.OpenFrame = {
@@ -269,11 +297,22 @@ function login() {
   var username = form.elements["username"].value;
   var password = form.elements["password"].value;
   var extension = String(form.elements["extension"].value);
+  var mobileAgentEnabled = String(form.elements["mobileAgentEnabled"] && form.elements["mobileAgentEnabled"].checked);
+  var mobileAgentMode = String(form.elements["mobileAgentMode"] && form.elements["mobileAgentMode"].value) || null;
+  var mobileAgentDialedNumber = String(form.elements["mobileAgentDialedNumber"] && form.elements["mobileAgentDialedNumber"].value) || null;
 
-  loginAgent(username, password, extension);
+  var mobileAgentOptions = {
+    enabled: mobileAgentEnabled === "true",
+    mode: mobileAgentMode,
+    dialedNumber: mobileAgentDialedNumber
+  };
+
+  console.log("Clicked login with:", username, extension, mobileAgentOptions);
+
+  loginAgent(username, password, extension, mobileAgentOptions);
 }
 
-function loginAgent(username, password, extension) {
+function loginAgent(username, password, extension, mobileAgentOptions) {
   console.log("Logging in...");
 
   Finesse.resetAgent();
@@ -283,12 +322,14 @@ function loginAgent(username, password, extension) {
   Finesse.agent.username = username;
   Finesse.password = password;
   Finesse.agent.extension = extension;
+  Finesse.agent.mobileAgentOptions = mobileAgentOptions;
   //FinesseTunnelApi.connect(Finesse.agent);
-
-  console.log("Logging in:", Finesse.agent.username, Finesse.agent.extension);
+  
+  console.log("Logging in:", Finesse.agent.username, Finesse.agent.extension, Finesse.mobileAgentOptions);
 
   LogRocket.identify(Finesse.agent.username, {
     extension: Finesse.agent.extension,
+    mobileAgentOptions: mobileAgentOptions
   });
 
   if(!Finesse.agent.username || !Finesse.password) {
@@ -298,6 +339,11 @@ function loginAgent(username, password, extension) {
 
   if(!Finesse.agent.extension) {
     handleLoginFailed("Extension required.");
+    return false;
+  }
+
+  if (Finesse.agent.mobileAgentOptions.enabled && !Finesse.agent.mobileAgentOptions.dialedNumber) {
+    handleLoginFailed("Dialed number required for mobile agent mode.");
     return false;
   }
 
@@ -341,8 +387,8 @@ function loginAgent(username, password, extension) {
 }
 
 
-function pushLoginToFinesse(username, password, extension) {
-  console.log("Pushing login to finesse with username: " + username);
+function pushLoginToFinesse(username, password, extension, mobileAgentOptions) {
+  console.log("Pushing login to finesse with:", username, extension, mobileAgentOptions);
 
   FinesseStateApi.updateAgentState(function () {
     if (Finesse.agent.state !== "LOGOUT") {
@@ -353,8 +399,15 @@ function pushLoginToFinesse(username, password, extension) {
 
     var xml = '<User>' +
               ' <state>LOGIN</state>' +
-              ' <extension>' + extension + '</extension>' +
-              '</User>';
+              ' <extension>' + extension + '</extension>';
+
+    if (mobileAgentOptions.enabled) {
+      xml +=  ' <mobileAgent>' +
+              '  <mode>' + mobileAgentOptions.mode + '</mode>' +
+              '  <dialNumber>' + mobileAgentOptions.dialedNumber + '</dialNumber>' +
+              ' </mobileAgent>';
+    }
+    xml += '</User>';
 
     $.ajax({
       url: Finesse.url.full + '/finesse/api/User/' + username,
@@ -463,6 +516,9 @@ function handleParentWindowMessage(event) {
     case "clickToCall":
       handleClickToCallEvent(event.data);
       break;
+    case "updateCallData":
+      handleUpdateCallDataEvent(event.data);
+      break;
     case "frameShown":
       handleFrameShownEvent();
       break;
@@ -544,11 +600,21 @@ function handleFrameConfigEvent(config) {
   }
 
   if (config.dialPrefix && config.dialPrefix != "") {
-    FinessePhoneApi.dialPrefix = config.dialPrefix;
+    FinessePhoneApi.dialPrefix.default = config.dialPrefix;
+  }
+  for (const prop in config) {
+    if (!prop.startsWith("dialPrefix.")) {
+      continue;
+    }
+
+    let propName = prop.split(".").slice(1).join(".");
+    FinessePhoneApi.dialPrefix[propName] = config[prop];
   }
 
   window.FinessePlugin.config = config;
   window.FinessePlugin.initialized = true;
+
+  window.rerender(Finesse.agent);
 
   // window.openFrameAPI.subscribe(window.openFrameAPI.EVENTS.COMMUNICATION_EVENT,
   //   handleCommunicationEvent);
@@ -564,11 +630,15 @@ function handleCallerInfoEvent(info) {
 }
 
 function handleFinesseTunnelMessage(event) {
+  if (!event || !event.data) {
+    return;
+  }
+
   console.log("Received from tunnel:", event.data);
 
   if (event.data === "4|connected") {
     FinesseTunnelApi.state = "connected";
-    pushLoginToFinesse(Finesse.agent.username, Finesse.password, Finesse.agent.extension);
+    pushLoginToFinesse(Finesse.agent.username, Finesse.password, Finesse.agent.extension, Finesse.agent.mobileAgentOptions);
   }
 
   if (event.data === "4|unauthorized") {
@@ -595,7 +665,7 @@ function handleFinesseTunnelMessage(event) {
 
   }
 
-  if (!event.data || !event.data.split) {
+  if (!event.data.split) {
     return;
   }
 
@@ -823,6 +893,15 @@ function handleDialogUpdated(dialog) {
   }
 
   console.log("Updated call:", call)
+
+  if (Finesse.pendingCallUpdate && call.state != "ALERTING") {
+    if (Finesse.pendingCallUpdate.id == call.id) {
+      FinessePhoneApi.updateCallVariables(Finesse.agent, call, Finesse.pendingCallUpdate.variables);
+    }
+
+    Finesse.pendingCallUpdate = null;
+  }
+
   rerender(Finesse.agent);
 
   let shouldPop = !call.alreadyPopped && call.direction === "inbound"
@@ -839,6 +918,8 @@ function handleDialogUpdated(dialog) {
 
   if (newCall) {
     window.FinessePlugin.callStarted(call);
+  } else {
+    window.FinessePlugin.callUpdated(call);
   }
 
   if(call.direction === "inbound" && call.state === "ALERTING" && !window.sforce) {
@@ -928,6 +1009,10 @@ function setAgentFieldFromUserUpdate(fieldName, userObject, type) {
   let currentState = Finesse.agent["state"]
   if(previousState !== "LOGOUT" && currentState === "LOGOUT") {
     disconnectSession();
+  }
+  if (previousState != currentState) {
+    //window.FinessePlugin.callStarted(call);
+    window.FinessePlugin.stateUpdated(currentState);
   }
 
 }
@@ -1041,10 +1126,21 @@ class App extends Component {
       mainHeight = 'calc(100% - 49px)';
     }
 
-    if(!loggedIn) {
+    if (!window.FinessePlugin.initialized) {
+      return (
+        <div id="main" style={{height: mainHeight}}>
+          <LoadingDialog />
+        </div>
+      )
+    } else if (!loggedIn) {
       return (
           <div id="main" style={{height: mainHeight}}>
-              <LoginDialog handleLogin={this.handleLogin} previousLoginFailed={agent.previousLoginFailed} loading={agent.loggingIn}/>
+              <LoginDialog 
+                handleLogin={this.handleLogin}
+                previousLoginFailed={agent.previousLoginFailed}
+                loading={agent.loggingIn}
+                mobileAgentEnabled={window.FinessePlugin.config.mobileAgentEnabled === "true"}
+              />
               <div style={{
                   padding: '10px',
                   width: '100%',

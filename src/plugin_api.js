@@ -1,7 +1,9 @@
 const PluginApi = {
   hideWindow: hideWindow,
   showWindow: showWindow,
+  stateUpdated: stateUpdated,
   callStarted: callStarted,
+  callUpdated, callUpdated,
   callEnded: callEnded,
   screenPop: screenPop,
   popRecord: popRecord
@@ -21,6 +23,14 @@ function hideWindow() {
   }, '*');
 }
 
+function stateUpdated(state) {
+  console.log("Sending state updated event:", state);
+  parent.window.postMessage({
+    type: 'stateUpdated',
+    state: state
+  }, '*');
+}
+
 function callStarted(call) {
   console.log("Sending call started event:", call);
   parent.window.postMessage({
@@ -28,6 +38,15 @@ function callStarted(call) {
     call: JSON.parse(JSON.stringify(call))
   }, '*');
 }
+
+function callUpdated(call) {
+  console.log("Sending call updated event:", call);
+  parent.window.postMessage({
+    type: 'callUpdated',
+    call: JSON.parse(JSON.stringify(call))
+  }, '*');
+}
+
 
 function callEnded(call) {
   console.log("Sending call ended event:", call);

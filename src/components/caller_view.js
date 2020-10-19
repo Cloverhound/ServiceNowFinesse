@@ -8,16 +8,55 @@ import "moment-duration-format";
 
 class CallerView extends Component {
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
-    this.state = { now: (new Date()) };
+    let htmlUrl = null;
+    let agent = props.agent || {};
+    if (agent.callerInfo && agent.callerInfo.html) {
+        // Repoint image URL to ServiceNow base URL
+        let html = agent.callerInfo.html.replace(/src="\/([^\.]+)\.iix"/, 'src="' + props.origin + '/$1.iix"');
+        htmlUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    }
+
+    this.state = { 
+      now: (new Date()),
+      htmlUrl: htmlUrl
+    };
   }
 
   componentDidMount() {
     this.interval = setInterval(() => {
       this.setState({ now: (new Date()) });
     }, 500);
+  }
+  
+  /** 
+   * We only want to generate a URL for our dynamic HTML once for each new HTML string
+   *  This method if the HTML is set and changed and updates the URL if so
+   */
+  componentDidUpdate() {
+    let agent = this.props.agent || {};
+    if (!agent.callerInfo || !agent.callerInfo.html) {
+      return;
+    }
+
+    if (agent.callerInfo.html && (this.state.html != agent.callerInfo.html
+      || !this.state.htmlUrl)) {
+        // Repoint image URL to ServiceNow base URL
+        let html = agent.callerInfo.html.replace(/src="\/([^\.]+)\.iix"/, 'src="' + this.props.origin + '/$1.iix"');
+        let url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+        console.log("Updating caller info HTML:", url, html);
+        this.setState({
+          htmlUrl: url,
+          html: html
+        });
+    } else if (!agent.callerInfo.html) {
+      this.setState({
+        htmlUrl: null,
+        html: null
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -130,7 +169,7 @@ class CallerView extends Component {
         containerStyle.height = 'calc(100% - 28px)';
       }
 
-      if (Object.keys(agent.calls).length == 0 || !agent.lastPopped || !agent.calls[agent.lastPopped]) {
+      if (Object.keys(agent.calls).length == 0) {
         return (
           <div style={containerStyle}>
             <div id="callerView" style={{height: "100%"}}>
@@ -142,14 +181,23 @@ class CallerView extends Component {
         )
       }
 
-      let call = agent.calls[agent.lastPopped];
+      let call = null;
+      for (let callId in agent.calls) {
+        if (agent.calls[callId] && agent.calls[callId].line == 1) {
+          call = agent.calls[callId];
+        }
+      }
       
-      if (!agent.callerInfo || agent.callerInfo.result != 'found') {
+      if (!call || !agent.callerInfo || agent.callerInfo.result != 'found') {
         return (
           <div style={containerStyle}>
             <div id="callerView" style={{height: "100%"}}>
               <div style={styles.header}>
                 User not found
+                <AnswerButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
+                <HangupButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
+                <ResumeButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
+                <HoldButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
               </div>
             </div>
           </div>
@@ -166,7 +214,13 @@ class CallerView extends Component {
         formattedCallTime = '(' + formattedCallTime.format('mm:ss', { trim: false }) + ')';
       }
 
-      let viewUrl = this.props.config.callerInfoViewUrl || 'x_clove_finesse_finesse_caller_view.do'
+      let viewUrl = "";
+      if (agent.callerInfo.html && this.state.htmlUrl) {        
+        viewUrl = this.state.htmlUrl;
+      } else if (!agent.callerInfo.html) {
+        viewUrl = this.props.config.callerInfoViewUrl || 'x_clove_finesse_finesse_caller_view.do';
+        viewUrl = this.props.origin + "/" + viewUrl + "?sysparm_nostack=true&data=" + encodeURIComponent(encodeURIComponent(JSON.stringify(call)));
+      }
 
       return (
         <div style={containerStyle}>
@@ -180,8 +234,8 @@ class CallerView extends Component {
               <HoldButton call={call} agent={agent} phoneApi={this.props.phoneApi}/>
             </div>
 
-            <iframe style={styles.iframe}
-              src={this.props.origin + "/" + viewUrl + "?sysparm_nostack=true&data=" + encodeURIComponent(encodeURIComponent(JSON.stringify(call)))}>
+            <iframe id="callerInfoFrame" style={styles.iframe}
+              src={viewUrl}>
             </iframe>
           
           </div>
