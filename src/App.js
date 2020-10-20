@@ -105,6 +105,23 @@ function loadPlugin() {
   window.$ = $;
 }
 
+function handleWorkspaceStateChangeEvent(event) {
+  switch (event.data.variables.result.presence.name) {
+    case "Available":
+      FinesseStateApi.ready(Finesse.agent)
+      break;
+    case "On Call":
+      FinesseStateApi.notReady(Finesse.agent, "busy")
+      break;
+    case "Away":
+      FinesseStateApi.notReady(Finesse.agent, "on break")
+      break;
+    case "Offline":
+      FinesseStateApi.notReady(Finesse.agent, "on break")
+      break;
+  }
+}
+
 function handleClickToCallEvent(event) {
   console.log("Communication from Topframe", event);
 
@@ -525,6 +542,9 @@ function handleParentWindowMessage(event) {
     case "listContacts":
       handleListContactsEvent(event.data);
       break;
+    case "workspaceStateUpdated":
+      handleWorkspaceStateChangeEvent(event);
+      break
     case "proxy":
       // For use to receive events from the embedded caller info page and feed
       // them onwards to the parent window
