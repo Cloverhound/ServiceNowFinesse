@@ -1,0 +1,26 @@
+WorkspacePresenceAPI
+    Type: Script include
+    Client callable: true
+    Application: Cisco Finesse Plugin
+    Accessible from: All application scopes
+
+Required OpenFrame Configs:
+    onCallReasonCode
+    awayReasonCode
+    offlineReasonCode
+    availableNoChannelReasonCode
+    monitoredAvailableChannel
+    availableSysId
+    awaySysId
+
+Finesse_plugin_container.html
+    Type: UI Page
+    Application: Global
+    Category General
+    Details: Goes inside html box of UI page
+
+Finesse_plugin_container.js
+    Type: UI Page
+    Application: Global
+    Category General
+    Details: Goes inside client script box of UI page
