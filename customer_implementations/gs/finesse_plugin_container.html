@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+ <j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+	 <script src="x_clove_finesse.FinesseDataReader.jsdbx"></script>
+	 <script src="x_clove_finesse.FinesseCallLogger.jsdbx"></script>
+
+	 <style>
+		 HTML[data-doctype=true] body[data-formName="ui_page_render"] {
+			 padding: 0px!important;
+			 overflow: hidden;
+		 }
+		 #bodyMainFrame {
+			 height: 0px;
+		 }
+		 .ctiContainer {
+			 height: 100%;
+			 width: 100%;
+			 padding: 0px;
+			 border: 0px;
+		 }
+
+		 #finesseFrame {
+			 height: 100%;
+			 width: 100%;
+			 border: 0;
+		 }
+
+	 </style>
+	 <div id="ctiContainer" class="ctiContainer">
+		 <iframe id="finesseFrame" src="https://ryan_test.ngrok.io"/>
+	 </div>
+
+	 <script type="text/javascript" src="/scripts/openframe/latest/openFrameAPI.min.js"/>
+ </j:jelly>

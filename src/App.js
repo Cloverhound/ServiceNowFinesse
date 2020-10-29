@@ -105,6 +105,33 @@ function loadPlugin() {
   window.$ = $;
 }
 
+function handleWorkspaceStateChangeEvent(event) {
+  switch (event.data.variables.result.presence.name) {
+    case "Available":
+      var channelArr = event.data.variables.result.presence.channels;
+      for (var i = 0; i < channelArr.length; i++) {
+        if (window.FinessePlugin.config.monitoredAvailableChannel == channelArr[i].sys_id) {
+          if (channelArr[i].available) {
+            FinesseStateApi.ready(Finesse.agent)
+          } else {
+            FinesseStateApi.notReady(Finesse.agent, window.FinessePlugin.config.availableNoChannelReasonCode)
+          }
+        }
+      }
+
+      break;
+    case "On Call":
+      FinesseStateApi.notReady(Finesse.agent, window.FinessePlugin.config.onCallReasonCode)
+      break;
+    case "Away":
+      FinesseStateApi.notReady(Finesse.agent, window.FinessePlugin.config.awayReasonCode)
+      break;
+    case "Offline":
+      FinesseStateApi.notReady(Finesse.agent, window.FinessePlugin.config.offlineReasonCode)
+      break;
+  }
+}
+
 function handleClickToCallEvent(event) {
   console.log("Communication from Topframe", event);
 
@@ -324,7 +351,7 @@ function loginAgent(username, password, extension, mobileAgentOptions) {
   Finesse.agent.extension = extension;
   Finesse.agent.mobileAgentOptions = mobileAgentOptions;
   //FinesseTunnelApi.connect(Finesse.agent);
-  
+
   console.log("Logging in:", Finesse.agent.username, Finesse.agent.extension, Finesse.mobileAgentOptions);
 
   LogRocket.identify(Finesse.agent.username, {
@@ -525,6 +552,9 @@ function handleParentWindowMessage(event) {
     case "listContacts":
       handleListContactsEvent(event.data);
       break;
+    case "workspaceStateUpdated":
+      handleWorkspaceStateChangeEvent(event);
+      break
     case "proxy":
       // For use to receive events from the embedded caller info page and feed
       // them onwards to the parent window
@@ -1135,7 +1165,7 @@ class App extends Component {
     } else if (!loggedIn) {
       return (
           <div id="main" style={{height: mainHeight}}>
-              <LoginDialog 
+              <LoginDialog
                 handleLogin={this.handleLogin}
                 previousLoginFailed={agent.previousLoginFailed}
                 loading={agent.loggingIn}
