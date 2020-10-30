@@ -105,30 +105,15 @@ function loadPlugin() {
   window.$ = $;
 }
 
-function handleWorkspaceStateChangeEvent(event) {
-  switch (event.data.variables.result.presence.name) {
-    case "Available":
-      var channelArr = event.data.variables.result.presence.channels;
-      for (var i = 0; i < channelArr.length; i++) {
-        if (window.FinessePlugin.config.monitoredAvailableChannel == channelArr[i].sys_id) {
-          if (channelArr[i].available) {
-            FinesseStateApi.ready(Finesse.agent)
-          } else {
-            FinesseStateApi.notReady(Finesse.agent, window.FinessePlugin.config.availableNoChannelReasonCode)
-          }
-        }
-      }
-
+function changeAgentState(event) {
+  switch (event.state) {
+    case "READY":
+      FinesseStateApi.ready(Finesse.agent);
       break;
-    case "On Call":
-      FinesseStateApi.notReady(Finesse.agent, window.FinessePlugin.config.onCallReasonCode)
+    case "NOT_READY":
+      FinesseStateApi.notReady(Finesse.agent, event.reasonCode);
       break;
-    case "Away":
-      FinesseStateApi.notReady(Finesse.agent, window.FinessePlugin.config.awayReasonCode)
-      break;
-    case "Offline":
-      FinesseStateApi.notReady(Finesse.agent, window.FinessePlugin.config.offlineReasonCode)
-      break;
+    default:
   }
 }
 
@@ -552,9 +537,9 @@ function handleParentWindowMessage(event) {
     case "listContacts":
       handleListContactsEvent(event.data);
       break;
-    case "workspaceStateUpdated":
-      handleWorkspaceStateChangeEvent(event);
-      break
+    case "changeAgentState":
+      changeAgentState(event.data);
+      break;
     case "proxy":
       // For use to receive events from the embedded caller info page and feed
       // them onwards to the parent window
