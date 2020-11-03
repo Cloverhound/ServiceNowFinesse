@@ -111,7 +111,12 @@ function changeAgentState(event) {
       FinesseStateApi.ready(Finesse.agent);
       break;
     case "NOT_READY":
-      FinesseStateApi.notReady(Finesse.agent, event.reasonCode);
+      if (event.reasonCodeLabel) {
+        FinesseStateApi.notReady(Finesse.agent, event.reasonCodeLabel);
+      } else {
+        FinesseStateApi.notReadyByCode(Finesse.agent, event.reasonCode);
+      }
+      
       break;
     default:
   }

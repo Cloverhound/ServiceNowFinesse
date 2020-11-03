@@ -5,6 +5,7 @@ import Finesse from './finesse_api';
 const FinesseStateApi = {
   ready: ready,
   notReady: notReady,
+  notReadyByCode: notReadyByCode,
   logout: logout,
   updateAgentState: updateAgentState
 }
@@ -63,6 +64,18 @@ function updateAgentState(callback) {
   });
 }
 
+function findReasonCodeByCode(code, reasonCodes) {
+  console.log("Finding reason code by code: " + code);
+  for(var i = 0; i < reasonCodes.length; i++) {
+    var reasonCode = reasonCodes[i];
+    if(reasonCode.code === code) {
+      console.log("Returning reason code: ", JSON.stringify(reasonCode));
+      return reasonCode;
+    }
+  }
+  return false;
+}
+
 function findReasonCodeByLabel(label, reasonCodes) {
   console.log("Finding reason code by label: " + label);
   for(var i = 0; i < reasonCodes.length; i++) {
@@ -74,7 +87,6 @@ function findReasonCodeByLabel(label, reasonCodes) {
   }
   return false;
 }
-
 
 function notReady(agent, label) {
   console.log("Running not ready with label: " + label);
@@ -92,8 +104,30 @@ function notReady(agent, label) {
               '</User>';
   }
 
-  console.log("Sending not ready xml: " + xml);
+  sendNotReady(agent, xml);
+}
 
+function notReadyByCode(agent, code) {
+  console.log("Running not ready with code: " + code);
+
+  var xml = '<User>' +
+            ' <state>NOT_READY</state>' +
+            '</User>';
+
+  if(code) {
+    var reasonCode = findReasonCodeByCode(code, agent.notReadyReasonCodes);
+    var reasonCodeId = reasonCode.uri.split("/").pop();
+    xml = '<User>' +
+              ' <state>NOT_READY</state>' +
+              ' <reasonCodeId>' + reasonCodeId + '</reasonCodeId>' +
+              '</User>';
+  }
+
+  sendNotReady(agent, xml);
+}
+
+function sendNotReady(agent, xml) {
+  console.log("Sending not ready xml: " + xml);
 
   $.ajax({
     url: Finesse.url.full + '/finesse/api/User/' + agent.username,
@@ -115,7 +149,6 @@ function notReady(agent, label) {
     }
   });
 }
-
 
 function logout(agent, label) {
   console.log("Logging out...");
