@@ -23,11 +23,12 @@ function hideWindow() {
   }, '*');
 }
 
-function stateUpdated(state) {
-  console.log("Sending state updated event:", state);
+function stateUpdated(state, reasonCode) {
+  console.log("Sending state updated event:", state, reasonCode);
   parent.window.postMessage({
     type: 'stateUpdated',
-    state: state
+    state: state,
+    reasonCode: reasonCode
   }, '*');
 }
 

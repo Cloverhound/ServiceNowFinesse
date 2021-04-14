@@ -790,6 +790,9 @@ function getRecentCallById(id) {
 
 
 function handleUserUpdate(updatedAgent) {
+  let previousState = Finesse.agent.state;
+  let previousReasonCode = Finesse.agent.reasonCode || {};
+
   setAgentReasonCodeFromUserUpdate(updatedAgent);
   setAgentFieldFromUserUpdate('state', updatedAgent);
   setAgentFieldFromUserUpdate('stateChangeTime', updatedAgent);
@@ -801,6 +804,17 @@ function handleUserUpdate(updatedAgent) {
   setAgentFieldFromUserUpdate('loginName', updatedAgent, "String");
   setAgentFieldFromUserUpdate('teamName', updatedAgent, "String");
   setAgentFieldFromUserUpdate('extension', updatedAgent, "String");
+
+  console.log("Checking if state changed:", previousState, previousReasonCode, Finesse.agent.state, Finesse.agent.reasonCode);
+
+  if ((previousState != Finesse.agent.state) ||
+      (previousReasonCode && !Finesse.agent.reasonCode) ||
+      (!previousReasonCode && Finesse.agent.reasonCode) ||
+      (previousReasonCode && previousReasonCode.code != Finesse.agent.reasonCode.code)
+      
+  ) {
+    window.FinessePlugin.stateUpdated(Finesse.agent.state, Finesse.agent.reasonCode);
+  }
 
   LogRocket.identify(Finesse.agent.username, {
     firstName: Finesse.agent.firstName,
@@ -1024,17 +1038,11 @@ function setAgentFieldFromUserUpdate(fieldName, userObject, type) {
     window.Finesse.agent.localStateChangeTime = new Date();
   }
 
-
   Finesse.agent[fieldName] = value;
   let currentState = Finesse.agent["state"]
   if(previousState !== "LOGOUT" && currentState === "LOGOUT") {
     disconnectSession();
   }
-  if (previousState != currentState) {
-    //window.FinessePlugin.callStarted(call);
-    window.FinessePlugin.stateUpdated(currentState);
-  }
-
 }
 
 function setAgentReasonCodeFromUserUpdate(userObject) {

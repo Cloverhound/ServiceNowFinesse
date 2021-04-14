@@ -41,21 +41,18 @@ class CallerView extends Component {
       return;
     }
 
-    if (agent.callerInfo.html && (this.state.html != agent.callerInfo.html
+    if (agent.callerInfo.html && (this.originalHtml != agent.callerInfo.html
       || !this.state.htmlUrl)) {
         // Repoint image URL to ServiceNow base URL
         let html = agent.callerInfo.html.replace(/src="\/([^\.]+)\.iix"/, 'src="' + this.props.origin + '/$1.iix"');
         let url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-        console.log("Updating caller info HTML:", url, html);
+        console.log("Updating caller info with HTML:", url, html);
+        this.originalHtml = agent.callerInfo.html;
         this.setState({
           htmlUrl: url,
-          html: html
+          html: html,
+          originalHtml: agent.callerInfo.html
         });
-    } else if (!agent.callerInfo.html) {
-      this.setState({
-        htmlUrl: null,
-        html: null
-      });
     }
   }
 
