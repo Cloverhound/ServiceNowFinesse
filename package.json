@@ -4,7 +4,6 @@
   "private": true,
   "homepage": "./",
   "devDependencies": {
-    "react-scripts": "0.8.4",
     "ssh2-sftp-client": "^1.0.5",
     "walk": "^2.3.9"
   },
@@ -20,6 +19,7 @@
     "react-dom": "^15.4.2",
     "react-dropdown": "^1.2.0",
     "react-fontawesome": "^1.6.1",
+    "react-scripts": "0.8.4",
     "react-spinners": "^0.2.6",
     "react-svg-loader": "^2.1.0",
     "spin.js": "^4.0.0"
