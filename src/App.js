@@ -162,7 +162,10 @@ function getSforceConfig(){
         window.sforceConfig["/reqGeneralInfo/finesseUrl"]);
         var conf = {}
         conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
-          setupFinesseUrl(conf);
+        setupFinesseUrl(conf);
+        window.FinessePlugin.initialized = true;
+
+        window.rerender(Finesse.agent);
     } else {
       console.error('Something went wrong! Errors:', response.errors);
     }
