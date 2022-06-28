@@ -1123,7 +1123,7 @@ class App extends Component {
 
     let mainHeight = '100%';
     if (window.sforce) {
-      mainHeight = 'calc(100% - 49px)';
+      mainHeight = '100%';
     }
 
     if (!window.FinessePlugin.initialized) {
