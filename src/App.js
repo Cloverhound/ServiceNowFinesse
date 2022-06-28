@@ -1122,9 +1122,6 @@ class App extends Component {
     let loggedIn = agent.state && agent.state !== 'LOGOUT'
 
     let mainHeight = '100%';
-    if (window.sforce) {
-      mainHeight = '100%';
-    }
 
     if (!window.FinessePlugin.initialized) {
       return (
