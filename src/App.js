@@ -38,8 +38,8 @@ var scriptLoad = 0;
 if (clientType === "sforce") {
   scriptLoad = 1;
   script.src = "https://c.na30.visual.force.com/support/api/45.0/lightning/opencti_min.js";
-  loadPlugin();
   document.head.appendChild(script); //or something of the likes
+  loadPlugin();
 } else {
   loadPlugin();
 }
