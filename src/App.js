@@ -37,11 +37,8 @@ var script = document.createElement('script');
 var scriptLoad = 0;
 if (clientType === "sforce") {
   scriptLoad = 1;
-  script.onload = function() {
-    loadPlugin();
-  };
   script.src = "https://c.na30.visual.force.com/support/api/45.0/lightning/opencti_min.js";
-
+  loadPlugin();
   document.head.appendChild(script); //or something of the likes
 } else {
   loadPlugin();
