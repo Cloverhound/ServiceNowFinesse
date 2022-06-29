@@ -37,12 +37,9 @@ var script = document.createElement('script');
 var scriptLoad = 0;
 if (clientType === "sforce") {
   scriptLoad = 1;
-  script.onload = function() {
-    loadPlugin();
-  };
   script.src = "https://c.na30.visual.force.com/support/api/45.0/lightning/opencti_min.js";
-
   document.head.appendChild(script); //or something of the likes
+  loadPlugin();
 } else {
   loadPlugin();
 }
@@ -165,7 +162,10 @@ function getSforceConfig(){
         window.sforceConfig["/reqGeneralInfo/finesseUrl"]);
         var conf = {}
         conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
-          setupFinesseUrl(conf);
+        setupFinesseUrl(conf);
+        window.FinessePlugin.initialized = true;
+
+        window.rerender(Finesse.agent);
     } else {
       console.error('Something went wrong! Errors:', response.errors);
     }
@@ -1122,9 +1122,6 @@ class App extends Component {
     let loggedIn = agent.state && agent.state !== 'LOGOUT'
 
     let mainHeight = '100%';
-    if (window.sforce) {
-      mainHeight = 'calc(100% - 49px)';
-    }
 
     if (!window.FinessePlugin.initialized) {
       return (
