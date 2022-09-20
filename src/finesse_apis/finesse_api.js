@@ -51,7 +51,8 @@ const Finesse = {
     console.log('Finesse URL: ' + this.url.full);
     console.log('Finesse URL without Port: ' + this.url.withoutPort);
   
-    document.getElementById('tunnel-frame').src = this.url.withoutPort + ":7443/tunnel"
+    let tunnelPort = config.tunnelPort || "7443";
+    document.getElementById('tunnel-frame').src = this.url.withoutPort + ":" + tunnelPort + "/tunnel";
   },
 
   saveRecentCalls() {
