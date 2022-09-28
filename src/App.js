@@ -695,12 +695,16 @@ function handleFinesseTunnelMessage(event) {
 
 
     if (data.Update.data.apiErrors && Finesse.agent.state === "LOGOUT") {
-      let errorMessage = data.Update.data.apiErrors.apiError.errorType._text;
+      let err = data.Update.data.apiErrors.apiError;
+      let errorMessage = err.errorType?._text;
 
       if (errorMessage === "Invalid Device") {
         handleLoginFailed("Invalid Extension");
       } else {
-        console.error("Received API error while logging in to Finesse:", errorMessage);
+        console.error("Received API error while logging in to Finesse:", err);
+        if (err.peripheralErrorText?._text) {
+          errorMessage = err.peripheralErrorText._text;
+        }
         window.reportError("Received API error while logging in to Finesse: " + errorMessage);
         handleLoginFailed(errorMessage);
       }
