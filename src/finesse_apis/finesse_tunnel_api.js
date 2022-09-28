@@ -34,7 +34,7 @@ function connect(agent, url, config) {
   var tunnelWindow = tunnelFrame.contentWindow;
 
   let username = agent.username;
-  if (config && config.escapeUsername) {
+  if (config && config.escapeUsername === "true") {
     username = username.replace(/@/g, "?40");
   }
 
@@ -43,7 +43,7 @@ function connect(agent, url, config) {
   }
   tunnelWindow.postMessage(MESSAGE_TYPE.RESOURCEID + "|snow", "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + url.hostname, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + agent.username, "*");
+  tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + username, "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + Finesse.password, "*");
 }
 
