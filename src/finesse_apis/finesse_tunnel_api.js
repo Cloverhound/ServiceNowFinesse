@@ -18,7 +18,11 @@ var MESSAGE_TYPE = {
   UNSUBSCRIBE: 8,
   PRESENCE: 9,
   CONNECT_REQ: 10,
-  DISCONNECT_REQ: 11
+  DISCONNECT_REQ: 11,
+  NOTIFICATION_CONNECTION_TYPE: 12,
+  LOGGING: 13,
+  SUBSCRIPTIONS_REQ: 14,
+  XMPP_DISCONNECT_PROPERTIES: 15
 };
 
 function connect(agent, url, config) {
@@ -34,6 +38,9 @@ function connect(agent, url, config) {
     username = username.replace(/@/g, "?40");
   }
 
+  if (config && config.tunnelMode === "websocket") {
+    tunnelWindow.postMessage(MESSAGE_TYPE.NOTIFICATION_CONNECTION_TYPE + "|websocket", "*");
+  }
   tunnelWindow.postMessage(MESSAGE_TYPE.RESOURCEID + "|snow", "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + url.hostname, "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + agent.username, "*");
