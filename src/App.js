@@ -323,7 +323,7 @@ function loginAgent(username, password, extension, mobileAgentOptions) {
   Finesse.password = password;
   Finesse.agent.extension = extension;
   Finesse.agent.mobileAgentOptions = mobileAgentOptions;
-  //FinesseTunnelApi.connect(Finesse.agent);
+  //FinesseTunnelApi.connect(Finesse.agent, Finesse.url, window.FinessePlugin.config);
   
   console.log("Logging in:", Finesse.agent.username, Finesse.agent.extension, Finesse.mobileAgentOptions);
 
@@ -358,7 +358,7 @@ function loginAgent(username, password, extension, mobileAgentOptions) {
     },
     success: function() {
       FinesseReasonCodesApi.setReasonCodes(Finesse.agent);
-      FinesseTunnelApi.connect(Finesse.agent);
+      FinesseTunnelApi.connect(Finesse.agent, Finesse.url, window.FinessePlugin.config);
     },
     error: function(req, status, err) {
       if (status === "timeout") {
@@ -655,7 +655,7 @@ function handleFinesseTunnelMessage(event) {
 
     if(Finesse.agent.state !== "LOGOUT" && !Finesse.agent.loggingOut) {
       console.log("Reconnecting because logged in and not logging out, so shouldnt have disconnected");
-      FinesseTunnelApi.connect(Finesse.agent);
+      FinesseTunnelApi.connect(Finesse.agent, Finesse.url, window.FinessePlugin.config);
       return;
     }
 

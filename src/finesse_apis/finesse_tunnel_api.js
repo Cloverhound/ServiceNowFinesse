@@ -21,18 +21,23 @@ var MESSAGE_TYPE = {
   DISCONNECT_REQ: 11
 };
 
-function connect(agent) {
-  console.log("Connecting iframe with username: " + agent.username)
+function connect(agent, url, config) {
+  console.log("Connecting iframe with username: '" + agent.username + "' and hostname: '" + url.hostname + "'");
 
   FinesseTunnelApi.state = "connecting";
 
   var tunnelFrame = document.getElementById("tunnel-frame");
   var tunnelWindow = tunnelFrame.contentWindow;
 
+  let username = agent.username;
+  if (config && config.escapeUsername) {
+    username = username.replace(/@/g, "?40");
+  }
+
   tunnelWindow.postMessage(MESSAGE_TYPE.RESOURCEID + "|snow", "*");
+  tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + url.hostname, "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.ID + "|" + agent.username, "*");
   tunnelWindow.postMessage(MESSAGE_TYPE.PASSWORD + "|" + Finesse.password, "*");
-  tunnelWindow.postMessage(MESSAGE_TYPE.XMPPDOMAIN + "|" + window.finesseHostname, "*");
 }
 
 function disconnect(agent) {
