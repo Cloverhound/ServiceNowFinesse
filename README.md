@@ -1,6 +1,6 @@
 # PLACEHOLDER FOR DOCUMENTATION
 
-All README.md file was a template file for React projects.
+Old README.md file was a template file for React projects.
 
 TODO:
 - Move the relevant React documentation here (`npm start`, `npm run build`)
