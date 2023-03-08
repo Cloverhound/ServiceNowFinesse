@@ -39,6 +39,7 @@ function connect(agent, url, config) {
   }
 
   if (config && config.tunnelMode === "websocket") {
+    console.log("Tunnel mode websocket selected");
     tunnelWindow.postMessage(MESSAGE_TYPE.NOTIFICATION_CONNECTION_TYPE + "|websocket", "*");
   }
   tunnelWindow.postMessage(MESSAGE_TYPE.RESOURCEID + "|snow", "*");

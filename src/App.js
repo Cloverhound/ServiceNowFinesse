@@ -162,7 +162,11 @@ function getSforceConfig(){
         window.sforceConfig["/reqGeneralInfo/finesseUrl"]);
         var conf = {}
         conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
+        conf.tunnelPort = window.sforceConfig["/reqGeneralInfo/tunnelPort"]
+        conf.tunnelPath = window.sforceConfig["/reqGeneralInfo/tunnelPath"]
+        conf.tunnelMode = window.sforceConfig["/reqGeneralInfo/tunnelMode"]
         setupFinesseUrl(conf);
+        window.FinessePlugin.config = conf;
         window.FinessePlugin.initialized = true;
 
         window.rerender(Finesse.agent);
