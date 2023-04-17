@@ -35,6 +35,7 @@ var contacts_loaded = false;
 var clientType = decodeURIComponent(getQueryParameter("client") || "default");
 var script = document.createElement('script');
 var scriptLoad = 0;
+console.log("Cloverhound Salesforce Finesse Plugin Version 1.0.1-00004");
 if (clientType === "sforce") {
   scriptLoad = 1;
   script.src = "https://c.na30.visual.force.com/support/api/45.0/lightning/opencti_min.js";
@@ -160,12 +161,17 @@ function getSforceConfig(){
       window.sforceConfig = response.returnValue;
       console.log('API method call executed successfully! returnValue:',
         window.sforceConfig["/reqGeneralInfo/finesseUrl"]);
-        var conf = {}
-        conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"]
-        conf.tunnelPort = window.sforceConfig["/reqGeneralInfo/tunnelPort"]
-        conf.tunnelPath = window.sforceConfig["/reqGeneralInfo/tunnelPath"]
-        conf.tunnelMode = window.sforceConfig["/reqGeneralInfo/tunnelMode"]
+        var conf = {};
+        conf.finesseUrl = window.sforceConfig["/reqGeneralInfo/finesseUrl"];
+        conf.tunnelPort = window.sforceConfig["/reqGeneralInfo/tunnelPort"];
+        conf.tunnelPath = window.sforceConfig["/reqGeneralInfo/tunnelPath"];
+        conf.tunnelMode = window.sforceConfig["/reqGeneralInfo/tunnelMode"];
+        conf.dialPrefix = {};
+        conf.dialPrefix.default = window.sforceConfig["/reqDialingOptions.reqOutsidePrefix"] + "{countryCode}";
+        conf.reqLongDistPrefix = window.sforceConfig["/reqDialingOptions.reqLongDistPrefix"];
+        conf.reqInternationalPrefix = window.sforceConfig["/reqDialingOptions.reqInternationalPrefix"];
         setupFinesseUrl(conf);
+        console.log("CONF", conf);
         window.FinessePlugin.config = conf;
         window.FinessePlugin.initialized = true;
 
@@ -186,7 +192,11 @@ function SforceScreenPop(call){
     }
   };
 //Invokes API method
-  window.sforce.opencti.searchAndScreenPop({ searchParams : call.otherParty ,queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
+  // window.sforce.opencti.searchAndScreenPop({ searchParams : call.otherParty ,queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
+  console.log("Printing the call variables", call.callVariables);
+  window.sforce.opencti.searchAndScreenPop({ searchParams :  call.callVariables["callVariable1"] + " OR " + call.otherParty, queryParams : '', callType : window.sforce.opencti.CALL_TYPE.INBOUND, deferred: false, callback : callback });
+
+
 }
 function openFrameInitSuccess(snConfig) {
   window.openFrameConfig = snConfig;
@@ -691,8 +701,8 @@ function handleFinesseTunnelMessage(event) {
       console.log("Tunnel not connected, ignoring data update.");
       return;
     }
-
-    var dataString = event.data.split('|')[1];
+    var pipeIndex = event.data.indexOf('|');
+    var dataString = event.data.substring(pipeIndex + 1);
     dataString = dataString.replace(/^[^<]+/, '')
     var data = xmlToJSON.parseString(dataString, { childrenAsArray: false, grokText: false });
     console.log(data);

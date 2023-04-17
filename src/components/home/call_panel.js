@@ -126,7 +126,7 @@ class CallPanel extends Component {
             </div>
 
             <div className="call-content" style={contentStyle}>
-              <div>{"CallVariable1: " + callVariable1}</div>
+              <div>{"Cliente: " + callVariable1}</div>
             </div>
           </div>
         );

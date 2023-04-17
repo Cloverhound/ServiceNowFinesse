@@ -18,12 +18,21 @@ const FinessePhoneApi = {
   dialPrefix: {
     default: "9{countryCode}"
   },
-  defaultCountry: "US",
+  defaultCountry: "CO",
   formatNumber: formatNumber
+}
+
+function formatColombiaNumbers(number) { 
+  if (number.length == 10 ) { 
+    return "003" + number 
+  } else { 
+    return "0" + number 
+  } 
 }
 
 function call(agent, number) {
   number = formatNumber(number);
+  //number = formatColombiaNumbers(number);
   console.log("Calling:", "'" + number + "'");
 
   var xml = '<Dialog>' +
@@ -36,6 +45,12 @@ function call(agent, number) {
 }
 
 function formatNumber(number) {
+  if (number.length == 10) { 
+    return "003" + number 
+  } else if (number.length == 7) { 
+    return "0" + number 
+  } 
+  
   let parsed = parseNumber(number, { defaultCountry: FinessePhoneApi.defaultCountry, extended: true });
   
   console.log("Parsed number:", number, "as:", JSON.stringify(parsed));
