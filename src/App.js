@@ -692,7 +692,8 @@ function handleFinesseTunnelMessage(event) {
       return;
     }
 
-    var dataString = event.data.split('|')[1];
+    var pipeIndex = event.data.indexOf('|');
+    var dataString = event.data.substring(pipeIndex + 1);
     dataString = dataString.replace(/^[^<]+/, '')
     var data = xmlToJSON.parseString(dataString, { childrenAsArray: false, grokText: false });
     console.log(data);
